@@ -1,0 +1,80 @@
+{
+  "name": "pixel",
+  "version": "1.0.0",
+  "description": "milkchoco frida cheat tool",
+  "main": "dist/index.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder",
+    "watch": "concurrently \"tsc -w\" \"npx tailwindcss -i ./public/global.css -o ./public/output.css --watch\" \"tsc -w --project tsconfig.scripts.json\"",
+    "build": "tsc && npx tailwindcss -i ./public/global.css -o ./public/output.css --minify && tsc --project tsconfig.scripts.json",
+    "clean:win": "rd /s /q dist && rd /s /q build && del public/output.css /q",
+    "clean:linux": "rm -rf dist build public/output.css",
+    "download:binding": "start https://github.com/frida/frida/releases/download/16.4.10/frida-v16.4.10-electron-v125-win32-x64.tar.gz"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "adb-ts": "^6.0.0",
+    "dotenv": "^16.4.5",
+    "electron-is-dev": "^2.0.0",
+    "electron-log": "^5.1.7",
+    "electron-updater": "^6.3.4",
+    "frida": "^16.4.10",
+    "mongodb": "^6.8.0",
+    "node-global-key-listener": "^0.3.0"
+  },
+  "devDependencies": {
+    "@types/frida-gum": "^18.7.0",
+    "@types/node": "^22.5.4",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^8.2.2",
+    "cross-env": "^7.0.3",
+    "electron": "^31.4.0",
+    "electron-builder": "^25.0.5",
+    "frida-compile": "^16.4.1",
+    "postcss-loader": "^8.1.1",
+    "tailwindcss": "^3.4.10",
+    "typescript": "^5.5.4"
+  },
+  "build": {
+    "appId": "com.mswtester.pixel",
+    "productName": "pixel",
+    "win": {
+      "target": "nsis",
+      "icon": "./public/favicon.ico"
+    },
+    "directories": {
+      "output": "build"
+    },
+    "files": [
+      "dist/**/*",
+      "public/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "./public",
+        "to": "./public",
+        "filter": [
+          "**/*",
+          "!global.css",
+          "!main.html"
+        ]
+      }
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "private": true,
+        "owner": "MswTester",
+        "repo": "pixel",
+        "token": "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"
+      }
+    ]
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MswTester/pixel.git"
+  }
+}

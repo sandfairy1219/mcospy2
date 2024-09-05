@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="./output.css">
+</head>
+<body>
+    <select id="lang" class="text-sm">
+        <option value="en">English</option>
+        <option value="ko">한국어</option>
+        <option value="jp">日本語</option>
+        <option value="zh">中文</option>
+    </select>
+    <div class="page" id="login">
+        <img src="./icon.svg" style="width: 30vw; height: 30vw;" alt="icon">
+        <div class="form">
+            <!-- auto updater -->
+            <p id="updp" class="w-full text-center" data-lang="checking-for-updates"></p>
+            <div id="updbar" class="w-full bar hide flex rounded-full bg-neutral-300 h-2">
+                <div id="updprg" class="prg flex rounded-full bg-sky-400 h-2 transition-all" style="width: 0%;"></div>
+            </div>
+            <!-- token -->
+            <div id="logform" class="flex flex-col gap-1 hide">
+                <input id="key" type="password" data-lang-ph="key" class="w-full text-center">
+                <button id="logbtn" class="w-full" data-lang="login"></button>
+                <p id="logerr" class="w-full text-red-400 text-center"></p>
+            </div>
+        </div>
+    </div>
+    <div class="page hide" id="app">
+        <details>
+            <summary data-lang="initialize"></summary>
+            <div>
+                <input type="text" id="host" value="127.0.0.1">
+                <input type="text" id="port" value="5555">
+            </div>
+            <div>
+                <div id="state-adb" class="state"></div>
+                <div data-lang="adb"></div>
+                <div id="state-adb-log" class="w-full log"></div>
+            </div>
+            <div>
+                <div id="state-server" class="state"></div>
+                <div data-lang="server"></div>
+                <div id="state-server-log" class="w-full log"></div>
+            </div>
+            <div>
+                <div id="state-frida" class="state"></div>
+                <div data-lang="frida"></div>
+                <div id="state-frida-log" class="w-full log"></div>
+            </div>
+            <div>
+                <div id="state-session" class="state"></div>
+                <div data-lang="session"></div>
+                <div id="state-session-log" class="w-full log"></div>
+            </div>
+            <button id="connect-adb" data-lang="connect-adb"></button>
+            <button id="start-server" data-lang="start-server"></button>
+            <button id="connect-frida" data-lang="connect-frida"></button>
+            <input type="text" id="cookie" class="text-center" data-lang-ph="cookie">
+            <button id="get-cookie" data-lang="get-cookie"></button>
+            <button id="start-agent" data-lang="start-agent"></button>
+        </details>
+        <details>
+            <summary data-lang="scan"></summary>
+            <div>
+                <div id="state-base" class="state"></div>
+                <div data-lang="base"></div>
+                <div id="state-base-log" class="w-full log"></div>
+            </div>
+            <div>
+                <div id="state-player" class="state"></div>
+                <div data-lang="player"></div>
+                <div id="state-player-log" class="w-full log"></div>
+            </div>
+            <button id="scan-base" data-lang="scan-base"></button>
+            <button id="scan-player" data-lang="scan-plyaer-base"></button>
+            <button id="clear-player" data-lang="clear-plyaer-base"></button>
+        </details>
+    </div>
+    <script type="module" src="../dist/main.js"></script>
+</body>
+</html>

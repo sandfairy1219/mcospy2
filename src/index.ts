@@ -1,0 +1,250 @@
+import Logger from "electron-log";
+import EventEmitter from "events";
+import { GlobalKeyboardListener } from "node-global-key-listener";
+import dotenv from "dotenv";
+import path from "path";
+import { MongoClient } from "mongodb";
+import { createWindow } from "./data/utils";
+import { app, ipcMain } from "electron";
+import { autoUpdater } from "electron-updater";
+import isDev from "electron-is-dev";
+import frida from "frida";
+import { existsSync, readFileSync, stat } from "fs";
+import { adb, checkFridaPerm, conenctFrida, connectAdbDevice, executeProcess, fileExist, fileName, getArch, startFrida } from "./data/frida";
+
+const process_name = 'com.gameparadiso.milkchoco';
+const frida_version = '16.4.10';
+const agentPath = isDev ? path.join(__dirname, './../public/scripts/', 'agent.js') : path.join(__dirname, './../../public/scripts/', 'agent.js');
+if(!existsSync(agentPath)) {
+    Logger.error("Failed to open agent file");
+    process.exit(1);
+}
+const agentScript = readFileSync(agentPath, 'utf8').toString().split('"cut";')[1];
+
+// load env
+const envPath = path.join(__dirname, '/../', '/.env');
+dotenv.config({ path: envPath });
+// connect to mongo
+const client = new MongoClient(process.env.MONGO_URI || "mongodb+srv://realtime:EhcTmV54vQFH0AXq@cluster0.qo3ekyu.mongodb.net/")
+// register logger
+Logger.initialize();
+// create event emitter
+const emitter = new EventEmitter();
+const listener = new GlobalKeyboardListener();
+// listen for global key events
+listener.addListener((event, down) => {
+    emitter.emit("gk", event, down);
+});
+// exit app
+const exitApp = () => {
+    Logger.log("App closed");
+    app.quit();
+    process.exit(0);
+};
+
+// main app events
+app.on("ready", async () => {
+    await client.connect();
+    Logger.log("Connected to mongo");
+
+    const main = createWindow("main", 300, 400, true, {
+        title: `Pixel v${app.getVersion()}`,
+        maximizable: false,
+        fullscreenable: false,
+        fullscreen: false,
+    }, async () => {
+        try{
+            if(isDev){
+                main.webContents.send("login");
+            } else {
+                autoUpdater.checkForUpdates();
+            }
+        } catch(err){
+            Logger.error("Update error", err);
+            main.webContents.send("login");
+        }
+    });
+    main.once('close', exitApp);
+    main.once('closed', exitApp);
+
+    autoUpdater.on("checking-for-update", () => {
+        Logger.log("Checking for updates");
+    });
+
+    autoUpdater.on("update-available", () => {
+        Logger.log("Update available");
+        main.webContents.send("update");
+        autoUpdater.downloadUpdate();
+    });
+
+    autoUpdater.on("download-progress", (progress) => {
+        Logger.log("Download progress", progress.percent);
+        main.webContents.send("download", progress.percent);
+    });
+
+    autoUpdater.on("update-downloaded", () => {
+        Logger.log("Update downloaded");
+        autoUpdater.quitAndInstall(false, true);
+        exitApp();
+    });
+
+    autoUpdater.on("error", (err) => {
+        Logger.error("Update error", err);
+        main.webContents.send("login");
+    });
+
+    autoUpdater.on("update-cancelled", () => {
+        Logger.log("Update cancelled");
+        main.webContents.send("login");
+    });
+
+    autoUpdater.on("update-not-available", () => {
+        Logger.log("Update not available");
+        main.webContents.send("login");
+    });
+
+    // get token
+    ipcMain.on("login", async (e, key) => {
+        const db = client.db("sanabi");
+        const tokens = db.collection("tokens");
+        const token = await tokens.findOne({ key });
+        if(!token) main.webContents.send("token", "Invalid token");
+        else if(token.expiration < Date.now()) main.webContents.send("token", "Token expired");
+        else main.webContents.send("token", token);
+    });
+
+    // vars
+    let host:string = "127.0.0.1";
+    let port:string = "5555";
+    let adbId:string = '';
+    let frida:frida.Device = null;
+    let cookie:string = '';
+    let exp:frida.ScriptExports = null;
+    let config:{[key:string]:any} = {};
+    let keybinds:{[key:string]:string} = {};
+
+    // events
+    ipcMain.on('host', (e, h:string) => {host = h});
+    ipcMain.on('port', (e, p:string) => {port = p});
+    ipcMain.on('cookie', (e, c:string) => {cookie = c});
+    ipcMain.on("keybind", (e, id, key) => {keybinds[id] = key;});
+    ipcMain.on("config", (e, id, data) => {config[id] = data;});
+    const state = (id:string, state:string, log:string) => {
+        main.webContents.send("update-state", id, state, log);
+    };
+
+    const _main = async () => {
+        adbId = await connectAdbDevice(host, port);
+        if(adbId === '') return state("adb", "error", "Failed to connect to adb");
+        state("adb", "active", "Connected to adb");
+    }
+    ipcMain.on("connect-adb", async (e) => {
+        state("adb", "pending", "Trying to connect to adb");
+        try{
+            await adb.startServer();
+            state("adb", "pending", "Server started");
+            await adb.tcpip(port);
+            state("adb", "pending", "Server listening on port");
+            await _main();
+        } catch(err){
+            Logger.error("ADB error", err);
+            state("adb", "pending", "Server error");
+            await _main();
+        }
+    });
+
+    ipcMain.on("start-server", async (e) => {
+        if(adbId === '') return state("server", "error", "ADB not connected");
+        state("server", "pending", "Starting frida server");
+        const arch = await getArch(adbId);
+        if(arch === '') return state("server", "error", "Failed to get arch");
+        const filename = await fileExist(adbId, frida_version);
+        if(filename === '') return state("server", "error", "Cannot find frida server");
+        const perm = await checkFridaPerm(adbId, filename);
+        if(!perm) return state("server", "error", "Frida permissions denied");
+        if(!await startFrida(adbId, filename, () => state("server", "error", "Frida server crashed"))) {
+            return state("server", "error", "Failed to start frida server");
+        }
+        state("server", "active", "Frida server started");
+    });
+
+    ipcMain.on("connect-frida", async (e) => {
+        state("frida", "pending", "Connecting to frida server");
+        await conenctFrida(host, port, () => state("frida", "error", "Frida server crashed"), (d) => {
+            frida = d;
+            state("frida", "active", "Connected to frida server");
+        });
+    });
+
+    ipcMain.on("get-cookie", async (e) => {
+        if(!frida) return state("session", "error", "Frida not connected");
+        state("session", "pending", "Getting cookie");
+        try{
+            const [dispose, script] = await executeProcess(process_name, frida, `
+                setTimeout(() => {
+                    setImmediate(function() {
+                        Java.perform(() => {
+                            let Cocos2dxActivity = Java.use("org.cocos2dx.lib.Cocos2dxActivity");
+                            Cocos2dxActivity["getCookie"].implementation = function (str) {
+                                let result = this["getCookie"](str);
+                                send(result);
+                                return \`\${result}\`;
+                            };
+                        });
+                    });
+                }, 100)`,
+                (message:frida.Message, data:Buffer) => {
+                    if(message.type === 'send') {
+                        cookie = message.payload;
+                        state("session", "active", "Cookie received");
+                        main.webContents.send("cookie", cookie);
+                    }
+                },
+                () => {
+                    state("session", "active", "Script attached");
+                },
+                () => {
+                    state("session", "error", "Session disposed");
+                    dispose();
+                }
+            )
+        } catch (err){
+            Logger.error("Cookie error", err);
+            state("session", "error", "Failed to get cookie");
+        }
+    });
+
+    ipcMain.on("start-agent", async (e) => {
+        if(!frida) return state("session", "error", "Frida not connected");
+        state("session", "pending", "Starting agent");
+        try{
+            const [dispose, script] = await executeProcess(process_name, frida, agentScript.replace("/*cookie*/", cookie),
+                (message:frida.Message, data:Buffer) => {
+                    if(message.type === 'send') {
+                        const [channel, ...args] = [...message.payload];
+                        if(channel == 'XigncodeClientSystem.initialize'){
+                            exp = script.exports;
+                            state("session", "active", "Agent Linked");
+                        }
+                        emitter.emit(channel, ...args);
+                    }
+                },
+                () => {
+                    state("session", "pending", "Agent attached");
+                },
+                () => {
+                    exp = null;
+                    state("session", "error", "Session disposed");
+                    dispose();
+                }
+            )
+        } catch (err){
+            Logger.error("Agent error", err);
+            state("session", "error", "Failed to start agent");
+        }
+    });
+});
+
+ipcMain.on("log", (e, ...args:any[]) => {
+    Logger.log(...args);
+});

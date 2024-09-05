@@ -1,0 +1,10 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+      "outDir": "public/scripts", // scripts 폴더 내 파일의 출력 디렉토리
+      "sourceMap": false
+    },
+    "include": ["src/scripts/**/*"], // scripts 내 모든 .ts 파일 포함
+    "exclude": []
+  }
+  
