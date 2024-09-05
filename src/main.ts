@@ -181,6 +181,12 @@ ipcRenderer.on('cookie', (e, cookie:string) => {
     $i('cookie').value = cookie;
 });
 
+ipcRenderer.send('host', $i('host').value);
+ipcRenderer.send('port', $i('port').value);
+$i('host').addEventListener('change', () => {ipcRenderer.send('host', $i('host').value);});
+$i('port').addEventListener('change', () => {ipcRenderer.send('port', $i('port').value);});
+$i('cookie').addEventListener('change', () => {ipcRenderer.send('cookie', $i('cookie').value);});
+
 $_('connect-adb').addEventListener('click', () => {
     ipcRenderer.send('connect-adb', +$i('host').value, +$i('port').value);
 });
