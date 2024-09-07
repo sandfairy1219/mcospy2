@@ -132,3 +132,4 @@ dist
 # custom
 public/output.css
 public/scripts/
+build/

@@ -5,12 +5,13 @@ import dotenv from "dotenv";
 import path from "path";
 import { MongoClient } from "mongodb";
 import { createWindow } from "./data/utils";
-import { app, ipcMain } from "electron";
+import { app, dialog, ipcMain } from "electron";
 import { autoUpdater } from "electron-updater";
 import isDev from "electron-is-dev";
 import frida from "frida";
 import { existsSync, readFileSync, stat } from "fs";
-import { adb, checkFridaPerm, conenctFrida, connectAdbDevice, executeProcess, fileExist, fileName, getArch, startFrida } from "./data/frida";
+import { adb, checkFridaPerm, conenctFrida, connectAdbDevice, executeProcess, fileExist, fileName, getArch, getUrl, startFrida } from "./data/frida";
+import { exec } from "child_process";
 
 const process_name = 'com.gameparadiso.milkchoco';
 const frida_version = '16.4.10';
@@ -150,6 +151,28 @@ app.on("ready", async () => {
             Logger.error("ADB error", err);
             state("adb", "pending", "Server error");
             await _main();
+        }
+    });
+
+    ipcMain.on("download-server", async (e) => {
+        if(adbId === '') return state("server", "error", "ADB not connected");
+        const url = getUrl(frida_version, await getArch(adbId));
+        exec(`start ${url}`);
+    });
+
+    ipcMain.on("upload-server", async (e) => {
+        if(adbId === '') return state("server", "error", "ADB not connected");
+        const result = await dialog.showOpenDialog({
+            properties: ['openFile'],
+            filters: [{name: 'Frida Server', extensions:[]}]
+        })
+        if(result.canceled) return;
+        const filePath = result.filePaths[0];
+        const name = fileName(frida_version, await getArch(adbId));
+        try{
+            adb.push(adbId, filePath, `/data/local/tmp/${name}`);
+        } catch(e) {
+            Logger.error("Failed to upload frida server");
         }
     });
 
