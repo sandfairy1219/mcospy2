@@ -9,7 +9,7 @@ import { app, dialog, ipcMain } from "electron";
 import { autoUpdater } from "electron-updater";
 import isDev from "electron-is-dev";
 import frida from "frida";
-import { existsSync, readFileSync, stat } from "fs";
+import { existsSync, readFileSync } from "fs";
 import { adb, checkFridaPerm, conenctFrida, connectAdbDevice, executeProcess, fileExist, fileName, getArch, getUrl, startFrida } from "./data/frida";
 import { exec } from "child_process";
 
@@ -20,6 +20,7 @@ if(!existsSync(agentPath)) {
     Logger.error("Failed to open agent file");
     process.exit(1);
 }
+
 const agentScript = readFileSync(agentPath, 'utf8').toString().split('"cut";')[1];
 
 // load env
@@ -124,7 +125,7 @@ app.on("ready", async () => {
     let config:{[key:string]:any} = {};
     let keybinds:{[key:string]:string} = {};
 
-    // events
+    // initialize
     ipcMain.on('host', (e, h:string) => {host = h});
     ipcMain.on('port', (e, p:string) => {port = p});
     ipcMain.on('cookie', (e, c:string) => {cookie = c});
@@ -266,6 +267,8 @@ app.on("ready", async () => {
             state("session", "error", "Failed to start agent");
         }
     });
+
+    // scan
 });
 
 ipcMain.on("log", (e, ...args:any[]) => {
