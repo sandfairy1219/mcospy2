@@ -58,17 +58,22 @@
             </div>
             <button id="connect-adb" data-lang="connect-adb"></button>
             <div>
-                <button id="start-server" data-lang="start-server"></button>
-                <button id="download-server" data-lang="download-server"></button>
-                <button id="upload-server" data-lang="upload-server"></button>
+                <button class="w-full" id="start-server" data-lang="start-server"></button>
+                <button class="w-full" id="download-server" data-lang="download-server"></button>
+                <button class="w-full" id="upload-server" data-lang="upload-server"></button>
             </div>
             <button id="connect-frida" data-lang="connect-frida"></button>
-            <input type="text" id="cookie" class="text-center" data-lang-ph="cookie">
-            <button id="get-cookie" data-lang="get-cookie"></button>
+            <div>
+                <input type="text" id="cookie" class="text-center w-full" data-lang-ph="cookie">
+                <button class="w-full" id="get-cookie" data-lang="get-cookie"></button>
+            </div>
             <button id="start-agent" data-lang="start-agent"></button>
         </details>
         <details>
-            <summary data-lang="cheat"></summary>
+            <summary data-lang="cheats"></summary>
+        </details>
+        <details id="dev-mode" class="hide">
+            <summary data-lang="dev-mode"></summary>
         </details>
     </div>
     <script type="module" src="../dist/main.js"></script>

@@ -62,21 +62,12 @@ export const conenctFrida = async (serial:string, onCrashed:() => void, onConnec
 }
 
 export const connectAdbDevice = async (serial:string):Promise<string> => {
-    const devices = await adb.map(async (device) => {
-        if (device.id === serial) {
-            await device.tcpip();
-            return device.id
-        }
-        return ''
-    })
-    const result = (await Promise.all(devices)).find(d => d !== '')
-
+    const result = await adb.connect(serial)
     if (!result) {
-        Logger.error(`[*] ADB device not connected to ${serial}`)
+        Logger.error('[*] Failed to connect to adb server')
         return ''
-    } else {
-        return result
     }
+    return result
 }
 
 export const fileExist = async (id:string, version:string):Promise<string> => {

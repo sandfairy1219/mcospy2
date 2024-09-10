@@ -44,6 +44,10 @@ let xa:NativePointer = null;
 let an:NativePointer = null;
 let cd:NativePointer = null;
 
+let frame:number = 60;
+let cheats:{[key:string]:boolean} = {};
+let config:{[key:string]:any} = {};
+
 Java.perform(() => {
     let XigncodeClientSystem = Java.use("com.wellbia.xigncode.XigncodeClientSystem");
     XigncodeClientSystem["initialize"].implementation = function (activity:any,str:string,str2:string,str3:string,callback:() => void) {
@@ -56,29 +60,50 @@ Java.perform(() => {
         send(["Cocos2dxActivity.getCookie"]);
         return '/*cookie*/';
     };
-    recv('addr', () => {
-        const r = Process.enumerateRanges('r--')
-        const rw = Process.enumerateRanges('rw-')
-        const _xa = r.filter((range:RangeDetails) =>
-            range.file &&
-            range.file.path.includes('libMyGame.so') &&
-            range.size >= 51068928
-        )[0]
-        const _an = rw.filter((range:RangeDetails) =>
-            (!range.file) &&
-            range.size >= 21921792
-        )[0]
-        const _cd = rw.filter((range:RangeDetails) =>
-            range.file &&
-            range.file.path.includes('libMyGame.so') &&
-            range.size >= 126976
-        )[0]
-        if(_xa) xa = _xa.base
-        if(_an) an = _an.base
-        if(_cd) cd = _cd.base
-        send(['Address.init', xa.toString(), an.toString(), cd.toString()])
-    })
+    function api(message:any[]) {
+        const [name, ...args] = message;
+        if(name === 'log'){
+            send(['log', '[FRIDA]', args])
+        } else if(name === 'addr'){
+            const r = Process.enumerateRanges('r--')
+            const rw = Process.enumerateRanges('rw-')
+            const _xa = r.filter((range:RangeDetails) =>
+                range.file &&
+                range.file.path.includes('libMyGame.so') &&
+                range.size >= 51068928
+            )[0];
+            const _an = rw.filter((range:RangeDetails) =>
+                (!range.file) &&
+                range.size >= 21921792
+            )[0];
+            const _cd = rw.filter((range:RangeDetails) =>
+                range.file &&
+                range.file.path.includes('libMyGame.so') &&
+                range.size >= 126976
+            )[0];
+            if(_xa) xa = _xa.base;
+            if(_an) an = _an.base;
+            if(_cd) cd = _cd.base;
+            send(['Address.init', xa.toString(), an.toString(), cd.toString()])
+        } else if(name === 'cheats'){
+            cheats[args[0]] = args[1];
+            // Enable/Disable static address cheats
+        } else if(name === 'frame'){
+            frame = args[0];
+        } else if(name === 'config'){
+            config[args[0]] = args[1];
+        }
+        recv(api)
+    }
+    recv(api)
 });
+
+function loop(){
+    if(xa){
+    }
+    setTimeout(loop, 1000/frame);
+}
+loop();
 
 rpc.exports = {
     log: function(str) {

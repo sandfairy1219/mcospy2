@@ -121,6 +121,7 @@ app.on("ready", async () => {
     let frida:frida.Device = null;
     let cookie:string = '';
     let exp:frida.ScriptExports = null;
+    let cheats:{[key:string]:boolean} = {};
     let config:{[key:string]:any} = {};
     let keybinds:{[key:string]:string} = {};
 
@@ -128,15 +129,23 @@ app.on("ready", async () => {
     ipcMain.on('serial', (e, s:string) => {serial = s});
     ipcMain.on('cookie', (e, c:string) => {cookie = c});
     ipcMain.on("keybind", (e, id, key) => {keybinds[id] = key;});
-    ipcMain.on("config", (e, id, data) => {config[id] = data;});
+    ipcMain.on("config", (e, id, data) => {
+        config[id] = data;
+        emitter.emit("config", id, data);
+    });
     const state = (id:string, state:string, log:string) => {
         main.webContents.send("update-state", id, state, log);
     };
 
     const _main = async () => {
-        adbId = await connectAdbDevice(serial);
-        if(adbId === '') return state("adb", "error", "Failed to connect to adb");
-        state("adb", "active", "Connected to adb");
+        try{
+            adbId = await connectAdbDevice(serial);
+            if(adbId === '') return state("adb", "error", "Failed to connect to adb");
+            state("adb", "active", `Connected to adb ${adbId}`);
+        } catch(err){
+            Logger.error("ADB error", err);
+            state("adb", "error", "Failed to connect to adb");
+        }
     }
     ipcMain.on("connect-adb", async (e) => {
         state("adb", "pending", "Trying to connect to adb");
@@ -216,7 +225,7 @@ app.on("ready", async () => {
                 (message:frida.Message, data:Buffer) => {
                     if(message.type === 'send') {
                         cookie = message.payload;
-                        state("session", "active", "Cookie received");
+                        state("session", "succeed", "Cookie received");
                         main.webContents.send("cookie", cookie);
                     }
                 },
@@ -237,6 +246,7 @@ app.on("ready", async () => {
     ipcMain.on("start-agent", async (e) => {
         if(!frida) return state("session", "error", "Frida not connected");
         state("session", "pending", "Starting agent");
+        let found:boolean = false;
         try{
             const [dispose, script] = await executeProcess(process_name, frida, agentScript.replace("/*cookie*/", cookie),
                 (message:frida.Message, data:Buffer) => {
@@ -244,20 +254,25 @@ app.on("ready", async () => {
                         const [channel, ...args] = [...message.payload];
                         if(channel == 'XigncodeClientSystem.initialize'){
                             exp = script.exports;
-                            state("session", "pending", "Xigncode Bypassed");
+                            state("session", "active", "Xigncode Bypassed");
                         } else if(channel == 'Cocos2dxActivity.getCookie'){
                             Logger.info("CocosActivity Connected");
-                            script.post({type: 'addr', payload: ''});
+                            if(!found) script.post(['addr']);
                         } else if(channel == 'Address.init'){
-                            state("session", "active", `Address found`);
-                        }
-                        emitter.emit(channel, ...args);
+                            found = true;
+                            Logger.info("Address Found", args);
+                            state("session", "succeed", `Address found`);
+                        } else emitter.emit(channel, ...args);
                     }
                 },
                 () => {
                     state("session", "pending", "Agent attached");
+                    emitter.on("config", (key, value) => {
+                        script.post(['config', key, value]);
+                    });
                 },
                 () => {
+                    emitter.removeAllListeners("config");
                     exp = null;
                     state("session", "error", "Session disposed");
                     dispose();
@@ -272,6 +287,9 @@ app.on("ready", async () => {
     // cheat
 });
 
+emitter.on("log", (...args:any[]) => {
+    Logger.log(...args);
+});
 ipcMain.on("log", (e, ...args:any[]) => {
     Logger.log(...args);
 });

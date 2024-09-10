@@ -18,6 +18,120 @@ const keymap:{[key:string]:IGlobalKey} = {
 }
 
 const lan:{[key:string]:{[key:string]:string}} = {
+    'checking-for-updates':{
+        'en':'Checking for updates',
+        'ko':'업데이트 확인 중',
+        'ja':'更新を確認中',
+        'zh':'检查更新中',
+    },
+    'key':{
+        'en':'Key',
+        'ko':'키',
+        'ja':'キー',
+        'zh':'键',
+    },
+    'login':{
+        'en':'Login',
+        'ko':'로그인',
+        'ja':'ログイン',
+        'zh':'登录',
+    },
+    'initialize':{
+        'en':'Initialize',
+        'ko':'초기화',
+        'ja':'初期化',
+        'zh':'初始化',
+    },
+    'serial':{
+        'en':'Serial',
+        'ko':'시리얼',
+        'ja':'シリアル',
+        'zh':'序列号',
+    },
+    'adb':{
+        'en':'ADB',
+        'ko':'ADB',
+        'ja':'ADB',
+        'zh':'ADB',
+    },
+    'server':{
+        'en':'Server',
+        'ko':'서버',
+        'ja':'サーバ',
+        'zh':'服务器',
+    },
+    'frida':{
+        'en':'Frida',
+        'ko':'프리다',
+        'ja':'フリダ',
+        'zh':'Frida',
+    },
+    'session':{
+        'en':'Session',
+        'ko':'세션',
+        'ja':'セッション',
+        'zh':'会话',
+    },
+    'connect-adb':{
+        'en':'Connect ADB',
+        'ko':'ADB 연결',
+        'ja':'ADB接続',
+        'zh':'连接ADB',
+    },
+    'start-server':{
+        'en':'Start Server',
+        'ko':'서버 시작',
+        'ja':'サーバ起動',
+        'zh':'启动服务器',
+    },
+    'download-server':{
+        'en':'Download Server',
+        'ko':'서버 다운로드',
+        'ja':'サーバダウンロード',
+        'zh':'下载服务器',
+    },
+    'upload-server':{
+        'en':'Upload Server',
+        'ko':'서버 업로드',
+        'ja':'サーバアップロード',
+        'zh':'上传服务器',
+    },
+    'connect-frida':{
+        'en':'Connect Frida',
+        'ko':'프리다 연결',
+        'ja':'フリダ接続',
+        'zh':'连接Frida',
+    },
+    'cookie':{
+        'en':'Cookie',
+        'ko':'쿠키',
+        'ja':'クッキー',
+        'zh':'Cookie',
+    },
+    'get-cookie':{
+        'en':'Get Cookie',
+        'ko':'쿠키 가져오기',
+        'ja':'クッキー取得',
+        'zh':'获取Cookie',
+    },
+    'start-agent':{
+        'en':'Start Agent',
+        'ko':'에이전트 시작',
+        'ja':'エージェント起動',
+        'zh':'启动代理',
+    },
+    'cheats':{
+        'en':'Cheats',
+        'ko':'치트',
+        'ja':'チート',
+        'zh':'作弊',
+    },
+    'dev-mode':{
+        'en':'Developer Mode',
+        'ko':'개발자 모드',
+        'ja':'開発者モード',
+        'zh':'开发者模式',
+    },
 }
 
 function lng(la:string, str:string):string{
@@ -167,13 +281,14 @@ ipcRenderer.on('token', (e, token:Token|string) => {
         localStorage.setItem('token', JSON.stringify(token.key));
         $_('login').classList.add('hide');
         $_('app').classList.remove('hide');
+        if(token.perms.includes('dev')) $_('dev-mode').classList.remove('hide');
     }
 });
 
 ipcRenderer.on('update-state', (e, id:string, state:string, log:string) => {
     const el = $_(`state-${id}`);
     const elog = $_(`state-${id}-log`);
-    if(el) el.classList.remove('active', 'error', 'pending');
+    if(el) el.classList.remove('active', 'error', 'pending', 'succeed');
     if(el) el.classList.add(state);
     if(elog) elog.textContent = log;
 });
