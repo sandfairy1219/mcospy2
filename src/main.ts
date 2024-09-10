@@ -181,16 +181,14 @@ ipcRenderer.on('cookie', (e, cookie:string) => {
     $i('cookie').value = cookie;
 });
 
-ipcRenderer.send('host', $i('host').value);
-ipcRenderer.send('port', $i('port').value);
-$i('host').addEventListener('change', () => {ipcRenderer.send('host', $i('host').value);});
-$i('port').addEventListener('change', () => {ipcRenderer.send('port', $i('port').value);});
+ipcRenderer.send('serial', $i('serial').value);
+$i('serial').addEventListener('change', () => {ipcRenderer.send('serial', $i('serial').value);});
 $i('cookie').addEventListener('change', () => {ipcRenderer.send('cookie', $i('cookie').value);});
 
-$_('connect-adb').addEventListener('click', () => {ipcRenderer.send('connect-adb', +$i('host').value, +$i('port').value);});
+$_('connect-adb').addEventListener('click', () => {ipcRenderer.send('connect-adb', $i('serial').value);});
 $_('start-server').addEventListener('click', () => {ipcRenderer.send('start-server');});
 $_('download-server').addEventListener('click', () => {ipcRenderer.send('download-server');});
 $_('upload-server').addEventListener('click', () => {ipcRenderer.send('upload-server');});
-$_('connect-frida').addEventListener('click', () => {ipcRenderer.send('connect-frida', +$i('host').value, +$i('port').value);});
+$_('connect-frida').addEventListener('click', () => {ipcRenderer.send('connect-frida', $i('serial').value);});
 $_('get-cookie').addEventListener('click', () => {ipcRenderer.send('get-cookie');});
 $_('start-agent').addEventListener('click', () => {ipcRenderer.send('start-agent');});

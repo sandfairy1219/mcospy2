@@ -40,18 +40,18 @@ export const startFrida = async (id:string, filename:string, onCrashed:() => voi
     }
 }
 
-export const conenctFrida = async (host:string, port:string, onCrashed:() => void, onConnected:(d:frida.Device) => void) => {
+export const conenctFrida = async (serial:string, onCrashed:() => void, onConnected:(d:frida.Device) => void) => {
     const deviceManager = frida.getDeviceManager();
     const ds = await deviceManager.enumerateDevices()
-    if(ds.find(d => d.id === `${host}:${port}`)) {
+    if(ds.find(d => d.id === serial)) {
         const fridaDevice = await frida.getUsbDevice();
         fridaDevice.processCrashed.connect(onCrashed);
         onConnected(fridaDevice)
         return
     }
-    const tar = await deviceManager.addRemoteDevice(`${host}:${port}`)
+    const tar = await deviceManager.addRemoteDevice(serial)
     if (!tar) {
-        Logger.error(`[*] Frida device not connected to ${host}:${port}`)
+        Logger.error(`[*] Frida device not connected to ${serial}`)
         onConnected(null)
     }
     deviceManager.added.connect(async () => {
@@ -61,13 +61,22 @@ export const conenctFrida = async (host:string, port:string, onCrashed:() => voi
     })
 }
 
-export const connectAdbDevice = async (host:string, port:string):Promise<string> => {
-    const result = await adb.connect(`${host}`, +port)
-    if (!result) {
-        Logger.error('[*] Failed to connect to adb server')
+export const connectAdbDevice = async (serial:string):Promise<string> => {
+    const devices = await adb.map(async (device) => {
+        if (device.id === serial) {
+            await device.tcpip();
+            return device.id
+        }
         return ''
+    })
+    const result = (await Promise.all(devices)).find(d => d !== '')
+
+    if (!result) {
+        Logger.error(`[*] ADB device not connected to ${serial}`)
+        return ''
+    } else {
+        return result
     }
-    return result
 }
 
 export const fileExist = async (id:string, version:string):Promise<string> => {

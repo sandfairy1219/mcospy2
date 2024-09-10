@@ -116,8 +116,7 @@ app.on("ready", async () => {
     });
 
     // vars
-    let host:string = "127.0.0.1";
-    let port:string = "5555";
+    let serial:string = "127.0.0.1:5555";
     let adbId:string = '';
     let frida:frida.Device = null;
     let cookie:string = '';
@@ -126,8 +125,7 @@ app.on("ready", async () => {
     let keybinds:{[key:string]:string} = {};
 
     // initialize
-    ipcMain.on('host', (e, h:string) => {host = h});
-    ipcMain.on('port', (e, p:string) => {port = p});
+    ipcMain.on('serial', (e, s:string) => {serial = s});
     ipcMain.on('cookie', (e, c:string) => {cookie = c});
     ipcMain.on("keybind", (e, id, key) => {keybinds[id] = key;});
     ipcMain.on("config", (e, id, data) => {config[id] = data;});
@@ -136,7 +134,7 @@ app.on("ready", async () => {
     };
 
     const _main = async () => {
-        adbId = await connectAdbDevice(host, port);
+        adbId = await connectAdbDevice(serial);
         if(adbId === '') return state("adb", "error", "Failed to connect to adb");
         state("adb", "active", "Connected to adb");
     }
@@ -145,8 +143,6 @@ app.on("ready", async () => {
         try{
             await adb.startServer();
             state("adb", "pending", "Server started");
-            await adb.tcpip(port);
-            state("adb", "pending", "Server listening on port");
             await _main();
         } catch(err){
             Logger.error("ADB error", err);
@@ -194,7 +190,7 @@ app.on("ready", async () => {
 
     ipcMain.on("connect-frida", async (e) => {
         state("frida", "pending", "Connecting to frida server");
-        await conenctFrida(host, port, () => state("frida", "error", "Frida server crashed"), (d) => {
+        await conenctFrida(serial, () => state("frida", "error", "Frida server crashed"), (d) => {
             frida = d;
             state("frida", "active", "Connected to frida server");
         });
@@ -248,7 +244,12 @@ app.on("ready", async () => {
                         const [channel, ...args] = [...message.payload];
                         if(channel == 'XigncodeClientSystem.initialize'){
                             exp = script.exports;
-                            state("session", "active", "Agent Linked");
+                            state("session", "pending", "Xigncode Bypassed");
+                        } else if(channel == 'Cocos2dxActivity.getCookie'){
+                            Logger.info("CocosActivity Connected");
+                            script.post({type: 'addr', payload: ''});
+                        } else if(channel == 'Address.init'){
+                            state("session", "active", `Address found`);
                         }
                         emitter.emit(channel, ...args);
                     }
@@ -268,7 +269,7 @@ app.on("ready", async () => {
         }
     });
 
-    // scan
+    // cheat
 });
 
 ipcMain.on("log", (e, ...args:any[]) => {

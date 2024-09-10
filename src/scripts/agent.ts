@@ -1,61 +1,179 @@
 "cut";
-// setTimeout(() => {
-//     setImmediate(function() {
-        Java.perform(() => {
-            let XigncodeClientSystem = Java.use("com.wellbia.xigncode.XigncodeClientSystem");
-            XigncodeClientSystem["initialize"].implementation = function (activity:any,str:string,str2:string,str3:string,callback:() => void) {
-                send(["XigncodeClientSystem.initialize", activity, str, str2, str3]);
-                return 0;
-            };
-            let Cocos2dxActivity = Java.use("org.cocos2dx.lib.Cocos2dxActivity");
-            Cocos2dxActivity["getCookie"].implementation = function (str:string) {
-                let result = this["getCookie"](str);
-                send(["Cocos2dxActivity.getCookie", str, result]);
-                return '/*cookie*/';
-            };
-        });
-//     });
-// }, 100)
+const xaOffset = {
+    'no-recoil': 0x331176C,
+    'no-clip': 0x330C87C,
+    'no-spread1': 0x34FDCDC,
+    'no-spread2': 0x34FDCF4,
+    'instant-respawn': 0x30B4FA8,
+    'body-one-kill': 0x34FDE28,
+}
+const anOffset = {
+    "camera-base": 0x8A900C,
+    "position-base": 0x7A37E0,
+    "cash-base": 0x2CDF60,
+    "skill-base": 0x8B58A5,
+    "grenade-base": 0x8B5805,
+}
+const cdOffset = {
+    "epos-pointer": 0x171E8,
+}
+const eposOffset = {
+    'x': 0x190, // float
+    'y': 0x194, // float
+    'z': 0x198, // float
+    'dx':0x100, // float
+    'dy':0x134, // float
+    'dz':0xFC, // float
+    'state':0x12C, // int32
+    'w1c':0xE8, // float
+    'w2c':0xEC, // float
+    'gc':0x1A8, // float
+    'gx':0x13C, // float
+    'gy':0x140, // float
+    'gz':0x144, // float
+    'sc':0xCC, // float
+    'dc':0xE0, // float
+    'timer':0xC8, // float
+    'hp':0x2C, // int16
+    'barrier':0x30, // int16,
+    'sk':0xAD, // byte
+    'fall':0xAF // byte
+};
+
+let xa:NativePointer = null;
+let an:NativePointer = null;
+let cd:NativePointer = null;
+
+Java.perform(() => {
+    let XigncodeClientSystem = Java.use("com.wellbia.xigncode.XigncodeClientSystem");
+    XigncodeClientSystem["initialize"].implementation = function (activity:any,str:string,str2:string,str3:string,callback:() => void) {
+        send(["XigncodeClientSystem.initialize", activity, str, str2, str3]);
+        return 0;
+    };
+    let Cocos2dxActivity = Java.use("org.cocos2dx.lib.Cocos2dxActivity");
+    Cocos2dxActivity["getCookie"].implementation = function (str:string) {
+        let result = this["getCookie"](str);
+        send(["Cocos2dxActivity.getCookie"]);
+        return '/*cookie*/';
+    };
+    recv('addr', () => {
+        const r = Process.enumerateRanges('r--')
+        const rw = Process.enumerateRanges('rw-')
+        const _xa = r.filter((range:RangeDetails) =>
+            range.file &&
+            range.file.path.includes('libMyGame.so') &&
+            range.size >= 51068928
+        )[0]
+        const _an = rw.filter((range:RangeDetails) =>
+            (!range.file) &&
+            range.size >= 21921792
+        )[0]
+        const _cd = rw.filter((range:RangeDetails) =>
+            range.file &&
+            range.file.path.includes('libMyGame.so') &&
+            range.size >= 126976
+        )[0]
+        if(_xa) xa = _xa.base
+        if(_an) an = _an.base
+        if(_cd) cd = _cd.base
+        send(['Address.init', xa.toString(), an.toString(), cd.toString()])
+    })
+});
+
 rpc.exports = {
     log: function(str) {
         send(["frida-log", str]);
         return str;
     },
-    readArrayBytes: function(addr, size) {
-        return ptr(addr).readByteArray(size);
+    readArrayBytes: function(addr, size, ignoreProtection:boolean = false) {
+        const pointer = ptr(addr)
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r-x');
+        const res = pointer.readByteArray(size);
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r--');
+        return res;
     },
-    readByte: function(addr) {
-        return ptr(addr).readU8();
+    readByte: function(addr, ignoreProtection:boolean = false) {
+        const pointer = ptr(addr)
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r-x');
+        const res = pointer.readU8();
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r--');
+        return res;
     },
-    readInt16: function(addr) {
-        return ptr(addr).readS16();
+    readInt16: function(addr, ignoreProtection:boolean = false) {
+        const pointer = ptr(addr)
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r-x');
+        const res = pointer.readS16();
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r--');
+        return res;
     },
-    readInt32: function(addr) {
-        return ptr(addr).readS32();
+    readInt32: function(addr, ignoreProtection:boolean = false) {
+        const pointer = ptr(addr)
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r-x');
+        const res = pointer.readS32();
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r--');
+        return res;
     },
-    readFloat: function(addr) {
-        return ptr(addr).readFloat();
+    readFloat: function(addr, ignoreProtection:boolean = false) {
+        const pointer = ptr(addr)
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r-x');
+        const res = pointer.readFloat();
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r--');
+        return res;
     },
-    readDouble: function(addr) {
-        return ptr(addr).readDouble();
+    readDouble: function(addr, ignoreProtection:boolean = false) {
+        const pointer = ptr(addr)
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r-x');
+        const res = pointer.readDouble();
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r--');
+        return res;
     },
-    writeArrayBytes: function(addr, data) {
-        ptr(addr).writeByteArray(data);
+    readPointer: function(addr, ignoreProtection:boolean = false) {
+        const pointer = ptr(addr)
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r-x');
+        const res = pointer.readPointer();
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r--');
+        return res;
     },
-    writeByte: function(addr, data) {
-        ptr(addr).writeU8(data);
+    writeArrayBytes: function(addr, data, ignoreProtection:boolean = false) {
+        const pointer = ptr(addr);
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'rwx');
+        pointer.writeByteArray(data);
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r-x');
     },
-    writeInt16: function(addr, data) {
-        ptr(addr).writeS16(data);
+    writeByte: function(addr, data, ignoreProtection:boolean = false) {
+        const pointer = ptr(addr);
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'rwx');
+        pointer.writeS8(data);
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r-x');
     },
-    writeInt32: function(addr, data) {
-        ptr(addr).writeS32(data);
+    writeInt16: function(addr, data, ignoreProtection:boolean = false) {
+        const pointer = ptr(addr);
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'rwx');
+        pointer.writeS16(data);
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r-x');
     },
-    writeFloat: function(addr, data) {
-        ptr(addr).writeFloat(data);
+    writeInt32: function(addr, data, ignoreProtection:boolean = false) {
+        const pointer = ptr(addr);
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'rwx');
+        pointer.writeS32(data);
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r-x');
     },
-    writeDouble: function(addr, data) {
-        ptr(addr).writeDouble(data);
+    writeFloat: function(addr, data, ignoreProtection:boolean = false) {
+        const pointer = ptr(addr);
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'rwx');
+        pointer.writeFloat(data);
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r-x');
+    },
+    writeDouble: function(addr, data, ignoreProtection:boolean = false) {
+        const pointer = ptr(addr);
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'rwx');
+        pointer.writeDouble(data);
+        if(ignoreProtection) Memory.protect(pointer, Process.pageSize, 'r-x');
+    },
+    writePointer: function(addr, data, ignoreProtection:boolean = false) {
+        if(ignoreProtection) Memory.protect(ptr(addr), Process.pageSize, 'rwx');
+        ptr(addr).writePointer(ptr(data));
+        if(ignoreProtection) Memory.protect(ptr(addr), Process.pageSize, 'r-x');
     },
     scan: function(base, size, pattern) {
         return Memory.scanSync(ptr(base), size, pattern);
@@ -63,7 +181,7 @@ rpc.exports = {
     enumerateModules: function() {
         return Process.enumerateModules();
     },
-    aimbot: function(posbase, cambase, mode, speed, angle, datas){
+    aimbot: function(cambase, mode, speed, angle, datas){
         const rad = angle/180*Math.PI;
         const camX = ptr(cambase).add(0xc).readFloat();
         const camY = ptr(cambase).add(0x10).readFloat();

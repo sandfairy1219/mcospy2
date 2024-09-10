@@ -34,8 +34,7 @@
         <details>
             <summary data-lang="initialize"></summary>
             <div>
-                <input class="config w-full" type="text" id="host" value="127.0.0.1">
-                <input class="config w-full" type="text" id="port" value="5555">
+                <input class="config w-full text-center" type="text" id="serial" data-lang-ph="serial" value="127.0.0.1:5555">
             </div>
             <div>
                 <div id="state-adb" class="state"></div>
@@ -58,29 +57,18 @@
                 <div id="state-session-log" class="w-full log"></div>
             </div>
             <button id="connect-adb" data-lang="connect-adb"></button>
-            <button id="download-server" data-lang="download-server"></button>
-            <button id="upload-server" data-lang="upload-server"></button>
-            <button id="start-server" data-lang="start-server"></button>
+            <div>
+                <button id="start-server" data-lang="start-server"></button>
+                <button id="download-server" data-lang="download-server"></button>
+                <button id="upload-server" data-lang="upload-server"></button>
+            </div>
             <button id="connect-frida" data-lang="connect-frida"></button>
             <input type="text" id="cookie" class="text-center" data-lang-ph="cookie">
             <button id="get-cookie" data-lang="get-cookie"></button>
             <button id="start-agent" data-lang="start-agent"></button>
         </details>
         <details>
-            <summary data-lang="scan"></summary>
-            <div>
-                <div id="state-base" class="state"></div>
-                <div data-lang="base"></div>
-                <div id="state-base-log" class="w-full log"></div>
-            </div>
-            <div>
-                <div id="state-player" class="state"></div>
-                <div data-lang="player"></div>
-                <div id="state-player-log" class="w-full log"></div>
-            </div>
-            <button id="scan-base" data-lang="scan-base"></button>
-            <button id="scan-player" data-lang="scan-plyaer-base"></button>
-            <button id="clear-player" data-lang="clear-plyaer-base"></button>
+            <summary data-lang="cheat"></summary>
         </details>
     </div>
     <script type="module" src="../dist/main.js"></script>
