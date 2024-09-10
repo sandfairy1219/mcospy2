@@ -5,7 +5,8 @@ const xaOffset = {
     'no-spread1': 0x34FDCDC,
     'no-spread2': 0x34FDCF4,
     'instant-respawn': 0x30B4FA8,
-    'body-one-kill': 0x34FDE28,
+    'body-one-kill': 0x34FDE28, // 506335232 => 505925632
+    'head-one-kill': 0x34FDE20, // -1136594944 => 505925632
 }
 const anOffset = {
     "camera-base": 0x8A900C,
@@ -15,7 +16,8 @@ const anOffset = {
     "grenade-base": 0x8B5805,
 }
 const cdOffset = {
-    "epos-pointer": 0x171E8,
+    "epos-pointer": [0x171E8, 0xBC, 0x0, 0x8],
+    "player1-pointer": [0x171E8, 0xCC, 0x320, 0x110, 0x10],
 }
 const eposOffset = {
     'x': 0x190, // float
@@ -88,6 +90,9 @@ Java.perform(() => {
         } else if(name === 'cheats'){
             cheats[args[0]] = args[1];
             // Enable/Disable static address cheats
+            switch(args[0]){
+
+            }
         } else if(name === 'frame'){
             frame = args[0];
         } else if(name === 'config'){

@@ -133,6 +133,10 @@ app.on("ready", async () => {
         config[id] = data;
         emitter.emit("config", id, data);
     });
+    ipcMain.on("cheats", (e, id, _state:boolean) => {
+        cheats[id] = _state;
+        emitter.emit("cheats", id, _state);
+    });
     const state = (id:string, state:string, log:string) => {
         main.webContents.send("update-state", id, state, log);
     };
@@ -141,7 +145,7 @@ app.on("ready", async () => {
         try{
             adbId = await connectAdbDevice(serial);
             if(adbId === '') return state("adb", "error", "Failed to connect to adb");
-            state("adb", "active", `Connected to adb ${adbId}`);
+            state("adb", "active", `Connected to adb`);
         } catch(err){
             Logger.error("ADB error", err);
             state("adb", "error", "Failed to connect to adb");
@@ -270,9 +274,13 @@ app.on("ready", async () => {
                     emitter.on("config", (key, value) => {
                         script.post(['config', key, value]);
                     });
+                    emitter.on("cheats", (key, value) => {
+                        script.post(['cheats', key, value]);
+                    });
                 },
                 () => {
                     emitter.removeAllListeners("config");
+                    emitter.removeAllListeners("cheats");
                     exp = null;
                     state("session", "error", "Session disposed");
                     dispose();
