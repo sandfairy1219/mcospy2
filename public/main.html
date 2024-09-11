@@ -8,12 +8,16 @@
     <link rel="stylesheet" href="./output.css">
 </head>
 <body>
+    <!-- language selector -->
     <select id="lang" class="text-sm">
         <option value="en">English</option>
         <option value="ko">한국어</option>
         <option value="jp">日本語</option>
         <option value="zh">中文</option>
     </select>
+    <!-- back button -->
+    <button id="back" class="hide"><i class="fa fa-arrow-left"></i></button>
+    <!-- login page -->
     <div class="page" id="login">
         <img src="./icon.svg" style="width: 30vw; height: 30vw;" alt="icon">
         <div class="form">
@@ -30,31 +34,37 @@
             </div>
         </div>
     </div>
+    <!-- main page -->
     <div class="page hide" id="app">
-        <details>
-            <summary data-lang="initialize"></summary>
+        <section id="selector">
+            <button class="w-full selector" id="selector-initialize" data-lang="initialize"></button>
+            <button class="w-full selector" id="selector-cheats" data-lang="cheats"></button>
+            <button class="w-full selector" id="selector-settings" data-lang="settings"></button>
+            <button class="w-full selector" id="selector-dev-mode" data-lang="dev-mode"></button>
+        </section>
+        <section id="initialize" class="hide">
             <div>
                 <input class="config w-full text-center" type="text" id="serial" data-lang-ph="serial" value="127.0.0.1:5555">
             </div>
             <div>
                 <div id="state-adb" class="state"></div>
                 <div data-lang="adb"></div>
-                <div id="state-adb-log" class="w-full log"></div>
+                <div id="state-adb-log" class="log"></div>
             </div>
             <div>
                 <div id="state-server" class="state"></div>
                 <div data-lang="server"></div>
-                <div id="state-server-log" class="w-full log"></div>
+                <div id="state-server-log" class="log"></div>
             </div>
             <div>
                 <div id="state-frida" class="state"></div>
                 <div data-lang="frida"></div>
-                <div id="state-frida-log" class="w-full log"></div>
+                <div id="state-frida-log" class="log"></div>
             </div>
             <div>
                 <div id="state-session" class="state"></div>
                 <div data-lang="session"></div>
-                <div id="state-session-log" class="w-full log"></div>
+                <div id="state-session-log" class="log"></div>
             </div>
             <button id="connect-adb" data-lang="connect-adb"></button>
             <div>
@@ -68,13 +78,138 @@
                 <button class="w-full" id="get-cookie" data-lang="get-cookie"></button>
             </div>
             <button id="start-agent" data-lang="start-agent"></button>
-        </details>
-        <details>
-            <summary data-lang="cheats"></summary>
-        </details>
-        <details id="dev-mode" class="hide">
-            <summary data-lang="dev-mode"></summary>
-        </details>
+        </section>
+        <section id="cheats" class="hide">
+            <details>
+                <summary id="aimbot" data-lang="aimbot"></summary>
+                <div>
+                    <div data-lang="keybind"></div>
+                    <input type="text" id="key-aimbot" class="keybind" data-lang-ph="keybind">
+                </div>
+                <div>
+                    <div data-lang="aimbot-mode"></div>
+                    <select class="config" id="aimbot-mode">
+                        <option value="normal" data-lang="normal"></option>
+                        <option value="smooth" data-lang="smooth"></option>
+                        <option value="instant" data-lang="instant"></option>
+                    </select>
+                </div>
+                <div>
+                    <div data-lang="aimbot-speed"></div>
+                    <input class="config" type="number" id="aimbot-speed" min="1" max="100" value="20">
+                </div>
+                <div>
+                    <div data-lang="aimbot-limit"></div>
+                    <input class="config" type="number" id="aimbot-limit" min="0" max="90" value="3">
+                </div>
+                <div>
+                    <div data-lang="aimbot-ignore"></div>
+                    <input class="config" type="checkbox" id="aimbot-ignore">
+                </div>
+            </details>
+            <details>
+                <summary id="esp" data-lang="esp"></summary>
+                <div>
+                    <div data-lang="esp-lock"></div>
+                    <input type="checkbox" id="esp-lock">
+                </div>
+                <div>
+                    <div data-lang="esp-tracer"></div>
+                    <input class="config" type="checkbox" id="esp-tracer">
+                </div>
+                <div>
+                    <div data-lang="esp-3d"></div>
+                    <input class="config" type="checkbox" id="esp-3d">
+                </div>
+                <div>
+                    <div data-lang="esp-color"></div>
+                    <input class="config" type="color" id="esp-color">
+                </div>
+                <div>
+                    <div data-lang="esp-mark-keybind"></div>
+                    <input type="text" id="key-esp-mark" class="keybind" data-lang-ph="keybind">
+                </div>
+            </details>
+            <details>
+                <summary id="blackhole" data-lang="blackhole"></summary>
+                <div>
+                    <div data-lang="keybind"></div>
+                    <input type="text" id="key-blackhole" class="keybind" data-lang-ph="keybind">
+                </div>
+                <div>
+                    <div data-lang="blackhole-distance"></div>
+                    <input class="config" type="number" id="blackhole-distance" min="1" max="100" value="20">
+                </div>
+            </details>
+            <details>
+                <summary id="shoot-speed" data-lang="shoot-speed"></summary>
+                <div>
+                    <div data-lang="keybind"></div>
+                    <input type="text" id="key-shoot-speed" class="keybind" data-lang-ph="keybind">
+                </div>
+            </details>
+            <details>
+                <summary id="no-recoil" data-lang="no-recoil"></summary>
+            </details>
+            <details>
+                <summary id="no-spread" data-lang="no-spread"></summary>
+            </details>
+            <details>
+                <summary id="no-reload" data-lang="no-reload"></summary>
+            </details>
+            <details>
+                <summary id="skill-cooldown" data-lang="skill-cooldown"></summary>
+            </details>
+            <details>
+                <summary id="instant-respawn" data-lang="instant-respawn"></summary>
+            </details>
+            <details>
+                <summary id="no-clip" data-lang="no-clip"></summary>
+            </details>
+            <details>
+                <summary id="move-speed" data-lang="move-speed"></summary>
+                <div>
+                    <div data-lang="keybind"></div>
+                    <input type="text" id="key-move-speed" class="keybind" data-lang-ph="keybind">
+                </div>
+                <div>
+                    <div data-lang="move-speed-value"></div>
+                    <input class="config" type="number" id="move-speed-value" min="0.1" max="100" value="3">
+                </div>
+            </details>
+            <details>
+                <summary id="fly" data-lang="fly"></summary>
+                <div>
+                    <div data-lang="fly-up-keybind"></div>
+                    <input type="text" id="key-fly-up" class="keybind" data-lang-ph="keybind">
+                </div>
+                <div>
+                    <div data-lang="fly-down-keybind"></div>
+                    <input type="text" id="key-fly-down" class="keybind" data-lang-ph="keybind">
+                </div>
+                <div>
+                    <div data-lang="fly-speed"></div>
+                    <input class="config" type="number" id="fly-speed" min="0" max="100" value="4">
+                </div>
+            </details>
+            <details>
+                <summary id="one-kill" data-lang="one-kill"></summary>
+            </details>
+            <details>
+                <summary id="skill-damage" data-lang="skill-damage"></summary>
+            </details>
+            <details>
+                <summary id="grenade" data-lang="grenade"></summary>
+                <div>
+                    <div data-lang="keybind"></div>
+                    <input type="text" id="key-grenade" class="keybind" data-lang-ph="keybind">
+                </div>
+            </details>
+        </section>
+        <section id="settings" class="hide">
+        </section>
+        <section id="dev-mode" class="hide">
+        </section>
     </div>
     <script type="module" src="../dist/main.js"></script>
 </body>

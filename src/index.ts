@@ -126,6 +126,10 @@ app.on("ready", async () => {
     let keybinds:{[key:string]:string} = {};
 
     // initialize
+    ipcMain.on("init", (e, _keybinds, _config) => {
+        keybinds = _keybinds;
+        config = _config;
+    });
     ipcMain.on('serial', (e, s:string) => {serial = s});
     ipcMain.on('cookie', (e, c:string) => {cookie = c});
     ipcMain.on("keybind", (e, id, key) => {keybinds[id] = key;});
@@ -266,6 +270,7 @@ app.on("ready", async () => {
                             found = true;
                             Logger.info("Address Found", args);
                             state("session", "succeed", `Address found`);
+                            main.webContents.send("init", true);
                         } else emitter.emit(channel, ...args);
                     }
                 },
@@ -279,6 +284,7 @@ app.on("ready", async () => {
                     });
                 },
                 () => {
+                    main.webContents.send("init", false);
                     emitter.removeAllListeners("config");
                     emitter.removeAllListeners("cheats");
                     exp = null;

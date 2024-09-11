@@ -42,6 +42,24 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'初期化',
         'zh':'初始化',
     },
+    'cheats':{
+        'en':'Cheats',
+        'ko':'치트',
+        'ja':'チート',
+        'zh':'作弊',
+    },
+    'settings':{
+        'en':'Settings',
+        'ko':'설정',
+        'ja':'設定',
+        'zh':'设置',
+    },
+    'dev-mode':{
+        'en':'Developer Mode',
+        'ko':'개발자 모드',
+        'ja':'開発者モード',
+        'zh':'开发者模式',
+    },
     'serial':{
         'en':'Serial',
         'ko':'시리얼',
@@ -120,17 +138,11 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'エージェント起動',
         'zh':'启动代理',
     },
-    'cheats':{
-        'en':'Cheats',
-        'ko':'치트',
-        'ja':'チート',
-        'zh':'作弊',
-    },
-    'dev-mode':{
-        'en':'Developer Mode',
-        'ko':'개발자 모드',
-        'ja':'開発者モード',
-        'zh':'开发者模式',
+    'keybind':{
+        'en':'Keybind',
+        'ko':'단축키',
+        'ja':'キーバインド',
+        'zh':'键绑定',
     },
 }
 
@@ -149,6 +161,9 @@ const $_ = (selector: string) => document.getElementById(selector);
 const $i = (selector: string):HTMLInputElement => document.getElementById(selector) as HTMLInputElement;
 const $$_ = (selector: string) => Array.from($$(selector));
 const log = (...args: any[]) => ipcRenderer.send("log", args);
+
+let attached:boolean = false;
+let cheats:{[key:string]:boolean} = {}; // cheats
 
 // load local storage
 let keybinds:{[key:string]:string} = {}; // keybinds
@@ -169,7 +184,8 @@ $$_('.config').forEach((el:HTMLElement) => {
     if(el.tagName === 'BUTTON'){
         config[el.id] = el.classList.contains('selected');
     } else if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') {
-        config[el.id] = (el as HTMLInputElement).value;
+        const _el = el as HTMLInputElement;
+        config[_el.id] = _el.type === 'checkbox' ? _el.checked : _el.value;
     } else {
         config[el.id] = '';
     }
@@ -183,14 +199,24 @@ for(const key in config){
     if(el.tagName === 'BUTTON'){
         el.classList.toggle('selected', config[key]);
     } else {
-        (el as HTMLInputElement).value = config[key];
+        const _el = el as HTMLInputElement;
+        if(_el.type === 'checkbox') _el.checked = config[key];
+        else _el.value = config[key];
     }
 }
-
+const toggleCheat = (e:Event) => {
+    const _tar = e.currentTarget as HTMLInputElement;
+    const [key, val] = [_tar.id.split('toggle-')[1], _tar.checked];
+    cheats[key] = val;
+    ipcRenderer.send('cheats', key, val);
+}
 // language
 let lang:string = localStorage.getItem('lang') || 'en'; // language
 localStorage.setItem('lang', lang);
 const updateLang = () => {
+    $$_('.toggle').forEach((el:HTMLInputElement) => {
+        el.removeEventListener('change', toggleCheat);
+    });
     ipcRenderer.send('lang', lang);
     $$_('*[data-lang-ph]').forEach((el:HTMLInputElement) => {
         el.placeholder = lng(lang, el.getAttribute('data-lang-ph'));
@@ -199,11 +225,23 @@ const updateLang = () => {
         el.value = lng(lang, el.getAttribute('data-lang-v'));
     });
     $$_('*[data-lang]').forEach((el:HTMLElement) => {
-        el.textContent = lng(lang, el.getAttribute('data-lang'));
+        if(el.tagName === "SUMMARY") {
+            el.innerHTML = `
+                <input type="checkbox" class="toggle" id="toggle-${el.id}">
+                <p>${lng(lang, el.getAttribute('data-lang'))}</p>
+            `;
+        } else el.textContent = lng(lang, el.getAttribute('data-lang'));
     });
     Object.keys(lan).forEach((key:string) => {
         const els = $$_(`#lang-${key}`)
         if(els.length) els.forEach((el:HTMLElement) => el.textContent = lng(lang, key));
+    });
+    $$_('.toggle').forEach((el:HTMLInputElement) => {
+        const key = el.id.split('toggle-')[1];
+        if(cheats[key] === undefined) cheats[key] = false;
+        else el.checked = cheats[key];
+        el.disabled = !attached;
+        el.addEventListener('change', toggleCheat);
     });
 };
 $i('lang').value = lang;
@@ -242,12 +280,14 @@ $$_('.config').forEach((el:HTMLElement) => {
         });
     } else if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') {
         el.addEventListener('change', () => {
-            config[el.id] = (el as HTMLInputElement).value;
+            const _el = el as HTMLInputElement;
+            config[_el.id] = _el.type === 'checkbox' ? _el.checked : _el.value;
             localStorage.setItem('config', JSON.stringify(config));
             ipcRenderer.send('config', el.id, config[el.id]);
         });
     }
 });
+ipcRenderer.send('init', keybinds, config);
 
 // auto updater
 ipcRenderer.on('update', () => {
@@ -281,7 +321,6 @@ ipcRenderer.on('token', (e, token:Token|string) => {
         localStorage.setItem('token', JSON.stringify(token.key));
         $_('login').classList.add('hide');
         $_('app').classList.remove('hide');
-        if(token.perms.includes('dev')) $_('dev-mode').classList.remove('hide');
     }
 });
 
@@ -307,3 +346,27 @@ $_('upload-server').addEventListener('click', () => {ipcRenderer.send('upload-se
 $_('connect-frida').addEventListener('click', () => {ipcRenderer.send('connect-frida', $i('serial').value);});
 $_('get-cookie').addEventListener('click', () => {ipcRenderer.send('get-cookie');});
 $_('start-agent').addEventListener('click', () => {ipcRenderer.send('start-agent');});
+
+$_('back').addEventListener('click', () => {
+    Array.from($_('app').children).forEach((el:HTMLElement) => el.classList.add('hide'));
+    $_('selector').classList.remove('hide');
+    $_('back').classList.add('hide');
+});
+
+$$_('.selector').forEach((el:HTMLElement) => {
+    el.addEventListener('click', () => {
+        $_('selector').classList.add('hide');
+        $_(el.id.split('selector-')[1]).classList.remove('hide');
+        $_('back').classList.remove('hide');
+    });
+});
+
+ipcRenderer.on('init', (e, _b:boolean) => {
+    attached = _b;
+    $$_('.toggle').forEach((el:HTMLInputElement) => {
+        el.disabled = !attached;
+        if(!_b){
+            el.checked = _b;
+        }
+    });
+})

@@ -1,12 +1,13 @@
 "cut";
 const xaOffset = {
-    'no-recoil': 0x331176C,
-    'no-clip': 0x330C87C,
-    'no-spread1': 0x34FDCDC,
-    'no-spread2': 0x34FDCF4,
-    'instant-respawn': 0x30B4FA8,
+    'no-recoil': 0x331176C, // 505427968 => 505493504
+    'no-clip': 0x330C87C, // 0.01 => 100
+    'no-spread1': 0x34FDCDC, // -1119869952 => -1119872000
+    'no-spread2': 0x34FDCF4, // -1119870976 => -1119872000
+    'instant-respawn': 0x30B4FA8, // 505415712 => 505415680
     'body-one-kill': 0x34FDE28, // 506335232 => 505925632
     'head-one-kill': 0x34FDE20, // -1136594944 => 505925632
+    'skill-damage': 0x3266148, // -1203335166 => 1384184322
 }
 const anOffset = {
     "camera-base": 0x8A900C,
@@ -89,10 +90,42 @@ Java.perform(() => {
             if(_cd) cd = _cd.base;
             send(['Address.init', xa.toString(), an.toString(), cd.toString()])
         } else if(name === 'cheats'){
+            if(!an || !xa || !cd) return;
             cheats[args[0]] = args[1];
-            // Enable/Disable static address cheats
+            // Enable/Disable values
             switch(args[0]){
-
+                case 'no-recoil':{
+                    xa.add(xaOffset['no-recoil']).writeS32(args[1] ? 505493504 : 505427968);
+                    break;
+                }
+                case 'no-clip':{
+                    xa.add(xaOffset['no-clip']).writeFloat(args[1] ? 100 : 0.01);
+                    break;
+                }
+                case 'no-spread':{
+                    xa.add(xaOffset['no-spread1']).writeS32(args[1] ? -1119872000 : -1119869952);
+                    break;
+                }
+                case 'no-spread':{
+                    xa.add(xaOffset['no-spread2']).writeS32(args[1] ? -1119872000 : -1119870976);
+                    break;
+                }
+                case 'instant-respawn':{
+                    xa.add(xaOffset['instant-respawn']).writeS32(args[1] ? 505415680 : 505415712);
+                    break;
+                }
+                case 'one-kill':{
+                    xa.add(xaOffset['body-one-kill']).writeS32(args[1] ? 505925632 : 506335232);
+                    break;
+                }
+                case 'one-kill':{
+                    xa.add(xaOffset['head-one-kill']).writeS32(args[1] ? 505925632 : -1136594944);
+                    break;
+                }
+                case 'skill-damage':{
+                    xa.add(xaOffset['skill-damage']).writeS32(args[1] ? 1384184322 : -1203335166);
+                    break;
+                }
             }
         } else if(name === 'frame'){
             frame = args[0];
@@ -105,8 +138,8 @@ Java.perform(() => {
 });
 
 function loop(){
-    if(xa){
-    }
+    if(!an || !xa || !cd) return;
+    // Pin values
     setTimeout(loop, 1000/frame);
 }
 loop();
