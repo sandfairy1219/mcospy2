@@ -1,9 +1,9 @@
 "cut";
 const xaOffset = {
-    'no-recoil': 0x331176C, // 505427968 => 505493504
+    'no-recoil': 0x3311770, // -1124072416 => 505942016
     'no-clip': 0x330C87C, // 0.01 => 100
-    'no-spread1': 0x34FDCDC, // -1119869952 => -1119872000
-    'no-spread2': 0x34FDCF4, // -1119870976 => -1119872000
+    'no-spread1': 0x34FDCDC, // -1119869952 => 505942016
+    'no-spread2': 0x34FDCF4, // -1119870976 => 505942016
     'instant-respawn': 0x30B4FA8, // 505415712 => 505415680
     'body-one-kill': 0x34FDE28, // 506335232 => 505925632
     'head-one-kill': 0x34FDE20, // -1136594944 => 505925632
@@ -17,8 +17,8 @@ const anOffset = {
     "grenade-base": 0x8B5805,
 }
 const cdOffset = {
-    "epos-pointer": [0x171E8, 0xBC, 0x0, 0x8],
-    "player1-pointer": [0x171E8, 0xCC, 0x320, 0x110, 0x10],
+    "epos-pointer": [[0x171E8, 0xBC], [0x0, 0x8]],
+    "player1-pointer": [[0x171E8, 0xCC], [0x320, 0x110, 0x10]],
 }
 const eposOffset = {
     'number': 0x0, // int32
@@ -50,7 +50,9 @@ let cd:NativePointer = null;
 
 let frame:number = 60;
 let cheats:{[key:string]:boolean} = {};
+let keybinds:{[key:string]:string} = {};
 let config:{[key:string]:any} = {};
+let keymap:{[key:string]:boolean} = {};
 
 Java.perform(() => {
     let XigncodeClientSystem = Java.use("com.wellbia.xigncode.XigncodeClientSystem");
@@ -68,6 +70,10 @@ Java.perform(() => {
         const [name, ...args] = message;
         if(name === 'log'){
             send(['log', '[FRIDA]', args])
+        } else if (name === 'init'){
+            cheats = args[0];
+            keybinds = args[1];
+            config = args[2];
         } else if(name === 'addr'){
             const r = Process.enumerateRanges('r--')
             const rw = Process.enumerateRanges('rw-')
@@ -95,7 +101,7 @@ Java.perform(() => {
             // Enable/Disable values
             switch(args[0]){
                 case 'no-recoil':{
-                    forceWriteS32(xa.add(xaOffset['no-recoil']), args[1] ? 505493504 : 505427968);
+                    forceWriteS32(xa.add(xaOffset['no-recoil']), args[1] ? 505942016 : -1124072416);
                     break;
                 }
                 case 'no-clip':{
@@ -103,8 +109,8 @@ Java.perform(() => {
                     break;
                 }
                 case 'no-spread':{
-                    forceWriteS32(xa.add(xaOffset['no-spread1']), args[1] ? -1119872000 : -1119869952);
-                    forceWriteS32(xa.add(xaOffset['no-spread2']), args[1] ? -1119872000 : -1119870976);
+                    forceWriteS32(xa.add(xaOffset['no-spread1']), args[1] ? 505942016 : -1119869952);
+                    forceWriteS32(xa.add(xaOffset['no-spread2']), args[1] ? 505942016 : -1119870976);
                     break;
                 }
                 case 'instant-respawn':{
@@ -125,6 +131,10 @@ Java.perform(() => {
             frame = args[0];
         } else if(name === 'config'){
             config[args[0]] = args[1];
+        } else if(name === 'keybind'){
+            keybinds[args[0]] = args[1];
+        } else if(name === 'keymap'){
+            keymap = args[0];
         }
         recv(api)
     }
@@ -134,14 +144,49 @@ Java.perform(() => {
 function loop(){
     if(!an || !xa || !cd) return setTimeout(loop, 1000/frame);
     // Pin values
-    if(cheats['shoot-speed']){
-        send(['log', getChainedPointer(cd, cdOffset['epos-pointer']).add(eposOffset['w1c']).readFloat()]);
-        getChainedPointer(cd, cdOffset['epos-pointer']).add(eposOffset['w1c']).writeFloat(0);
-        getChainedPointer(cd, cdOffset['epos-pointer']).add(eposOffset['w2c']).writeFloat(0);
-    } else if(cheats['no-reload']){
-        getChainedPointer(cd, cdOffset['epos-pointer']).add(eposOffset['timer']).writeFloat(9999);
-    } else if(cheats['skill-cooldown']){
-        an.add(anOffset['skill-base']).writeS8(1);
+    try{
+        const eposPointer = getChainedPointer(cd, cdOffset['epos-pointer'])
+        send(['log', eposPointer]);
+        if(cheats['shoot-speed']){
+            if(eposPointer.isNull()) return setTimeout(loop, 1000/frame);
+            if(keybinds['shoot-speed'] && !keymap[keybinds['shoot-speed']]) return setTimeout(loop, 1000/frame);
+            eposPointer.add(eposOffset['w1c']).writeFloat(0);
+            eposPointer.add(eposOffset['w2c']).writeFloat(0);
+        }
+        if(cheats['no-reload']){
+            if(eposPointer.isNull()) return setTimeout(loop, 1000/frame);
+            eposPointer.add(eposOffset['timer']).writeFloat(9999);
+        }
+        if(cheats['move-speed']){
+            if(eposPointer.isNull()) return setTimeout(loop, 1000/frame);
+            if(keybinds['move-speed'] && !keymap[keybinds['move-speed']]) return setTimeout(loop, 1000/frame);
+            const half:number = Math.sin(45/180*Math.PI)
+            if(keymap["W"] && keymap["A"]) eposPointer.add(eposOffset['dx']).writeFloat(half*config['move-speed-value']), eposPointer.add(eposOffset['dz']).writeFloat(half*config['move-speed-value']);
+            else if(keymap["W"] && keymap["D"]) eposPointer.add(eposOffset['dx']).writeFloat(half*config['move-speed-value']), eposPointer.add(eposOffset['dz']).writeFloat(-half*config['move-speed-value']);
+            else if(keymap["S"] && keymap["A"]) eposPointer.add(eposOffset['dx']).writeFloat(-half*config['move-speed-value']), eposPointer.add(eposOffset['dz']).writeFloat(half*config['move-speed-value']);
+            else if(keymap["S"] && keymap["D"]) eposPointer.add(eposOffset['dx']).writeFloat(-half*config['move-speed-value']), eposPointer.add(eposOffset['dz']).writeFloat(-half*config['move-speed-value']);
+            else if(keymap["W"]) eposPointer.add(eposOffset['dx']).writeFloat(config['move-speed-value']);
+            else if(keymap["S"]) eposPointer.add(eposOffset['dx']).writeFloat(-config['move-speed-value']);
+            else if(keymap["A"]) eposPointer.add(eposOffset['dz']).writeFloat(config['move-speed-value']);
+            else if(keymap["D"]) eposPointer.add(eposOffset['dz']).writeFloat(-config['move-speed-value']);
+            else {
+                eposPointer.add(eposOffset['dx']).writeFloat(0);
+                eposPointer.add(eposOffset['dz']).writeFloat(0);
+            }
+        }
+        if(cheats['fly']){
+            if(eposPointer.isNull()) return setTimeout(loop, 1000/frame);
+            eposPointer.add(eposOffset['dy']).writeFloat(-.1);
+            eposPointer.add(eposOffset['fall']).writeS8(0);
+            const y = eposPointer.add(eposOffset['y']).readFloat();
+            if(keybinds['fly-up']) eposPointer.add(eposOffset['y']).writeFloat(y + (config['fly-speed'] || 1));
+            if(keybinds['fly-down']) eposPointer.add(eposOffset['y']).writeFloat(y - (config['fly-speed'] || 1));
+        }
+        if(cheats['skill-cooldown']){
+            an.add(anOffset['skill-base']).writeS8(1);
+        }
+    } catch(e){
+        send(['log', e.toString()]);
     }
     setTimeout(loop, 1000/frame);
 }
@@ -291,14 +336,27 @@ rpc.exports = {
     }
 }
 
-function getChainedPointer(_bs:NativePointer, iter:number[]){
+function getChainedPointer(_bs:NativePointer, iters:number[][]):NativePointer{
     let pt = _bs;
-    for(let n of iter){
-        pt = pt.add(n).readPointer();
-    };
+    iters.forEach((iter, i) => {
+        for(let offset of iter){
+            pt = pt.add(offset);
+            pt = i ? pt.readPointer() : ptr(readHex(pt));
+            if(pt.isNull()) return null;
+        }
+    });
     return pt;
 }
-
+function readHex(ptr: NativePointer): string {
+    const buffer = ptr.readByteArray(4);
+    const byteArray = new Uint8Array(buffer).reverse();
+    
+    let hexString = '';
+    for (let byte of byteArray) {
+        hexString += byte.toString(16).padStart(2, '0');
+    }
+    return "0x" + hexString;
+}
 function forceWriteS32(_ptr:NativePointer, value:number){
     Memory.protect(_ptr, Process.pageSize, 'rwx');
     _ptr.writeS32(value);

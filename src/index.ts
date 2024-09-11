@@ -132,7 +132,10 @@ app.on("ready", async () => {
     });
     ipcMain.on('serial', (e, s:string) => {serial = s});
     ipcMain.on('cookie', (e, c:string) => {cookie = c});
-    ipcMain.on("keybind", (e, id, key) => {keybinds[id] = key;});
+    ipcMain.on("keybind", (e, id, key) => {
+        keybinds[id] = key;
+        emitter.emit("keybind", id, key);
+    });
     ipcMain.on("config", (e, id, data) => {
         config[id] = data;
         emitter.emit("config", id, data);
@@ -271,6 +274,7 @@ app.on("ready", async () => {
                             Logger.info("Address Found", args);
                             state("session", "succeed", `Address found`);
                             main.webContents.send("init", true);
+                            script.post(['init', cheats, keybinds, config]);
                         } else emitter.emit(channel, ...args);
                     }
                 },
@@ -279,14 +283,22 @@ app.on("ready", async () => {
                     emitter.on("config", (key, value) => {
                         script.post(['config', key, value]);
                     });
+                    emitter.on("keybind", (key, value) => {
+                        script.post(['keybind', key, value]);
+                    });
                     emitter.on("cheats", (key, value) => {
                         script.post(['cheats', key, value]);
+                    });
+                    emitter.on("gk", (event, down) => {
+                        script.post(['keymap', down]);
                     });
                 },
                 () => {
                     main.webContents.send("init", false);
                     emitter.removeAllListeners("config");
+                    emitter.removeAllListeners("keybind");
                     emitter.removeAllListeners("cheats");
+                    emitter.removeAllListeners("gk");
                     exp = null;
                     state("session", "error", "Session disposed");
                     dispose();
