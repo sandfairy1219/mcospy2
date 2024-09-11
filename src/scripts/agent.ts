@@ -95,35 +95,29 @@ Java.perform(() => {
             // Enable/Disable values
             switch(args[0]){
                 case 'no-recoil':{
-                    xa.add(xaOffset['no-recoil']).writeS32(args[1] ? 505493504 : 505427968);
+                    forceWriteS32(xa.add(xaOffset['no-recoil']), args[1] ? 505493504 : 505427968);
                     break;
                 }
                 case 'no-clip':{
-                    xa.add(xaOffset['no-clip']).writeFloat(args[1] ? 100 : 0.01);
+                    forceWriteFloat(xa.add(xaOffset['no-clip']), args[1] ? 100 : 0.01);
                     break;
                 }
                 case 'no-spread':{
-                    xa.add(xaOffset['no-spread1']).writeS32(args[1] ? -1119872000 : -1119869952);
-                    break;
-                }
-                case 'no-spread':{
-                    xa.add(xaOffset['no-spread2']).writeS32(args[1] ? -1119872000 : -1119870976);
+                    forceWriteS32(xa.add(xaOffset['no-spread1']), args[1] ? -1119872000 : -1119869952);
+                    forceWriteS32(xa.add(xaOffset['no-spread2']), args[1] ? -1119872000 : -1119870976);
                     break;
                 }
                 case 'instant-respawn':{
-                    xa.add(xaOffset['instant-respawn']).writeS32(args[1] ? 505415680 : 505415712);
+                    forceWriteS32(xa.add(xaOffset['instant-respawn']), args[1] ? 505415680 : 505415712);
                     break;
                 }
                 case 'one-kill':{
-                    xa.add(xaOffset['body-one-kill']).writeS32(args[1] ? 505925632 : 506335232);
-                    break;
-                }
-                case 'one-kill':{
-                    xa.add(xaOffset['head-one-kill']).writeS32(args[1] ? 505925632 : -1136594944);
+                    forceWriteS32(xa.add(xaOffset['body-one-kill']), args[1] ? 505925632 : 506335232);
+                    forceWriteS32(xa.add(xaOffset['head-one-kill']), args[1] ? 505925632 : -1136594944);
                     break;
                 }
                 case 'skill-damage':{
-                    xa.add(xaOffset['skill-damage']).writeS32(args[1] ? 1384184322 : -1203335166);
+                    forceWriteS32(xa.add(xaOffset['skill-damage']), args[1] ? 1384184322 : -1203335166);
                     break;
                 }
             }
@@ -138,8 +132,17 @@ Java.perform(() => {
 });
 
 function loop(){
-    if(!an || !xa || !cd) return;
+    if(!an || !xa || !cd) return setTimeout(loop, 1000/frame);
     // Pin values
+    if(cheats['shoot-speed']){
+        send(['log', getChainedPointer(cd, cdOffset['epos-pointer']).add(eposOffset['w1c']).readFloat()]);
+        getChainedPointer(cd, cdOffset['epos-pointer']).add(eposOffset['w1c']).writeFloat(0);
+        getChainedPointer(cd, cdOffset['epos-pointer']).add(eposOffset['w2c']).writeFloat(0);
+    } else if(cheats['no-reload']){
+        getChainedPointer(cd, cdOffset['epos-pointer']).add(eposOffset['timer']).writeFloat(9999);
+    } else if(cheats['skill-cooldown']){
+        an.add(anOffset['skill-base']).writeS8(1);
+    }
     setTimeout(loop, 1000/frame);
 }
 loop();
@@ -294,4 +297,16 @@ function getChainedPointer(_bs:NativePointer, iter:number[]){
         pt = pt.add(n).readPointer();
     };
     return pt;
+}
+
+function forceWriteS32(_ptr:NativePointer, value:number){
+    Memory.protect(_ptr, Process.pageSize, 'rwx');
+    _ptr.writeS32(value);
+    Memory.protect(_ptr, Process.pageSize, 'r--');
+}
+
+function forceWriteFloat(_ptr:NativePointer, value:number){
+    Memory.protect(_ptr, Process.pageSize, 'rwx');
+    _ptr.writeFloat(value);
+    Memory.protect(_ptr, Process.pageSize, 'r--');
 }
