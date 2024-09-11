@@ -20,6 +20,7 @@ const cdOffset = {
     "player1-pointer": [0x171E8, 0xCC, 0x320, 0x110, 0x10],
 }
 const eposOffset = {
+    'number': 0x0, // int32
     'x': 0x190, // float
     'y': 0x194, // float
     'z': 0x198, // float
@@ -252,4 +253,12 @@ rpc.exports = {
             }
         }
     }
+}
+
+function getChainedPointer(_bs:NativePointer, iter:number[]){
+    let pt = _bs;
+    for(let n of iter){
+        pt = pt.add(n).readPointer();
+    };
+    return pt;
 }
