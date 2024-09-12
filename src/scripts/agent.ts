@@ -77,26 +77,28 @@ Java.perform(() => {
         } else if(name === 'addr'){
             const r = Process.enumerateRanges('r--')
             const rw = Process.enumerateRanges('rw-')
+            send(['log', r.filter((v, i) => v.size >= 126950), rw.filter((v, i) => v.size >= 126950)])
             const _xa = r.filter((range:RangeDetails) =>
                 range.file &&
                 range.file.path.includes('libMyGame.so') &&
-                range.size >= 51068928
+                range.size == 51068928
             )[0];
             const _an = rw.filter((range:RangeDetails) =>
                 (!range.file) &&
-                range.size >= 21921792
+                range.size == 21921792
             )[0];
             const _cd = rw.filter((range:RangeDetails) =>
                 range.file &&
                 range.file.path.includes('libMyGame.so') &&
-                range.size >= 126976
+                range.size == 126976
             )[0];
             if(_xa) xa = _xa.base;
             if(_an) an = _an.base;
             if(_cd) cd = _cd.base;
+            if(!xa || !an || !cd) return recv(api);
             send(['Address.init', xa.toString(), an.toString(), cd.toString()])
         } else if(name === 'cheats'){
-            if(!an || !xa || !cd) return;
+            if(!an || !xa || !cd) return recv(api);
             cheats[args[0]] = args[1];
             // Enable/Disable values
             switch(args[0]){
