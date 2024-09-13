@@ -146,7 +146,6 @@ function loop(){
     // Pin values
     try{
         const eposPointer = getChainedPointer(cd, cdOffset['epos-pointer'])
-        send(['log', eposPointer]);
         if(cheats['shoot-speed']){
             if(eposPointer.isNull()) return setTimeout(loop, 1000/frame);
             if(keybinds['shoot-speed'] && !keymap[keybinds['shoot-speed']]) return setTimeout(loop, 1000/frame);
@@ -179,8 +178,8 @@ function loop(){
             eposPointer.add(eposOffset['dy']).writeFloat(-.1);
             eposPointer.add(eposOffset['fall']).writeS8(0);
             const y = eposPointer.add(eposOffset['y']).readFloat();
-            if(keybinds['fly-up']) eposPointer.add(eposOffset['y']).writeFloat(y + (config['fly-speed'] || 1));
-            if(keybinds['fly-down']) eposPointer.add(eposOffset['y']).writeFloat(y - (config['fly-speed'] || 1));
+            if(keybinds['fly-up'] && keymap[keybinds['fly-up']]) eposPointer.add(eposOffset['y']).writeFloat(y + (config['fly-speed'] || 1));
+            if(keybinds['fly-down'] && keymap[keybinds['fly-down']]) eposPointer.add(eposOffset['y']).writeFloat(y - (config['fly-speed'] || 1));
         }
         if(cheats['skill-cooldown']){
             an.add(anOffset['skill-base']).writeS8(1);
