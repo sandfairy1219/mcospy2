@@ -77,7 +77,6 @@ Java.perform(() => {
         } else if(name === 'addr'){
             const r = Process.enumerateRanges('r--')
             const rw = Process.enumerateRanges('rw-')
-            send(['log', r.filter((v, i) => v.size >= 126950), rw.filter((v, i) => v.size >= 126950)])
             const _xa = r.filter((range:RangeDetails) =>
                 range.file &&
                 range.file.path.includes('libMyGame.so')
