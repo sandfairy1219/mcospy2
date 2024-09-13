@@ -80,17 +80,16 @@ Java.perform(() => {
             send(['log', r.filter((v, i) => v.size >= 126950), rw.filter((v, i) => v.size >= 126950)])
             const _xa = r.filter((range:RangeDetails) =>
                 range.file &&
-                range.file.path.includes('libMyGame.so') &&
-                range.size == 51068928
+                range.file.path.includes('libMyGame.so')
             )[0];
             const _an = rw.filter((range:RangeDetails) =>
                 (!range.file) &&
-                range.size == 21921792
+                range.size >= 21921792
             )[0];
             const _cd = rw.filter((range:RangeDetails) =>
                 range.file &&
                 range.file.path.includes('libMyGame.so') &&
-                range.size == 126976
+                range.size >= 126976
             )[0];
             if(_xa) xa = _xa.base;
             if(_an) an = _an.base;
