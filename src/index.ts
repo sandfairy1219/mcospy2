@@ -1,6 +1,6 @@
 import Logger from "electron-log";
 import EventEmitter from "events";
-import { GlobalKeyboardListener } from "node-global-key-listener";
+import { GlobalKeyboardListener, IGlobalKeyEvent } from "node-global-key-listener";
 import dotenv from "dotenv";
 import path from "path";
 import { MongoClient } from "mongodb";
@@ -289,8 +289,26 @@ app.on("ready", async () => {
                     emitter.on("cheats", (key, value) => {
                         script.post(['cheats', key, value]);
                     });
-                    emitter.on("gk", (event, down) => {
-                        script.post(['keymap', down]);
+                    emitter.on("gk", (event:IGlobalKeyEvent, down) => {
+                        script.post(['keyevent', event.name, event.state, down]);
+                    });
+                    ipcMain.on("reverse", (e) => {
+                        script.post(['reverse']);
+                    });
+                    ipcMain.on("pos", (e, pos:number[]) => {
+                        script.post(['pos', pos]);
+                    });
+                    ipcMain.on("skillcode", (e, code:number) => {
+                        script.post(['skillcode', code]);
+                    });
+                    ipcMain.on("scan-entity", (e) => {
+                        script.post(['scan-entity']);
+                    });
+                    ipcMain.on("get-ranges", (e, data:string) => {
+                        script.post(['get-ranges', data]);
+                    });
+                    ipcMain.on("find-ranges", (e, data:string) => {
+                        script.post(['find-ranges', data]);
                     });
                 },
                 () => {
@@ -299,6 +317,12 @@ app.on("ready", async () => {
                     emitter.removeAllListeners("keybind");
                     emitter.removeAllListeners("cheats");
                     emitter.removeAllListeners("gk");
+                    ipcMain.removeAllListeners("reverse");
+                    ipcMain.removeAllListeners("pos");
+                    ipcMain.removeAllListeners("skillcode");
+                    ipcMain.removeAllListeners("scan-entity");
+                    ipcMain.removeAllListeners("get-ranges");
+                    ipcMain.removeAllListeners("find-ranges");
                     exp = null;
                     state("session", "error", "Session disposed");
                     dispose();
@@ -309,9 +333,16 @@ app.on("ready", async () => {
             state("session", "error", "Failed to start agent");
         }
     });
-
+    
     // cheat
+    emitter.on("pos", (pos:number[]) => {
+        main.webContents.send("pos", pos);
+    });
+    emitter.on("skillcode", (code:number) => {
+        main.webContents.send("skillcode", code);
+    });
 });
+
 
 emitter.on("log", (...args:any[]) => {
     Logger.log(...args);

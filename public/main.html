@@ -80,6 +80,7 @@
             <button id="start-agent" data-lang="start-agent"></button>
         </section>
         <section id="cheats" class="hide">
+            <button id="scan-entity" data-lang="scan-entity"></button>
             <details>
                 <summary id="aimbot" data-lang="aimbot"></summary>
                 <div>
@@ -109,10 +110,6 @@
             </details>
             <details>
                 <summary id="esp" data-lang="esp"></summary>
-                <div>
-                    <div data-lang="esp-lock"></div>
-                    <input type="checkbox" id="esp-lock">
-                </div>
                 <div>
                     <div data-lang="esp-tracer"></div>
                     <input class="config" type="checkbox" id="esp-tracer">
@@ -205,10 +202,32 @@
                     <input type="text" id="key-grenade" class="keybind" data-lang-ph="keybind">
                 </div>
             </details>
+            <details>
+                <summary data-lang="changer"></summary>
+                <div>
+                    <input class="w-full text-center" type="text" id="pos-x" placeholder="X">
+                    <input class="w-full text-center" type="text" id="pos-y" placeholder="Y">
+                    <input class="w-full text-center" type="text" id="pos-z" placeholder="Z">
+                    <button class="w-full" id="pos-reverse" data-lang="reverse"></button>
+                </div>
+                <div>
+                    <div data-lang="reverse-keybind"></div>
+                    <input type="text" id="key-reverse" class="keybind" data-lang-ph="keybind">
+                </div>
+                <div>
+                    <input class="w-full text-center" type="text" id="skillcode" data-lang-ph="skillcode">
+                </div>
+            </details>
         </section>
         <section id="settings" class="hide">
         </section>
         <section id="dev-mode" class="hide">
+            <details>
+                <summary data-lang="ranges"></summary>
+                <input class="w-full" type="text" id="base" data-lang-ph="base">
+                <button class="w-full" id="get-ranges" data-lang="get"></button>
+                <button class="w-full" id="find-ranges" data-lang="find"></button>
+            </details>
         </section>
     </div>
     <script type="module" src="../dist/main.js"></script>

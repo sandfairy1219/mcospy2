@@ -225,7 +225,7 @@ const updateLang = () => {
         el.value = lng(lang, el.getAttribute('data-lang-v'));
     });
     $$_('*[data-lang]').forEach((el:HTMLElement) => {
-        if(el.tagName === "SUMMARY") {
+        if(el.tagName === "SUMMARY" && el.id) {
             el.innerHTML = `
                 <input type="checkbox" class="toggle" id="toggle-${el.id}">
                 <p>${lng(lang, el.getAttribute('data-lang'))}</p>
@@ -370,3 +370,44 @@ ipcRenderer.on('init', (e, _b:boolean) => {
         }
     });
 })
+
+const xel = $i('pos-x');
+const yel = $i('pos-y');
+const zel = $i('pos-z');
+const sel = $i('skillcode');
+
+$_('pos-reverse').addEventListener('click', () => {
+    ipcRenderer.send('reverse');
+});
+
+ipcRenderer.on('pos', (e, pos:number[]) => {
+    const [x, y, z] = pos;
+    xel.value = x.toFixed(2);
+    yel.value = y.toFixed(2);
+    zel.value = z.toFixed(2);
+})
+
+ipcRenderer.on('skillcode', (e, code:number) => {
+    sel.value = code.toString();
+})
+
+const blurCurrent = () => {(document.activeElement as HTMLInputElement).blur();}
+const changePosition = () => {ipcRenderer.send('pos', [parseFloat(xel.value || "0"), parseFloat(yel.value || "0"), parseFloat(zel.value || "0")]);}
+
+xel.addEventListener('input', changePosition);
+yel.addEventListener('input', changePosition);
+zel.addEventListener('input', changePosition);
+sel.addEventListener('input', () => {ipcRenderer.send('skillcode', parseInt(sel.value || "0"));});
+xel.addEventListener('change', blurCurrent);
+yel.addEventListener('change', blurCurrent);
+zel.addEventListener('change', blurCurrent);
+sel.addEventListener('change', blurCurrent);
+
+ipcRenderer.on('skillcode', (e, code:string) => {
+    $i('skillcode').value = code;
+})
+
+$_('scan-entity').addEventListener('click', () => {ipcRenderer.send('scan-entity');});
+
+$_('get-ranges').addEventListener('click', () => {ipcRenderer.send('get-ranges', $i('base').value);});
+$_('find-ranges').addEventListener('click', () => {ipcRenderer.send('find-ranges', $i('base').value);});
