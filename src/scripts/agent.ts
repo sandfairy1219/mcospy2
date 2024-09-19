@@ -57,6 +57,7 @@ const eposOffset = {
 let xa:NativePointer = null;
 let an:NativePointer = null;
 let cd:NativePointer = null;
+let cas:RangeDetails[] = [];
 let entityList:NativePointer[] = [];
 
 let frame:number = 60;
@@ -262,14 +263,16 @@ function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
     let _entityList:NativePointer[] = [];
     const _ranges = Process.enumerateRanges('rw-').filter(range =>
         !range.file &&
-        range.size >= 0x20_0000 &&
+        range.size >= 0x10_0000 &&
         range.size % 0x10_0000 == 0
     );
+    cas = _ranges;
     const _pattern = qwordToHex(_eposPointer.add(eposOffset['pointer']).readS64())
-    _ranges.forEach(range => {
+    cas.forEach(range => {
         const entities = Memory.scanSync(range.base, range.size, _pattern);
         _entityList = [..._entityList, ...entities.map(entity => entity.address.add(-0xEC0))];
     });
+    log("Entity Found:", _entityList.length)
     return _entityList.filter(entity => entity.toString().match(/000$/));
 }
 
