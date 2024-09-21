@@ -33,6 +33,7 @@ const eposOffset = {
     'hp':0x2C, // int16
     'weapon':0x2E, // int16
     'barrier':0x30, // int16,
+    'nickname':0x88, // string 10
     'sk':0xAD, // byte
     'fall':0xAF, // byte
     'timer':0xC8, // float
@@ -277,8 +278,11 @@ function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
         const entities = Memory.scanSync(range.base, range.size, _pattern);
         _entityList = [..._entityList, ...entities.map(entity => entity.address.add(-0xEC0))];
     });
-    log("Entity Found:", _entityList.length)
-    return _entityList.filter(entity => entity.toString().match(/000$/));
+    _entityList = _entityList.filter(entity => entity.toString().match(/000$/))
+    log("Entity Found:", _entityList.length, '\n',
+        _entityList.map(entity => `[${entity.add(eposOffset['number']).readS32()}] ${entity.add(eposOffset['nickname']).readUtf8String()}`).join('\n')
+    );
+    return _entityList || [];
 }
 
 function reverse(){
@@ -366,16 +370,18 @@ function blackhole(eposPointer:NativePointer){
     const camZ = cambase.add(0x14).readFloat();
     const yaw = cambase.add(0x4).readFloat();
     const pitch = cambase.readFloat();
-    const camDist = cambase.add(0x24).readFloat();
+    const camDist = - cambase.add(0x24).readFloat();
     const dist = camDist + (+config['blackhole-distance'] || 20);
     const resX = camX + Math.sin(yaw) * dist;
     const resY = camY + Math.sin(pitch) * dist;
     const resZ = camZ + Math.cos(yaw) * dist;
     entityList.filter(entity => entity.toString() !== eposPointer.toString())
     .forEach((entity:NativePointer) => {
-        entity.add(eposOffset['x']).writeFloat(resX);
-        entity.add(eposOffset['y']).writeFloat(resY);
-        entity.add(eposOffset['z']).writeFloat(resZ);
+        if(!entity.isNull()){
+            if(!entity.add(eposOffset['x']).isNull()) entity.add(eposOffset['x']).writeFloat(resX);
+            if(!entity.add(eposOffset['y']).isNull()) entity.add(eposOffset['y']).writeFloat(resY);
+            if(!entity.add(eposOffset['z']).isNull()) entity.add(eposOffset['z']).writeFloat(resZ);
+        }
     });
 }
 
