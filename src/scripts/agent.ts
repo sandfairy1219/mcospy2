@@ -210,6 +210,11 @@ function loop(){
                 aimbot(eposPointer);
             }
         }
+        if(cheats['blackhole'] && !eposPointer.isNull()){
+            if(!keybinds['blackhole'] || keymap[keybinds['blackhole']]){
+                blackhole(eposPointer);
+            }
+        }
         if(cheats['shoot-speed'] && !eposPointer.isNull()){
             if(!keybinds['shoot-speed'] || keymap[keybinds['shoot-speed']]){
                 eposPointer.add(eposOffset['w1c']).writeFloat(0);
@@ -350,6 +355,28 @@ function aimbot(eposPointer:NativePointer){
             cambase.writeFloat(npitch);
         }
     }
+}
+
+function blackhole(eposPointer:NativePointer){
+    if(!an) return;
+    if(eposPointer.isNull()) return;
+    const cambase = an.add(anOffset['camera-base']);
+    const camX = cambase.add(0xc).readFloat();
+    const camY = cambase.add(0x10).readFloat();
+    const camZ = cambase.add(0x14).readFloat();
+    const yaw = cambase.add(0x4).readFloat();
+    const pitch = cambase.readFloat();
+    const camDist = cambase.add(0x24).readFloat();
+    const dist = camDist + (+config['blackhole-distance'] || 20);
+    const resX = camX + Math.sin(yaw) * dist;
+    const resY = camY + Math.sin(pitch) * dist;
+    const resZ = camZ + Math.cos(yaw) * dist;
+    entityList.filter(entity => entity.toString() !== eposPointer.toString())
+    .forEach((entity:NativePointer) => {
+        entity.add(eposOffset['x']).writeFloat(resX);
+        entity.add(eposOffset['y']).writeFloat(resY);
+        entity.add(eposOffset['z']).writeFloat(resZ);
+    });
 }
 
 rpc.exports = {
