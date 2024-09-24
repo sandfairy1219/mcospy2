@@ -1,13 +1,13 @@
 "cut";
 const xaOffset = {
-    'no-recoil': 0x3311770, // -1124072416 => 505942016
-    'no-clip': 0x330C87C, // 0.01 => 100
-    'no-spread1': 0x34FDCDC, // -1119869952 => 505942016
-    'no-spread2': 0x34FDCF4, // -1119870976 => 505942016
-    'instant-respawn': 0x30B4FA8, // 505415712 => 505415680
-    'body-one-kill': 0x34FDE28, // 506335232 => 505925632
-    'head-one-kill': 0x34FDE20, // -1136594944 => 505925632
-    'skill-damage': 0x3266148, // -1203335166 => 1384184322
+    'no-recoil': 0x331078C, // -1124072416 => 505942016
+    'no-clip': 0x330B89C, // 0.01 => 100
+    'no-spread1': 0x34FE0B4, // -1119869952 => 505942016
+    'no-spread2': 0x34FE0CC, // -1119870976 => 505942016
+    'instant-respawn': 0x30B5FC8, // 505415712 => 505415680
+    'body-one-kill': 0x34FE200, // 506335232 => 505925632
+    'head-one-kill': 0x34FE1F8, // -1136594944 => 505925632
+    'skill-damage': 0x3265168, // -1203335166 => 1384184322
 }
 const anOffset = {
     "camera-base": 0x8A900C,
@@ -17,8 +17,7 @@ const anOffset = {
     "grenade-base": 0x8B5805,
 }
 const cdOffset = {
-    "epos-pointer": [[0x171E8, 0xBC], [0x0, 0x8]],
-    "player1-pointer": [[0x171E8, 0xCC], [0x320, 0x110, 0x10]],
+    "epos-pointer": [0x668, 0x58, 0x178, 0x130, 0x200, 0x158],
 }
 const eposOffset = {
     'number': 0x0, // int32
@@ -103,8 +102,8 @@ Java.perform(() => {
                 )[0];
                 const _cd = rw.filter((range:RangeDetails) =>
                     range.file &&
-                    range.file.path.includes('libMyGame.so') &&
-                    range.size >= 126976
+                    range.file.path.includes('libnms.so') &&
+                    range.size >= 4096
                 )[0];
                 if(_xa) xa = _xa.base;
                 if(_an) an = _an.base;
@@ -163,6 +162,7 @@ Java.perform(() => {
             } else if(name === 'scan-entity'){
                 if(!cd) return;
                 const eposPointer = getChainedPointer(cd, cdOffset['epos-pointer'])
+                if(!eposPointer) return;
                 if(eposPointer.isNull()) return;
                 entityList = scanEntityList(eposPointer);
             } else if(name === 'get-ranges'){
@@ -189,7 +189,8 @@ function loop(){
     // Pin values
     try{
         const eposPointer = getChainedPointer(cd, cdOffset['epos-pointer'])
-        if(!eposPointer.isNull()){
+        if(eposPointer && !eposPointer.isNull()){
+            log(eposPointer)
             if(!lastEpos){
                 lastEpos = true;
                 entityList = scanEntityList(eposPointer);
@@ -200,61 +201,59 @@ function loop(){
             send(['pos', [x, y, z]])
             const sk = eposPointer.add(eposOffset['sk']).readS8();
             send(['skillcode', sk])
-        } else {
-            if(lastEpos){
-                lastEpos = false;
-                entityList = [];
-            }
-        }
-        if(cheats['aimbot'] && !eposPointer.isNull()){
-            if(!keybinds['aimbot'] || keymap[keybinds['aimbot']]){
-                aimbot(eposPointer);
-            }
-        }
-        if(cheats['blackhole'] && !eposPointer.isNull()){
-            if(!keybinds['blackhole'] || keymap[keybinds['blackhole']]){
-                blackhole(eposPointer);
-            }
-        }
-        if(cheats['shoot-speed'] && !eposPointer.isNull()){
-            if(!keybinds['shoot-speed'] || keymap[keybinds['shoot-speed']]){
-                eposPointer.add(eposOffset['w1c']).writeFloat(0);
-                eposPointer.add(eposOffset['w2c']).writeFloat(0);
-            }
-        }
-        if(cheats['no-reload'] && !eposPointer.isNull()){
-            eposPointer.add(eposOffset['timer']).writeFloat(9999);
-        }
-        if(cheats['move-speed'] && !eposPointer.isNull()){
-            if((!keybinds['move-speed'] || keymap[keybinds['move-speed']])){
-                const half:number = Math.sin(45/180*Math.PI)
-                const val:number = (+config['move-speed-value']) || 3;
-                if(keymap["W"] && keymap["A"]) eposPointer.add(eposOffset['dx']).writeFloat(half*val), eposPointer.add(eposOffset['dz']).writeFloat(half*val);
-                else if(keymap["W"] && keymap["D"]) eposPointer.add(eposOffset['dx']).writeFloat(half*val), eposPointer.add(eposOffset['dz']).writeFloat(-half*val);
-                else if(keymap["S"] && keymap["A"]) eposPointer.add(eposOffset['dx']).writeFloat(-half*val), eposPointer.add(eposOffset['dz']).writeFloat(half*val);
-                else if(keymap["S"] && keymap["D"]) eposPointer.add(eposOffset['dx']).writeFloat(-half*val), eposPointer.add(eposOffset['dz']).writeFloat(-half*val);
-                else if(keymap["W"]) eposPointer.add(eposOffset['dx']).writeFloat(val);
-                else if(keymap["S"]) eposPointer.add(eposOffset['dx']).writeFloat(-val);
-                else if(keymap["A"]) eposPointer.add(eposOffset['dz']).writeFloat(val);
-                else if(keymap["D"]) eposPointer.add(eposOffset['dz']).writeFloat(-val);
-                else {
-                    eposPointer.add(eposOffset['dx']).writeFloat(0);
-                    eposPointer.add(eposOffset['dz']).writeFloat(0);
+            if(cheats['aimbot']){
+                if(!keybinds['aimbot'] || keymap[keybinds['aimbot']]){
+                    aimbot(eposPointer);
                 }
             }
-        }
-        if(cheats['fly'] && !eposPointer.isNull()){
-            eposPointer.add(eposOffset['dy']).writeFloat(-.1);
-            eposPointer.add(eposOffset['fall']).writeS8(0);
-            const y = eposPointer.add(eposOffset['y']).readFloat();
-            if(keybinds['fly-up'] && keymap[keybinds['fly-up']]) eposPointer.add(eposOffset['y']).writeFloat(y + (config['fly-speed'] || 1));
-            if(keybinds['fly-down'] && keymap[keybinds['fly-down']]) eposPointer.add(eposOffset['y']).writeFloat(y - (config['fly-speed'] || 1));
+            if(cheats['blackhole']){
+                if(!keybinds['blackhole'] || keymap[keybinds['blackhole']]){
+                    blackhole(eposPointer);
+                }
+            }
+            if(cheats['shoot-speed']){
+                if(!keybinds['shoot-speed'] || keymap[keybinds['shoot-speed']]){
+                    eposPointer.add(eposOffset['w1c']).writeFloat(0);
+                    eposPointer.add(eposOffset['w2c']).writeFloat(0);
+                }
+            }
+            if(cheats['no-reload']){
+                eposPointer.add(eposOffset['timer']).writeFloat(9999);
+            }
+            if(cheats['move-speed']){
+                if((!keybinds['move-speed'] || keymap[keybinds['move-speed']])){
+                    const half:number = Math.sin(45/180*Math.PI)
+                    const val:number = (+config['move-speed-value']) || 3;
+                    if(keymap["W"] && keymap["A"]) eposPointer.add(eposOffset['dx']).writeFloat(half*val), eposPointer.add(eposOffset['dz']).writeFloat(half*val);
+                    else if(keymap["W"] && keymap["D"]) eposPointer.add(eposOffset['dx']).writeFloat(half*val), eposPointer.add(eposOffset['dz']).writeFloat(-half*val);
+                    else if(keymap["S"] && keymap["A"]) eposPointer.add(eposOffset['dx']).writeFloat(-half*val), eposPointer.add(eposOffset['dz']).writeFloat(half*val);
+                    else if(keymap["S"] && keymap["D"]) eposPointer.add(eposOffset['dx']).writeFloat(-half*val), eposPointer.add(eposOffset['dz']).writeFloat(-half*val);
+                    else if(keymap["W"]) eposPointer.add(eposOffset['dx']).writeFloat(val);
+                    else if(keymap["S"]) eposPointer.add(eposOffset['dx']).writeFloat(-val);
+                    else if(keymap["A"]) eposPointer.add(eposOffset['dz']).writeFloat(val);
+                    else if(keymap["D"]) eposPointer.add(eposOffset['dz']).writeFloat(-val);
+                    else {
+                        eposPointer.add(eposOffset['dx']).writeFloat(0);
+                        eposPointer.add(eposOffset['dz']).writeFloat(0);
+                    }
+                }
+            }
+            if(cheats['fly']){
+                eposPointer.add(eposOffset['dy']).writeFloat(-.1);
+                eposPointer.add(eposOffset['fall']).writeS8(0);
+                const y = eposPointer.add(eposOffset['y']).readFloat();
+                if(keybinds['fly-up'] && keymap[keybinds['fly-up']]) eposPointer.add(eposOffset['y']).writeFloat(y + (config['fly-speed'] || 1));
+                if(keybinds['fly-down'] && keymap[keybinds['fly-down']]) eposPointer.add(eposOffset['y']).writeFloat(y - (config['fly-speed'] || 1));
+            }
+            if(cheats['grenade'] && (!keybinds['grenade'] || keymap[keybinds['grenade']])){
+                eposPointer.add(eposOffset['gc']).writeFloat(0);
+            }
+        } else {
+            lastEpos = false;
+            entityList = [];
         }
         if(cheats['skill-cooldown']){
             an.add(anOffset['skill-base']).writeS8(1);
-        }
-        if(cheats['grenade'] && !eposPointer.isNull() && (!keybinds['grenade'] || keymap[keybinds['grenade']])){
-            eposPointer.add(eposOffset['gc']).writeFloat(0);
         }
     } catch(e){
         log(e);
@@ -288,6 +287,7 @@ function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
 function reverse(){
     if(!cd) return;
     const eposPointer = getChainedPointer(cd, cdOffset['epos-pointer'])
+    if(!eposPointer) return;
     if(eposPointer.isNull()) return;
     const x = eposPointer.add(eposOffset['x']).readFloat();
     const z = eposPointer.add(eposOffset['z']).readFloat();
@@ -298,6 +298,7 @@ function reverse(){
 function pos(nums:number[]){
     if(!cd) return;
     const eposPointer = getChainedPointer(cd, cdOffset['epos-pointer'])
+    if(!eposPointer) return;
     if(eposPointer.isNull()) return;
     eposPointer.add(eposOffset['x']).writeFloat(nums[0]);
     eposPointer.add(eposOffset['y']).writeFloat(nums[1]);
@@ -313,6 +314,7 @@ function skillcode(num:number){
 
 function aimbot(eposPointer:NativePointer){
     if(!an) return;
+    if(!eposPointer) return;
     if(eposPointer.isNull()) return;
     const cambase = an.add(anOffset['camera-base']);
     const mode = config['aimbot-mode'] || 'normal';
@@ -484,15 +486,13 @@ rpc.exports = {
     }
 }
 
-function getChainedPointer(_bs:NativePointer, iters:number[][]):NativePointer{
+function getChainedPointer(_bs:NativePointer, iter:number[]):NativePointer{
     let pt = _bs;
-    iters.forEach((iter, i) => {
-        for(let offset of iter){
-            pt = pt.add(offset);
-            pt = i ? pt.readPointer() : ptr(readHex(pt));
-            if(pt.isNull()) return null;
-        }
-    });
+    for(let offset of iter){
+        pt = pt.add(offset);
+        pt = pt.readPointer();
+        if(pt.isNull()) return null;
+    }
     return pt;
 }
 function readHex(ptr: NativePointer): string {
