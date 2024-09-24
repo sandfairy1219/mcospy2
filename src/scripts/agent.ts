@@ -4,6 +4,7 @@ const xaOffset = {
     'no-clip': 0x330B89C, // 0.01 => 100
     'no-spread1': 0x34FE0B4, // -1119869952 => 505942016
     'no-spread2': 0x34FE0CC, // -1119870976 => 505942016
+    'no-reload': 0x34FE09C, // -1136562176 => 505925632
     'instant-respawn': 0x30B5FC8, // 505415712 => 505415680
     'body-one-kill': 0x34FE200, // 506335232 => 505925632
     'head-one-kill': 0x34FE1F8, // -1136594944 => 505925632
@@ -128,6 +129,10 @@ Java.perform(() => {
                         forceWriteS32(xa.add(xaOffset['no-spread2']), args[1] ? 505942016 : -1119870976);
                         break;
                     }
+                    case 'no-reload':{
+                        forceWriteS32(xa.add(xaOffset['no-reload']), args[1] ? 505925632 : -1136562176);
+                        break;
+                    }
                     case 'instant-respawn':{
                         forceWriteS32(xa.add(xaOffset['instant-respawn']), args[1] ? 505415680 : 505415712);
                         break;
@@ -190,7 +195,6 @@ function loop(){
     try{
         const eposPointer = getChainedPointer(cd, cdOffset['epos-pointer'])
         if(eposPointer && !eposPointer.isNull()){
-            log(eposPointer)
             if(!lastEpos){
                 lastEpos = true;
                 entityList = scanEntityList(eposPointer);
