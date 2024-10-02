@@ -301,8 +301,14 @@ app.on("ready", async () => {
                     ipcMain.on("skillcode", (e, code:number) => {
                         script.post(['skillcode', code]);
                     });
+                    ipcMain.on("scan-epos", (e) => {
+                        script.post(['scan-epos']);
+                    });
                     ipcMain.on("scan-entity", (e) => {
                         script.post(['scan-entity']);
+                    });
+                    ipcMain.on("clear-all", (e) => {
+                        script.post(['clear-all']);
                     });
                     ipcMain.on("get-ranges", (e, data:string) => {
                         script.post(['get-ranges', data]);

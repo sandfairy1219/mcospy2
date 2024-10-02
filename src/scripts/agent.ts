@@ -54,11 +54,14 @@ const eposOffset = {
     'gc':0x1A8, // float
     'pointer':0xEC0, // pointer
 };
+const yawOffset = 0;
+const pitchOffset = 0.12;
 
 let xa:NativePointer = null;
 let an:NativePointer = null;
 let cd:NativePointer = null;
 let cas:RangeDetails[] = [];
+let epos:NativePointer = null;
 let entityList:NativePointer[] = [];
 
 let frame:number = 60;
@@ -101,18 +104,18 @@ Java.perform(() => {
                     (!range.file) &&
                     range.size >= 21921792
                 )[0];
-                const _cd = rw.filter((range:RangeDetails) =>
-                    range.file &&
-                    range.file.path.includes('libnms.so') &&
-                    range.size >= 4096
-                )[0];
+                // const _cd = rw.filter((range:RangeDetails) =>
+                //     range.file &&
+                //     range.file.path.includes('libnms.so') &&
+                //     range.size >= 4096
+                // )[0];
                 if(_xa) xa = _xa.base;
                 if(_an) an = _an.base;
-                if(_cd) cd = _cd.base;
-                if(!xa || !an || !cd) return recv(api);
-                send(['Address.init', xa.toString(), an.toString(), cd.toString()])
+                // if(_cd) cd = _cd.base;
+                if(!xa || !an) return recv(api);
+                send(['Address.init', xa.toString(), an.toString()])
             } else if(name === 'cheats'){
-                if(!an || !xa || !cd) return recv(api);
+                if(!an || !xa) return recv(api);
                 cheats[args[0]] = args[1];
                 // Enable/Disable values
                 switch(args[0]){
@@ -164,12 +167,15 @@ Java.perform(() => {
                 pos(args[0]);
             } else if(name === 'skillcode'){
                 skillcode(+args[0]);
+            } else if(name === 'scan-epos'){
+                epos = scanEpos();
             } else if(name === 'scan-entity'){
-                if(!cd) return;
-                const eposPointer = getChainedPointer(cd, cdOffset['epos-pointer'])
+                const eposPointer = epos;
                 if(!eposPointer) return;
                 if(eposPointer.isNull()) return;
                 entityList = scanEntityList(eposPointer);
+            } else if(name === 'clear-all'){
+                clearAll();
             } else if(name === 'get-ranges'){
                 const r = Process.getRangeByAddress(ptr(args[0]));
                 log(r)
@@ -190,10 +196,10 @@ Java.perform(() => {
 let lastEpos = false;
 
 function loop(){
-    if(!an || !xa || !cd) return setTimeout(loop, 1000/frame);
+    if(!an || !xa) return setTimeout(loop, 1000/frame);
     // Pin values
     try{
-        const eposPointer = getChainedPointer(cd, cdOffset['epos-pointer'])
+        const eposPointer = epos;
         if(eposPointer && !eposPointer.isNull()){
             if(!lastEpos){
                 lastEpos = true;
@@ -254,7 +260,7 @@ function loop(){
             }
         } else {
             lastEpos = false;
-            entityList = [];
+            clearAll();
         }
         if(cheats['skill-cooldown']){
             an.add(anOffset['skill-base']).writeS8(1);
@@ -266,17 +272,33 @@ function loop(){
 }
 loop();
 
-function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
-    if(!cd) return [];
-    if(_eposPointer.isNull()) return [];
-    let _entityList:NativePointer[] = [];
+function scanEpos():NativePointer{
+    if(an.isNull()) return null;
+    if(an.add(anOffset['position-base']).isNull()) return null;
+    const _arr = an.add(anOffset['position-base']).readByteArray(0xC);
+    const _pattern = bufferToHex(_arr);
     const _ranges = Process.enumerateRanges('rw-').filter(range =>
         !range.file &&
         range.size >= 0x10_0000 &&
         range.size % 0x10_0000 == 0
     );
     cas = _ranges;
-    const _pattern = qwordToHex(_eposPointer.add(eposOffset['pointer']).readS64())
+    for(let range of _ranges){
+        const eposes = Memory.scanSync(range.base, range.size, _pattern);
+        if(eposes.length > 0){
+            const _epos = eposes.find(np => np.address.toString().match(/190$/));
+            if(_epos){
+                log("Epos Found:", _epos.address.add(-0x190).toString())
+                return _epos.address.add(-0x190);
+            }
+        }
+    }
+}
+
+function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
+    if(_eposPointer.isNull()) return [];
+    let _entityList:NativePointer[] = [];
+    const _pattern = qwordToHex(_eposPointer.add(eposOffset['pointer']).readS64());
     cas.forEach(range => {
         const entities = Memory.scanSync(range.base, range.size, _pattern);
         _entityList = [..._entityList, ...entities.map(entity => entity.address.add(-0xEC0))];
@@ -288,9 +310,14 @@ function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
     return _entityList || [];
 }
 
+function clearAll(){
+    epos = null;
+    entityList = [];
+}
+
 function reverse(){
-    if(!cd) return;
-    const eposPointer = getChainedPointer(cd, cdOffset['epos-pointer'])
+    // if(!cd) return;
+    const eposPointer = epos;
     if(!eposPointer) return;
     if(eposPointer.isNull()) return;
     const x = eposPointer.add(eposOffset['x']).readFloat();
@@ -300,8 +327,8 @@ function reverse(){
 }
 
 function pos(nums:number[]){
-    if(!cd) return;
-    const eposPointer = getChainedPointer(cd, cdOffset['epos-pointer'])
+    // if(!cd) return;
+    const eposPointer = epos;
     if(!eposPointer) return;
     if(eposPointer.isNull()) return;
     eposPointer.add(eposOffset['x']).writeFloat(nums[0]);
@@ -310,8 +337,9 @@ function pos(nums:number[]){
 }
 
 function skillcode(num:number){
-    if(!cd) return;
-    const eposPointer = getChainedPointer(cd, cdOffset['epos-pointer'])
+    // if(!cd) return;
+    const eposPointer = epos;
+    if(!eposPointer) return;
     if(eposPointer.isNull()) return;
     eposPointer.add(eposOffset['sk']).writeS8(num);
 }
@@ -329,7 +357,7 @@ function aimbot(eposPointer:NativePointer){
     const camY = cambase.add(0x10).readFloat();
     const camZ = cambase.add(0x14).readFloat();
     const yaw = cambase.add(0x4).readFloat();
-    const pitch = cambase.readFloat();
+    const pitch = cambase.readFloat() + pitchOffset;
     const targets = entityList
     .filter(entity => entity.toString() !== eposPointer.toString())
     .map((entity:NativePointer) => {
@@ -349,7 +377,7 @@ function aimbot(eposPointer:NativePointer){
     if(target){
         if(mode === "instant") {
             cambase.add(0x4).writeFloat(target[0]);
-            cambase.writeFloat(target[1]);
+            cambase.writeFloat(target[1] - pitchOffset);
         } else {
             const radyaw = target[2] > 0 ? rad : -rad;
             const radpitch = target[3] > 0 ? rad : -rad;
@@ -508,6 +536,14 @@ function readHex(ptr: NativePointer): string {
         hexString += byte.toString(16).padStart(2, '0');
     }
     return "0x" + hexString;
+}
+function bufferToHex(buffer: ArrayBuffer): string {
+    const byteArray = new Uint8Array(buffer)
+    const str:string[] = []
+    byteArray.forEach(byte => {
+        str.push(byte.toString(16).padStart(2, '0'))
+    })
+    return str.join(' ')
 }
 function qwordToHex(qword: Int64): string {
     const x = qword.toString(16)

@@ -407,7 +407,9 @@ ipcRenderer.on('skillcode', (e, code:string) => {
     $i('skillcode').value = code;
 })
 
+$_('scan-epos').addEventListener('click', () => {ipcRenderer.send('scan-epos');});
 $_('scan-entity').addEventListener('click', () => {ipcRenderer.send('scan-entity');});
+$_('clear-all').addEventListener('click', () => {ipcRenderer.send('clear-all');});
 
 $_('get-ranges').addEventListener('click', () => {ipcRenderer.send('get-ranges', $i('base').value);});
 $_('find-ranges').addEventListener('click', () => {ipcRenderer.send('find-ranges', $i('base').value);});
