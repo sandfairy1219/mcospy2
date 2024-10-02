@@ -310,6 +310,9 @@ app.on("ready", async () => {
                     ipcMain.on("clear-all", (e) => {
                         script.post(['clear-all']);
                     });
+                    ipcMain.on("change-ads-reward", (e) => {
+                        script.post(['change-ads-reward']);
+                    });
                     ipcMain.on("get-ranges", (e, data:string) => {
                         script.post(['get-ranges', data]);
                     });

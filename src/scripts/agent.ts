@@ -54,8 +54,6 @@ const eposOffset = {
     'gc':0x1A8, // float
     'pointer':0xEC0, // pointer
 };
-const yawOffset = 0;
-const pitchOffset = 0.12;
 
 let xa:NativePointer = null;
 let an:NativePointer = null;
@@ -169,6 +167,11 @@ Java.perform(() => {
                 skillcode(+args[0]);
             } else if(name === 'scan-epos'){
                 epos = scanEpos();
+            } else if(name === 'change-ads-reward'){
+                if(!an) return;
+                if(an.isNull()) return;
+                const cashBase = an.add(anOffset['cash-base']);
+                cashBase.add(0x58).writeS32(19);
             } else if(name === 'scan-entity'){
                 const eposPointer = epos;
                 if(!eposPointer) return;
@@ -352,6 +355,7 @@ function aimbot(eposPointer:NativePointer){
     const mode = config['aimbot-mode'] || 'normal';
     const speed = config['aimbot-speed'] || 20;
     const angle = config['aimbot-angle'] || 10;
+    const pitchOffset = config['aimbot-pitch-offset'] || 0;
     const rad = angle/180*Math.PI;
     const camX = cambase.add(0xc).readFloat();
     const camY = cambase.add(0x10).readFloat();
