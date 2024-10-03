@@ -21,6 +21,15 @@ html, body{
     display: none !important;
 }
 
+canvas{
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    width: 100vw;
+    height: 100vh;
+}
+
 #lang{
     position: fixed;
     top: 0;
@@ -80,13 +89,14 @@ button:disabled, input:disabled, select:disabled, textarea:disabled{@apply opaci
 #app > section {@apply w-full flex flex-col items-center gap-1;}
 #app > section .log {@apply text-sm text-neutral-500;}
 #app > section div {@apply flex items-center gap-1;}
-#app > section > div > button{@apply w-full;}
+#app > section > div > button{@apply w-full h-full;}
 #app > section > *, #app > section > details > * {@apply w-full;}
 #app > section > details {@apply flex flex-col;}
 #app > section > details > summary {@apply w-full hover:bg-neutral-300 cursor-pointer p-1 rounded-md flex justify-start items-center gap-1 select-none text-lg;}
 #app > section > details > summary > [type="checkbox"] {@apply text-base;}
-#app > section > details > summary::before{
-    content: "▶";
+#app > section > details > summary:not(.no):before{content: "▶";}
+#app > section > details > summary.no:before{content: "●";}
+#app > section > details > summary:before{
     display: inline-block;
     transition: transform 0.3s ease;
 }

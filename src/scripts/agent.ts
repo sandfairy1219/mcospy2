@@ -199,6 +199,18 @@ Java.perform(() => {
     recv(api)
 });
 
+function getFilteredEntityList():NativePointer[]{
+    if(!epos) return [];
+    if(epos.isNull()) return [];
+    if(!entityList) return [];
+    if(entityList.length === 0) return [];
+    const reversed = config['except-reverse'] || false;
+    return entityList
+    .filter(entity => !entity.isNull())
+    .filter(entity => entity.toString() !== epos.toString())
+    .filter(entity => reversed ? !excepts.includes(entity.add(eposOffset['number']).readS32()) : excepts.includes(entity.add(eposOffset['number']).readS32()))
+}
+
 let lastEpos = false;
 
 function loop(){
@@ -260,6 +272,9 @@ function loop(){
                 const y = eposPointer.add(eposOffset['y']).readFloat();
                 if(keybinds['fly-up'] && keymap[keybinds['fly-up']]) eposPointer.add(eposOffset['y']).writeFloat(y + (config['fly-speed'] || 1));
                 if(keybinds['fly-down'] && keymap[keybinds['fly-down']]) eposPointer.add(eposOffset['y']).writeFloat(y - (config['fly-speed'] || 1));
+            }
+            if(cheats['upskill'] && (!keybinds['upskill'] || keymap[keybinds['upskill']])){
+                eposPointer.add(eposOffset['sk']).writeFloat(+config['upskill-value'] || 0);
             }
             if(cheats['grenade'] && (!keybinds['grenade'] || keymap[keybinds['grenade']])){
                 eposPointer.add(eposOffset['gc']).writeFloat(0);
@@ -369,6 +384,8 @@ function aimbot(eposPointer:NativePointer){
     const mode = config['aimbot-mode'] || 'normal';
     const speed = config['aimbot-speed'] || 20;
     const angle = config['aimbot-angle'] || 10;
+    const ignoreTeam = config['aimbot-ignore'] || false;
+    const ignoreDead = config['aimbot-ignore-dead'] || false;
     const pitchOffset = +config['aimbot-pitch-offset'] || 0;
     const rad = angle/180*Math.PI;
     const camX = cambase.add(0xc).readFloat();
@@ -376,9 +393,8 @@ function aimbot(eposPointer:NativePointer){
     const camZ = cambase.add(0x14).readFloat();
     const yaw = cambase.add(0x4).readFloat();
     const pitch = cambase.readFloat() + pitchOffset;
-    const targets = entityList
-    .filter(entity => entity.toString() !== eposPointer.toString())
-    .filter(entity => !excepts.includes(entity.add(eposOffset['number']).readS32()))
+    const targets = getFilteredEntityList()
+    .filter(entity => ignoreDead ? entity.add(eposOffset['state']).readS32() !== 16 : true)
     .map((entity:NativePointer) => {
         const dx = entity.add(eposOffset["x"]).readFloat() - camX;
         const dy = entity.add(eposOffset["y"]).readFloat()+4.7 - camY;
@@ -409,7 +425,7 @@ function aimbot(eposPointer:NativePointer){
             const nyaw = yaw - (mode === 'smooth' ? ry3 * (speed/100) : target[2] * (speed/100));
             const npitch = pitch - (mode === 'smooth' ? rp3 * (speed/100) : target[3] * (speed/100));
             cambase.add(0x4).writeFloat(nyaw);
-            cambase.writeFloat(npitch);
+            cambase.writeFloat(npitch - pitchOffset);
         }
     }
 }
@@ -417,6 +433,8 @@ function aimbot(eposPointer:NativePointer){
 function blackhole(eposPointer:NativePointer){
     if(!an) return;
     if(eposPointer.isNull()) return;
+    const ignoreTeam = config['blackhole-ignore'] || false;
+    const ignoreDead = config['blackhole-ignore-dead'] || false;
     const cambase = an.add(anOffset['camera-base']);
     const camX = cambase.add(0xc).readFloat();
     const camY = cambase.add(0x10).readFloat();
@@ -428,14 +446,11 @@ function blackhole(eposPointer:NativePointer){
     const resX = camX + Math.sin(yaw) * dist;
     const resY = camY + Math.sin(pitch) * dist;
     const resZ = camZ + Math.cos(yaw) * dist;
-    entityList.filter(entity => entity.toString() !== eposPointer.toString())
-    .filter(entity => !excepts.includes(entity.add(eposOffset['number']).readS32()))
+    getFilteredEntityList().filter(entity => ignoreDead ? entity.add(eposOffset['state']).readS32() !== 16 : true)
     .forEach((entity:NativePointer) => {
-        if(!entity.isNull()){
-            if(!entity.add(eposOffset['x']).isNull()) entity.add(eposOffset['x']).writeFloat(resX);
-            if(!entity.add(eposOffset['y']).isNull()) entity.add(eposOffset['y']).writeFloat(resY);
-            if(!entity.add(eposOffset['z']).isNull()) entity.add(eposOffset['z']).writeFloat(resZ);
-        }
+        if(!entity.add(eposOffset['x']).isNull()) entity.add(eposOffset['x']).writeFloat(resX);
+        if(!entity.add(eposOffset['y']).isNull()) entity.add(eposOffset['y']).writeFloat(resY);
+        if(!entity.add(eposOffset['z']).isNull()) entity.add(eposOffset['z']).writeFloat(resZ);
     });
 }
 

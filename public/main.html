@@ -90,7 +90,10 @@
                 <div data-lang="entity"></div>
                 <div id="state-entity-log" class="log"></div>
             </div>
-            <input class="config" type="text" id="except-number" data-lang-ph="except-number">
+            <div>
+                <input class="config" type="text" id="except-number" data-lang-ph="except-number">
+                <input class="config" type="checkbox" id="except-reverse">
+            </div>
             <div>
                 <button id="scan-epos" data-lang="scan-epos"></button>
                 <button id="scan-entity" data-lang="scan-entity"></button>
@@ -120,11 +123,15 @@
                 </div>
                 <div>
                     <div data-lang="aimbot-pitch-offset"></div>
-                    <input class="config" type="number" id="aimbot-pitch-offset" value="0">
+                    <input class="config" type="number" id="aimbot-pitch-offset" min="-3" max="3" value="0">
                 </div>
                 <div>
                     <div data-lang="aimbot-ignore"></div>
                     <input class="config" type="checkbox" id="aimbot-ignore">
+                </div>
+                <div>
+                    <div data-lang="aimbot-ignore-death"></div>
+                    <input class="config" type="checkbox" id="aimbot-ignore-death">
                 </div>
             </details>
             <details>
@@ -156,6 +163,14 @@
                     <div data-lang="blackhole-distance"></div>
                     <input class="config" type="number" id="blackhole-distance" min="1" max="100" value="20">
                 </div>
+                <div>
+                    <div data-lang="blackhole-ignore"></div>
+                    <input class="config" type="checkbox" id="blackhole-ignore">
+                </div>
+                <div>
+                    <div data-lang="blackhole-ignore-death"></div>
+                    <input class="config" type="checkbox" id="blackhole-ignore-death">
+                </div>
             </details>
             <details>
                 <summary id="shoot-speed" data-lang="shoot-speed"></summary>
@@ -165,22 +180,22 @@
                 </div>
             </details>
             <details>
-                <summary id="no-recoil" data-lang="no-recoil"></summary>
+                <summary class="no" id="no-recoil" data-lang="no-recoil"></summary>
             </details>
             <details>
-                <summary id="no-spread" data-lang="no-spread"></summary>
+                <summary class="no" id="no-spread" data-lang="no-spread"></summary>
             </details>
             <details>
-                <summary id="no-reload" data-lang="no-reload"></summary>
+                <summary class="no" id="no-reload" data-lang="no-reload"></summary>
             </details>
             <details>
-                <summary id="skill-cooldown" data-lang="skill-cooldown"></summary>
+                <summary class="no" id="skill-cooldown" data-lang="skill-cooldown"></summary>
             </details>
             <details>
-                <summary id="instant-respawn" data-lang="instant-respawn"></summary>
+                <summary class="no" id="instant-respawn" data-lang="instant-respawn"></summary>
             </details>
             <details>
-                <summary id="no-clip" data-lang="no-clip"></summary>
+                <summary class="no" id="no-clip" data-lang="no-clip"></summary>
             </details>
             <details>
                 <summary id="move-speed" data-lang="move-speed"></summary>
@@ -209,10 +224,21 @@
                 </div>
             </details>
             <details>
-                <summary id="one-kill" data-lang="one-kill"></summary>
+                <summary class="no" id="one-kill" data-lang="one-kill"></summary>
             </details>
             <details>
-                <summary id="skill-damage" data-lang="skill-damage"></summary>
+                <summary class="no" id="skill-damage" data-lang="skill-damage"></summary>
+            </details>
+            <details>
+                <summary id="upskill" data-lang="upskill"></summary>
+                <div>
+                    <div data-lang="keybind"></div>
+                    <input type="text" id="key-upskill" class="keybind" data-lang-ph="keybind">
+                </div>
+                <div>
+                    <div data-lang="upskill-value"></div>
+                    <input class="config" type="number" id="upskill-value" min="0" max="9999" value="0">
+                </div>
             </details>
             <details>
                 <summary id="grenade" data-lang="grenade"></summary>
