@@ -396,6 +396,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'アップスキル値',
         'zh':'技能升级值',
     },
+    'upskill-except-timer':{
+        'en':'Upskill Except Timer',
+        'ko':'업스킬 타이머 제외',
+        'ja':'アップスキルタイマー除外',
+        'zh':'技能升级除计时器',
+    },
     'grenade':{
         'en':'Grenade',
         'ko':'수류탄',

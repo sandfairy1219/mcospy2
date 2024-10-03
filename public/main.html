@@ -91,13 +91,18 @@
                 <div id="state-entity-log" class="log"></div>
             </div>
             <div>
-                <input class="config" type="text" id="except-number" data-lang-ph="except-number">
+                <input class="config w-full" type="text" id="except-number" data-lang-ph="except-number">
                 <input class="config" type="checkbox" id="except-reverse">
             </div>
             <div>
                 <button id="scan-epos" data-lang="scan-epos"></button>
                 <button id="scan-entity" data-lang="scan-entity"></button>
                 <button id="clear-all" data-lang="clear-all"></button>
+            </div>
+            <div>
+                <input type="text" id="key-scan-epos" class="min w-full keybind" data-lang-ph="keybind">
+                <input type="text" id="key-scan-entity" class="min w-full keybind" data-lang-ph="keybind">
+                <input type="text" id="key-clear-all" class="min w-full keybind" data-lang-ph="keybind">
             </div>
             <details>
                 <summary id="aimbot" data-lang="aimbot"></summary>
@@ -238,6 +243,10 @@
                 <div>
                     <div data-lang="upskill-value"></div>
                     <input class="config" type="number" id="upskill-value" min="0" max="9999" value="0">
+                </div>
+                <div>
+                    <div data-lang="upskill-except-timer"></div>
+                    <input class="config" type="checkbox" id="upskill-except-timer">
                 </div>
             </details>
             <details>

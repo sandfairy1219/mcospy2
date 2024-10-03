@@ -145,6 +145,7 @@ app.on("ready", async () => {
         emitter.emit("cheats", id, _state);
     });
     const state = (id:string, state:string, log:string) => {
+        if(main.isDestroyed()) return;
         main.webContents.send("update-state", id, state, log);
     };
 
@@ -349,7 +350,7 @@ app.on("ready", async () => {
             state("session", "error", "Failed to start agent");
         }
     });
-    
+
     // cheat
     emitter.on("pos", (pos:number[]) => {
         main.webContents.send("pos", pos);

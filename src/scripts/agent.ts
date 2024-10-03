@@ -160,24 +160,30 @@ Java.perform(() => {
                 const action = args[1];
                 keymap = args[2];
                 if(key === keybinds['reverse'] && action === 'DOWN') reverse();
+                if(key === keybinds['scan-epos'] && action === 'DOWN') {
+                    epos = scanEpos();
+                }
+                if(key === keybinds['scan-entity'] && action === 'DOWN') {
+                    entityList = scanEntityList(epos);
+                }
+                if(key === keybinds['clear-all'] && action === 'DOWN') clearAll();
             } else if(name === 'reverse'){
                 reverse();
             } else if(name === 'pos'){
                 pos(args[0]);
             } else if(name === 'skillcode'){
                 skillcode(+args[0]);
-            } else if(name === 'scan-epos'){
-                epos = scanEpos();
             } else if(name === 'change-ads-reward'){
                 if(!an) return;
                 if(an.isNull()) return;
                 const cashBase = an.add(anOffset['cash-base']);
                 cashBase.add(0x58).writeS32(19);
+            } else if(name === 'scan-epos'){
+                epos = scanEpos();
             } else if(name === 'scan-entity'){
-                const eposPointer = epos;
-                if(!eposPointer) return;
-                if(eposPointer.isNull()) return;
-                entityList = scanEntityList(eposPointer);
+                if(!epos) return;
+                if(epos.isNull()) return;
+                entityList = scanEntityList(epos);
             } else if(name === 'clear-all'){
                 clearAll();
             } else if(name === 'except-number'){
@@ -277,7 +283,11 @@ function loop(){
                 if(keybinds['fly-down'] && keymap[keybinds['fly-down']]) eposPointer.add(eposOffset['y']).writeFloat(y - (config['fly-speed'] || 1));
             }
             if(cheats['upskill'] && (!keybinds['upskill'] || keymap[keybinds['upskill']])){
-                eposPointer.add(eposOffset['sk']).writeFloat(+config['upskill-value'] || 0);
+                const hp = eposPointer.add(eposOffset['hp']).readS16();
+                eposPointer.add(eposOffset['hp']).writeS16(hp + 1);
+                const exceptTimer = config['upskill-except-timer'] || false;
+                eposPointer.add(eposOffset['sc']).writeFloat(+config['upskill-value'] || 0);
+                if(!exceptTimer) eposPointer.add(eposOffset['timer']).writeFloat(+config['upskill-value'] || 0);
             }
             if(cheats['grenade'] && (!keybinds['grenade'] || keymap[keybinds['grenade']])){
                 eposPointer.add(eposOffset['gc']).writeFloat(0);
@@ -297,6 +307,7 @@ function loop(){
 loop();
 
 function scanEpos():NativePointer{
+    if(!an) return null;
     if(an.isNull()) return null;
     if(an.add(anOffset['position-base']).isNull()) {
         send(['epos-state', 'error', 'Base Not Found']);
@@ -327,6 +338,7 @@ function scanEpos():NativePointer{
 }
 
 function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
+    if(!_eposPointer) return [];
     if(_eposPointer.isNull()) return [];
     let _entityList:NativePointer[] = [];
     send(['entity-state', 'pending', 'Scanning']);

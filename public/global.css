@@ -110,7 +110,8 @@ button:disabled, input:disabled, select:disabled, textarea:disabled{@apply opaci
 .state.error{@apply bg-red-400;}
 .state.pending{@apply bg-yellow-400;}
 
-.keybind{@apply text-sm text-neutral-700 bg-neutral-100 w-24 text-center;}
+.keybind{@apply text-sm text-neutral-700 bg-neutral-100 text-center;}
+.keybind:not(.min){@apply w-24;}
 
 [type="checkbox"] {
     appearance: none;
