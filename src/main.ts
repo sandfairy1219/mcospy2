@@ -327,7 +327,7 @@ ipcRenderer.on('token', (e, token:Token|string) => {
 ipcRenderer.on('update-state', (e, id:string, state:string, log:string) => {
     const el = $_(`state-${id}`);
     const elog = $_(`state-${id}-log`);
-    if(el) el.classList.remove('active', 'error', 'pending', 'succeed');
+    if(el) el.classList.remove('active', 'error', 'pending', 'succeed', 'clear', 'null');
     if(el) el.classList.add(state);
     if(elog) elog.textContent = log;
 });
@@ -412,6 +412,17 @@ ipcRenderer.on('skillcode', (e, code:string) => {
 $_('scan-epos').addEventListener('click', () => {ipcRenderer.send('scan-epos');});
 $_('scan-entity').addEventListener('click', () => {ipcRenderer.send('scan-entity');});
 $_('clear-all').addEventListener('click', () => {ipcRenderer.send('clear-all');});
+
+updateExceptNumber();
+$_('except-number').addEventListener('change', updateExceptNumber);
+
+function updateExceptNumber(){
+    const val = $i('except-number').value.split(',')
+    .filter(v => v)
+    .map((v:string) => parseInt(v) || 0)
+    .filter(v => v);
+    ipcRenderer.send('except-number', val);
+}
 
 $_('get-ranges').addEventListener('click', () => {ipcRenderer.send('get-ranges', $i('base').value);});
 $_('find-ranges').addEventListener('click', () => {ipcRenderer.send('find-ranges', $i('base').value);});

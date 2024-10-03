@@ -61,6 +61,7 @@ let cd:NativePointer = null;
 let cas:RangeDetails[] = [];
 let epos:NativePointer = null;
 let entityList:NativePointer[] = [];
+let excepts:number[] = [];
 
 let frame:number = 60;
 let cheats:{[key:string]:boolean} = {};
@@ -179,6 +180,8 @@ Java.perform(() => {
                 entityList = scanEntityList(eposPointer);
             } else if(name === 'clear-all'){
                 clearAll();
+            } else if(name === 'except-number'){
+                excepts = args[0];
             } else if(name === 'get-ranges'){
                 const r = Process.getRangeByAddress(ptr(args[0]));
                 log(r)
@@ -277,7 +280,11 @@ loop();
 
 function scanEpos():NativePointer{
     if(an.isNull()) return null;
-    if(an.add(anOffset['position-base']).isNull()) return null;
+    if(an.add(anOffset['position-base']).isNull()) {
+        send(['epos-state', 'error', 'Base Not Found']);
+        return null;
+    }
+    send(['epos-state', 'pending', 'Scanning']);
     const _arr = an.add(anOffset['position-base']).readByteArray(0xC);
     const _pattern = bufferToHex(_arr);
     const _ranges = Process.enumerateRanges('rw-').filter(range =>
@@ -291,16 +298,20 @@ function scanEpos():NativePointer{
         if(eposes.length > 0){
             const _epos = eposes.find(np => np.address.toString().match(/190$/));
             if(_epos){
-                log("Epos Found:", _epos.address.add(-0x190).toString())
-                return _epos.address.add(-0x190);
+                const _pointer = _epos.address.add(-0x190);
+                log("Epos Found:", _pointer.toString())
+                send(['epos-state', 'succeed', _pointer.toString().toUpperCase()]);
+                return _pointer;
             }
         }
     }
+    send(['epos-state', 'error', 'Not Found']);
 }
 
 function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
     if(_eposPointer.isNull()) return [];
     let _entityList:NativePointer[] = [];
+    send(['entity-state', 'pending', 'Scanning']);
     const _pattern = qwordToHex(_eposPointer.add(eposOffset['pointer']).readS64());
     cas.forEach(range => {
         const entities = Memory.scanSync(range.base, range.size, _pattern);
@@ -310,12 +321,15 @@ function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
     log("Entity Found:", _entityList.length, '\n',
         _entityList.map(entity => `[${entity.add(eposOffset['number']).readS32()}] ${entity.add(eposOffset['nickname']).readUtf8String()}`).join('\n')
     );
+    send(['entity-state', 'succeed', `Found: ${_entityList.length}`]);
     return _entityList || [];
 }
 
 function clearAll(){
     epos = null;
     entityList = [];
+    send(['epos-state', 'clear', '']);
+    send(['entity-state', 'clear', '']);
 }
 
 function reverse(){
@@ -355,7 +369,7 @@ function aimbot(eposPointer:NativePointer){
     const mode = config['aimbot-mode'] || 'normal';
     const speed = config['aimbot-speed'] || 20;
     const angle = config['aimbot-angle'] || 10;
-    const pitchOffset = config['aimbot-pitch-offset'] || 0;
+    const pitchOffset = +config['aimbot-pitch-offset'] || 0;
     const rad = angle/180*Math.PI;
     const camX = cambase.add(0xc).readFloat();
     const camY = cambase.add(0x10).readFloat();
@@ -364,6 +378,7 @@ function aimbot(eposPointer:NativePointer){
     const pitch = cambase.readFloat() + pitchOffset;
     const targets = entityList
     .filter(entity => entity.toString() !== eposPointer.toString())
+    .filter(entity => !excepts.includes(entity.add(eposOffset['number']).readS32()))
     .map((entity:NativePointer) => {
         const dx = entity.add(eposOffset["x"]).readFloat() - camX;
         const dy = entity.add(eposOffset["y"]).readFloat()+4.7 - camY;
@@ -414,6 +429,7 @@ function blackhole(eposPointer:NativePointer){
     const resY = camY + Math.sin(pitch) * dist;
     const resZ = camZ + Math.cos(yaw) * dist;
     entityList.filter(entity => entity.toString() !== eposPointer.toString())
+    .filter(entity => !excepts.includes(entity.add(eposOffset['number']).readS32()))
     .forEach((entity:NativePointer) => {
         if(!entity.isNull()){
             if(!entity.add(eposOffset['x']).isNull()) entity.add(eposOffset['x']).writeFloat(resX);

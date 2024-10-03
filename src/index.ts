@@ -310,6 +310,9 @@ app.on("ready", async () => {
                     ipcMain.on("clear-all", (e) => {
                         script.post(['clear-all']);
                     });
+                    ipcMain.on("except-number", (e, data:number[]) => {
+                        script.post(['except-number', data]);
+                    });
                     ipcMain.on("change-ads-reward", (e) => {
                         script.post(['change-ads-reward']);
                     });
@@ -329,10 +332,14 @@ app.on("ready", async () => {
                     ipcMain.removeAllListeners("reverse");
                     ipcMain.removeAllListeners("pos");
                     ipcMain.removeAllListeners("skillcode");
+                    ipcMain.removeAllListeners("scan-epos");
                     ipcMain.removeAllListeners("scan-entity");
+                    ipcMain.removeAllListeners("clear-all");
+                    ipcMain.removeAllListeners("except-number");
                     ipcMain.removeAllListeners("get-ranges");
                     ipcMain.removeAllListeners("find-ranges");
                     exp = null;
+                    cheats = {};
                     state("session", "error", "Session disposed");
                     dispose();
                 }
@@ -349,6 +356,12 @@ app.on("ready", async () => {
     });
     emitter.on("skillcode", (code:number) => {
         main.webContents.send("skillcode", code);
+    });
+    emitter.on("epos-state", (_state:string, msg:string) => {
+        state("epos", _state, msg);
+    });
+    emitter.on("entity-state", (_state:string, msg:string) => {
+        state("entity", _state, msg);
     });
 });
 
