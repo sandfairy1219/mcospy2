@@ -208,7 +208,10 @@ function getFilteredEntityList():NativePointer[]{
     return entityList
     .filter(entity => !entity.isNull())
     .filter(entity => entity.toString() !== epos.toString())
-    .filter(entity => reversed ? !excepts.includes(entity.add(eposOffset['number']).readS32()) : excepts.includes(entity.add(eposOffset['number']).readS32()))
+    .filter(entity => {
+        const except = excepts.includes(entity.add(eposOffset['number']).readS32())
+        return reversed ? except : !except;
+    })
 }
 
 let lastEpos = false;
@@ -394,7 +397,7 @@ function aimbot(eposPointer:NativePointer){
     const yaw = cambase.add(0x4).readFloat();
     const pitch = cambase.readFloat() + pitchOffset;
     const targets = getFilteredEntityList()
-    .filter(entity => ignoreDead ? entity.add(eposOffset['state']).readS32() !== 16 : true)
+    .filter(entity => ignoreDead ? entity.add(eposOffset['hp']).readS16() > 0 : true)
     .map((entity:NativePointer) => {
         const dx = entity.add(eposOffset["x"]).readFloat() - camX;
         const dy = entity.add(eposOffset["y"]).readFloat()+4.7 - camY;
@@ -446,7 +449,7 @@ function blackhole(eposPointer:NativePointer){
     const resX = camX + Math.sin(yaw) * dist;
     const resY = camY + Math.sin(pitch) * dist;
     const resZ = camZ + Math.cos(yaw) * dist;
-    getFilteredEntityList().filter(entity => ignoreDead ? entity.add(eposOffset['state']).readS32() !== 16 : true)
+    getFilteredEntityList().filter(entity => ignoreDead ? entity.add(eposOffset['hp']).readS16() > 0 : true)
     .forEach((entity:NativePointer) => {
         if(!entity.add(eposOffset['x']).isNull()) entity.add(eposOffset['x']).writeFloat(resX);
         if(!entity.add(eposOffset['y']).isNull()) entity.add(eposOffset['y']).writeFloat(resY);
