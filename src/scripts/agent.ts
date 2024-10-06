@@ -32,7 +32,7 @@ const eposOffset = {
     'assist': 0x20, // int32
     'hp':0x2C, // int16
     'weapon':0x2E, // int16
-    'barrier':0x30, // int16,
+    'barrier':0x30, // int16
     'nickname':0x88, // string 10
     'sk':0xAD, // byte
     'fall':0xAF, // byte
@@ -48,10 +48,15 @@ const eposOffset = {
     'gx':0x13C, // float
     'gy':0x140, // float
     'gz':0x144, // float
+    'zr1':0x18C, // float
     'x': 0x190, // float
     'y': 0x194, // float
     'z': 0x198, // float
+    'zr2':0x19C, // float
     'gc':0x1A8, // float
+    'ox':0x1AC, // float
+    'oy':0x1B0, // float
+    'oz':0x1B4, // float
     'pointer':0xEC0, // pointer
 };
 
@@ -113,6 +118,9 @@ Java.perform(() => {
                 // if(_cd) cd = _cd.base;
                 if(!xa || !an) return recv(api);
                 send(['Address.init', xa.toString(), an.toString()])
+                // Interceptor.attach(xa.add(0x34FE200), function(){
+                //     log(this.context);
+                // })
             } else if(name === 'cheats'){
                 if(!an || !xa) return recv(api);
                 cheats[args[0]] = args[1];
@@ -463,9 +471,15 @@ function blackhole(eposPointer:NativePointer){
     const resZ = camZ + Math.cos(yaw) * dist;
     getFilteredEntityList().filter(entity => ignoreDead ? entity.add(eposOffset['hp']).readS16() > 0 : true)
     .forEach((entity:NativePointer) => {
-        if(!entity.add(eposOffset['x']).isNull()) entity.add(eposOffset['x']).writeFloat(resX);
-        if(!entity.add(eposOffset['y']).isNull()) entity.add(eposOffset['y']).writeFloat(resY);
-        if(!entity.add(eposOffset['z']).isNull()) entity.add(eposOffset['z']).writeFloat(resZ);
+        if(
+            !entity.add(eposOffset['x']).isNull() &&
+            entity.add(eposOffset['zr1']).readFloat() === 0 &&
+            entity.add(eposOffset['zr2']).readFloat() === 0
+        ){
+            entity.add(eposOffset['x']).writeFloat(resX);
+            entity.add(eposOffset['y']).writeFloat(resY);
+            entity.add(eposOffset['z']).writeFloat(resZ);
+        }
     });
 }
 
@@ -604,7 +618,6 @@ function forceWriteS32(_ptr:NativePointer, value:number){
     _ptr.writeS32(value);
     Memory.protect(_ptr, Process.pageSize, 'r--');
 }
-
 function forceWriteFloat(_ptr:NativePointer, value:number){
     Memory.protect(_ptr, Process.pageSize, 'rwx');
     _ptr.writeFloat(value);

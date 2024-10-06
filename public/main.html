@@ -12,7 +12,7 @@
     <select id="lang" class="text-sm">
         <option value="en">English</option>
         <option value="ko">한국어</option>
-        <option value="jp">日本語</option>
+        <option value="ja">日本語</option>
         <option value="zh">中文</option>
     </select>
     <!-- back button -->
@@ -93,6 +93,14 @@
             <div>
                 <input class="config w-full" type="text" id="except-number" data-lang-ph="except-number">
                 <input class="config" type="checkbox" id="except-reverse">
+            </div>
+            <div class="justify-between">
+                <div data-lang="show-layout"></div>
+                <input type="checkbox" id="show-layout">
+            </div>
+            <div class="justify-between">
+                <div data-lang="lock-layout"></div>
+                <input type="checkbox" id="lock-layout">
             </div>
             <div>
                 <button id="scan-epos" data-lang="scan-epos"></button>
@@ -279,9 +287,13 @@
         <section id="dev-mode" class="hide">
             <details>
                 <summary data-lang="ranges"></summary>
-                <input class="w-full" type="text" id="base" data-lang-ph="base">
-                <button class="w-full" id="get-ranges" data-lang="get"></button>
-                <button class="w-full" id="find-ranges" data-lang="find"></button>
+                <div>
+                    <input class="w-full" type="text" id="base" data-lang-ph="base">
+                </div>
+                <div>
+                    <button class="w-full" id="get-ranges" data-lang="get"></button>
+                    <button class="w-full" id="find-ranges" data-lang="find"></button>
+                </div>
             </details>
         </section>
     </div>

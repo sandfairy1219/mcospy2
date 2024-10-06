@@ -1,6 +1,6 @@
 {
   "name": "pixel",
-  "version": "1.3.6",
+  "version": "1.3.7",
   "description": "milkchoco frida cheat tool",
   "main": "dist/index.js",
   "scripts": {
@@ -20,7 +20,7 @@
     "dotenv": "^16.4.5",
     "electron-is-dev": "^2.0.0",
     "electron-log": "^5.1.7",
-    "electron-updater": "^6.3.4",
+    "electron-updater": "^6.2.1",
     "frida": "^16.4.10",
     "mongodb": "^6.8.0",
     "node-global-key-listener": "^0.3.0"
@@ -59,7 +59,8 @@
         "filter": [
           "**/*",
           "!global.css",
-          "!main.html"
+          "!main.html",
+          "!layout.html"
         ]
       }
     ],
@@ -69,7 +70,7 @@
         "private": true,
         "owner": "MswTester",
         "repo": "pixel",
-        "token": "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"
+        "token": "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"
       }
     ]
   },

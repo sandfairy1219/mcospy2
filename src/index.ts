@@ -56,10 +56,11 @@ app.on("ready", async () => {
         fullscreen: false,
     }, async () => {
         try{
+            Logger.info(isDev ? "Development mode" : "Production mode");
             if(isDev){
                 main.webContents.send("login");
             } else {
-                autoUpdater.checkForUpdates();
+                autoUpdater.checkForUpdatesAndNotify();
             }
         } catch(err){
             Logger.error("Update error", err);
@@ -68,6 +69,16 @@ app.on("ready", async () => {
     });
     main.once('close', exitApp);
     main.once('closed', exitApp);
+
+    const layout = createWindow("layout", 800, 600, false, {
+        maximizable: true,
+        fullscreenable: true,
+        fullscreen: false,
+        frame: false,
+        transparent: true,
+        resizable: true,
+        movable: true,
+    });
 
     autoUpdater.on("checking-for-update", () => {
         Logger.log("Checking for updates");
@@ -115,30 +126,49 @@ app.on("ready", async () => {
         else main.webContents.send("token", token);
     });
 
+    // layout
+    ipcMain.on("show-layout", (e, bool:boolean) => {
+        if(bool) layout.show();
+        else layout.hide();
+    });
+    ipcMain.on("lock-layout", (e, bool:boolean) => {
+        layout.setMovable(!bool);
+        layout.setResizable(!bool);
+        layout.setAlwaysOnTop(bool);
+        layout.setIgnoreMouseEvents(bool);
+    });
+    ipcMain.on("resize-layout", (e) => {
+        main.webContents.send("resize-layout", layout.getBounds());
+    });
+
     // vars
     let serial:string = "127.0.0.1:5555";
     let adbId:string = '';
     let frida:frida.Device = null;
     let cookie:string = '';
     let exp:frida.ScriptExports = null;
-    let cheats:{[key:string]:boolean} = {};
-    let config:{[key:string]:any} = {};
-    let keybinds:{[key:string]:string} = {};
+    let cheats:Cheats = {};
+    let config:Config = {};
+    let keybinds:Keybinds = {};
 
     // initialize
-    ipcMain.on("init", (e, _keybinds, _config) => {
+    ipcMain.on("init", (e, _keybinds, _config, _layoutBounds:Electron.Rectangle|null) => {
         keybinds = _keybinds;
         config = _config;
+        if(_layoutBounds) layout.setBounds(_layoutBounds);
+        layout.webContents.send("init", keybinds, config);
     });
     ipcMain.on('serial', (e, s:string) => {serial = s});
     ipcMain.on('cookie', (e, c:string) => {cookie = c});
     ipcMain.on("keybind", (e, id, key) => {
         keybinds[id] = key;
         emitter.emit("keybind", id, key);
+        layout.webContents.send("keybind", id, key);
     });
     ipcMain.on("config", (e, id, data) => {
         config[id] = data;
         emitter.emit("config", id, data);
+        layout.webContents.send("config", id, data);
     });
     ipcMain.on("cheats", (e, id, _state:boolean) => {
         cheats[id] = _state;
@@ -364,6 +394,9 @@ app.on("ready", async () => {
     emitter.on("entity-state", (_state:string, msg:string) => {
         state("entity", _state, msg);
     });
+    emitter.on("esp", (data:any) => {
+        if(!layout.isDestroyed() && layout.isVisible() && cheats['esp']) layout.webContents.send("esp", data);
+    })
 });
 
 

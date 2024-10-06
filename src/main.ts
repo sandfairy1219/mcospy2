@@ -162,6 +162,18 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'除外番号',
         'zh':'排除号码',
     },
+    'show-layout':{
+        'en':'Show Layout',
+        'ko':'레이아웃 표시',
+        'ja':'レイアウト表示',
+        'zh':'显示布局',
+    },
+    'lock-layout':{
+        'en':'Lock Layout',
+        'ko':'레이아웃 잠금',
+        'ja':'レイアウトロック',
+        'zh':'锁定布局',
+    },
     'scan-epos':{
         'en':'Scan EPOS',
         'ko':'EPOS 스캔',
@@ -581,7 +593,8 @@ $$_('.config').forEach((el:HTMLElement) => {
         });
     }
 });
-ipcRenderer.send('init', keybinds, config);
+const bounds = localStorage.getItem('layout');
+ipcRenderer.send('init', keybinds, config, bounds ? JSON.parse(bounds) : null);
 
 // auto updater
 ipcRenderer.on('update', () => {
@@ -717,6 +730,13 @@ function updateExceptNumber(){
     .filter(v => v);
     ipcRenderer.send('except-number', val);
 }
+
+$_('show-layout').addEventListener('change', () => {ipcRenderer.send('show-layout', $i('show-layout').checked);});
+$_('lock-layout').addEventListener('change', () => {ipcRenderer.send('lock-layout', $i('lock-layout').checked);});
+
+ipcRenderer.on('resize-layout', (e, bounds:Electron.Rectangle) => {
+    localStorage.setItem('layout', JSON.stringify(bounds));
+});
 
 $_('get-ranges').addEventListener('click', () => {ipcRenderer.send('get-ranges', $i('base').value);});
 $_('find-ranges').addEventListener('click', () => {ipcRenderer.send('find-ranges', $i('base').value);});
