@@ -8,3 +8,13 @@ interface Token{
 type Cheats = {[key:string]:boolean}
 type Config = {[key:string]:any}
 type Keybinds = {[key:string]:string}
+
+interface Point{
+    x:number;
+    y:number;
+}
+
+interface DrawRect{
+    upside:Point[];
+    downside:Point[];
+}

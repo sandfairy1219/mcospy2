@@ -156,14 +156,13 @@ app.on("ready", async () => {
         keybinds = _keybinds;
         config = _config;
         if(_layoutBounds) layout.setBounds(_layoutBounds);
-        layout.webContents.send("init", keybinds, config);
+        layout.webContents.send("init", config);
     });
     ipcMain.on('serial', (e, s:string) => {serial = s});
     ipcMain.on('cookie', (e, c:string) => {cookie = c});
     ipcMain.on("keybind", (e, id, key) => {
         keybinds[id] = key;
         emitter.emit("keybind", id, key);
-        layout.webContents.send("keybind", id, key);
     });
     ipcMain.on("config", (e, id, data) => {
         config[id] = data;
