@@ -311,6 +311,7 @@ app.on("ready", async () => {
                 },
                 () => {
                     state("session", "pending", "Agent attached");
+                    layout.webContents.send("init-config", config);
                     emitter.on("config", (key, value) => {
                         script.post(['config', key, value]);
                     });
