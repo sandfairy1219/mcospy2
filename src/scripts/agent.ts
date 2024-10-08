@@ -59,6 +59,7 @@ const eposOffset = {
     'oz':0x1B4, // float
     'pointer':0xEC0, // pointer
 };
+const camFov = [92, 52];
 
 let xa:NativePointer = null;
 let an:NativePointer = null;
@@ -226,6 +227,7 @@ function getFilteredEntityList():NativePointer[]{
         const except = excepts.includes(entity.add(eposOffset['number']).readS32())
         return reversed ? except : !except;
     })
+    .filter(entity => entity.add(eposOffset['zr1']).readS32() === 0 && entity.add(eposOffset['zr2']).readS32() === 0)
 }
 
 let lastEpos = false;
@@ -249,6 +251,42 @@ function loop(){
             if(cheats['aimbot']){
                 if(!keybinds['aimbot'] || keymap[keybinds['aimbot']]){
                     aimbot(eposPointer);
+                }
+            }
+            if(cheats['esp']){
+                if(an && !an.isNull() && entityList.length > 0){
+                    const entities = getFilteredEntityList();
+                    const pitchOffset = +config['esp-pitch-offset'] || 0;
+                    const cambase = an.add(anOffset['camera-base']);
+                    const camX = cambase.add(0xc).readFloat();
+                    const camY = cambase.add(0x10).readFloat();
+                    const camZ = cambase.add(0x14).readFloat();
+                    const yaw = cambase.add(0x4).readFloat();
+                    const pitch = cambase.readFloat() + pitchOffset;
+                    const upSize = 9;
+                    const downSize = -0.5;
+                    const sideSize = 2.5;
+                    const data:DrawRect[] = entities.map(entity => {
+                        const x = entity.add(eposOffset['x']).readFloat();
+                        const y = entity.add(eposOffset['y']).readFloat();
+                        const z = entity.add(eposOffset['z']).readFloat();
+                        const number = entity.add(eposOffset['number']).readS32();
+                        const nickname = entity.add(eposOffset['nickname']).readUtf8String();
+                        const upside = [
+                            {x: x + sideSize, y: y + upSize, z: z + sideSize},
+                            {x: x - sideSize, y: y + upSize, z: z + sideSize},
+                            {x: x - sideSize, y: y + upSize, z: z - sideSize},
+                            {x: x + sideSize, y: y + upSize, z: z - sideSize},
+                        ].map(vec3 => calcESP(vec3, {x: camX, y: camY, z: camZ}, yaw, pitch, camFov)).filter(point => point);
+                        const downside = [
+                            {x: x + sideSize, y: y + downSize, z: z + sideSize},
+                            {x: x - sideSize, y: y + downSize, z: z + sideSize},
+                            {x: x - sideSize, y: y + downSize, z: z - sideSize},
+                            {x: x + sideSize, y: y + downSize, z: z - sideSize},
+                        ].map(vec3 => calcESP(vec3, {x: camX, y: camY, z: camZ}, yaw, pitch, camFov)).filter(point => point);
+                        return {upside, downside, number, nickname};
+                    }).filter(rect => rect.upside.length > 3 && rect.downside.length > 3);
+                    send(['esp', data]);
                 }
             }
             if(cheats['blackhole']){
@@ -300,6 +338,11 @@ function loop(){
             if(cheats['grenade'] && (!keybinds['grenade'] || keymap[keybinds['grenade']])){
                 eposPointer.add(eposOffset['gc']).writeFloat(0);
             }
+            if(cheats['hide-me']){
+                eposPointer.add(eposOffset['oy']).writeFloat(100);
+            } else {
+                eposPointer.add(eposOffset['oy']).writeFloat(0);
+            }
         } else {
             lastEpos = false;
             clearAll();
@@ -350,10 +393,10 @@ function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
     if(_eposPointer.isNull()) return [];
     let _entityList:NativePointer[] = [];
     send(['entity-state', 'pending', 'Scanning']);
-    const _pattern = qwordToHex(_eposPointer.add(eposOffset['pointer']).readS64());
+    const _pattern = bufferToHex(_eposPointer.add(eposOffset['pointer']).readByteArray(0x8));
     cas.forEach(range => {
         const entities = Memory.scanSync(range.base, range.size, _pattern);
-        _entityList = [..._entityList, ...entities.map(entity => entity.address.add(-0xEC0))];
+        _entityList = [..._entityList, ...entities.map(entity => entity.address.add(-eposOffset['pointer']))];
     });
     _entityList = _entityList.filter(entity => entity.toString().match(/000$/))
     log("Entity Found:", _entityList.length, '\n',
@@ -453,6 +496,24 @@ function aimbot(eposPointer:NativePointer){
     }
 }
 
+function calcESP(vec3:{x:number; y:number; z:number;}, cam3:{x:number; y:number; z:number;}, yaw:number, pitch:number, fov:number[]):Point{
+    const camX = cam3.x;
+    const camY = cam3.y;
+    const camZ = cam3.z;
+    const dx = vec3.x - camX;
+    const dy = vec3.y - camY;
+    const dz = vec3.z - camZ;
+    let rotatedX:number = dx * Math.cos(yaw + Math.PI) - dz * Math.sin(yaw + Math.PI);
+    let rotatedZ:number = dz * Math.cos(yaw + Math.PI) + dx * Math.sin(yaw + Math.PI);
+    let rotatedY:number = - dy * Math.cos(-pitch) + rotatedZ * Math.sin(-pitch);
+    rotatedZ = rotatedZ * Math.cos(-pitch) + dy * Math.sin(-pitch);
+    if(rotatedZ >= 0) return null;
+    return {
+        x:-(rotatedX / rotatedZ)*(90/fov[0]),
+        y:-(rotatedY / rotatedZ)*(90/fov[1])
+    };
+}
+
 function blackhole(eposPointer:NativePointer){
     if(!an) return;
     if(eposPointer.isNull()) return;
@@ -469,17 +530,12 @@ function blackhole(eposPointer:NativePointer){
     const resX = camX + Math.sin(yaw) * dist;
     const resY = camY + Math.sin(pitch) * dist;
     const resZ = camZ + Math.cos(yaw) * dist;
-    getFilteredEntityList().filter(entity => ignoreDead ? entity.add(eposOffset['hp']).readS16() > 0 : true)
+    getFilteredEntityList()
+    .filter(entity => ignoreDead ? entity.add(eposOffset['hp']).readS16() > 0 : true)
     .forEach((entity:NativePointer) => {
-        if(
-            !entity.add(eposOffset['x']).isNull() &&
-            entity.add(eposOffset['zr1']).readFloat() === 0 &&
-            entity.add(eposOffset['zr2']).readFloat() === 0
-        ){
-            entity.add(eposOffset['x']).writeFloat(resX);
-            entity.add(eposOffset['y']).writeFloat(resY);
-            entity.add(eposOffset['z']).writeFloat(resZ);
-        }
+        entity.add(eposOffset['x']).writeFloat(resX);
+        entity.add(eposOffset['y']).writeFloat(resY);
+        entity.add(eposOffset['z']).writeFloat(resZ);
     });
 }
 

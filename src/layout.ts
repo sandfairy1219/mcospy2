@@ -21,10 +21,15 @@ ipcRenderer.on("config", (event, id:string, value:any) => {
     };
 });
 ipcRenderer.on("draw", (event, data:DrawRect[], tracer:boolean = false, threed:boolean = false) => {
+    console.log(data);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     if(threed){
         for (const rect of data) {
             ctx.beginPath();
+            if(tracer){
+                ctx.moveTo(canvas.width / 2, 0);
+                ctx.lineTo(rect.upside[0].x, rect.upside[0].y);
+            }
             const lastUpIdx = rect.upside.length - 1;
             ctx.moveTo(rect.upside[lastUpIdx].x, rect.upside[lastUpIdx].y);
             for (const point of rect.upside) {
@@ -51,6 +56,10 @@ ipcRenderer.on("draw", (event, data:DrawRect[], tracer:boolean = false, threed:b
             const minY = Math.min(...Ys);
             const maxY = Math.max(...Ys);
             ctx.beginPath();
+            if(tracer){
+                ctx.moveTo(canvas.width / 2, 0);
+                ctx.lineTo(minX, minY);
+            }
             ctx.moveTo(minX, minY);
             ctx.lineTo(maxX, minY);
             ctx.lineTo(maxX, maxY);

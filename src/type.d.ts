@@ -17,4 +17,6 @@ interface Point{
 interface DrawRect{
     upside:Point[];
     downside:Point[];
+    number:number;
+    nickname:string;
 }

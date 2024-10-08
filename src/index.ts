@@ -393,11 +393,10 @@ app.on("ready", async () => {
     emitter.on("entity-state", (_state:string, msg:string) => {
         state("entity", _state, msg);
     });
-    emitter.on("esp", (data:any) => {
-        if(!layout.isDestroyed() && layout.isVisible() && cheats['esp']) layout.webContents.send("esp", data);
+    emitter.on("esp", (data:DrawRect[]) => {
+        if(!layout.isDestroyed() && layout.isVisible() && cheats['esp']) layout.webContents.send("draw", data, config['esp-tracer'], config['esp-3d']);
     })
 });
-
 
 emitter.on("log", (...args:any[]) => {
     Logger.log(...args);
