@@ -394,7 +394,9 @@ app.on("ready", async () => {
         state("entity", _state, msg);
     });
     emitter.on("esp", (data:DrawRect[]) => {
-        if(!layout.isDestroyed() && layout.isVisible() && cheats['esp']) layout.webContents.send("draw", data, config['esp-tracer'], config['esp-3d']);
+        if(!layout.isDestroyed() && layout.isVisible() && cheats['esp']) {
+            layout.webContents.send("draw", data, config['esp-tracer'], config['esp-3d']);
+        }
     })
 });
 

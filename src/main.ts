@@ -276,6 +276,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'ESP色',
         'zh':'ESP颜色',
     },
+    'esp-pitch-offset':{
+        'en':'ESP Pitch Offset',
+        'ko':'ESP 피치 오프셋',
+        'ja':'ESPピッチオフセット',
+        'zh':'ESP俯仰偏移',
+    },
     'esp-mark-keybind':{
         'en':'ESP Mark Keybind',
         'ko':'ESP 마킹 단축키',
@@ -419,6 +425,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ko':'수류탄',
         'ja':'手榴弾',
         'zh':'手榴弹',
+    },
+    'hide-me':{
+        'en':'Hide Player',
+        'ko':'플레이어 숨기기',
+        'ja':'プレイヤーを隠す',
+        'zh':'隐藏玩家',
     },
     'changer':{
         'en':'Changer',

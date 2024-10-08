@@ -2,6 +2,9 @@ import { ipcRenderer } from "electron"
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
+ctx.textAlign = "center";
+ctx.textBaseline = "bottom";
+ctx.font = "20px sans-serif";
 
 let configg:Config = {};
 
@@ -21,40 +24,50 @@ ipcRenderer.on("config", (event, id:string, value:any) => {
     };
 });
 ipcRenderer.on("draw", (event, data:DrawRect[], tracer:boolean = false, threed:boolean = false) => {
-    console.log(data);
+    const halfWidth = canvas.width / 2;
+    const halfHeight = canvas.height
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const value = config['esp-color'] || 'red'
+    ctx.fillStyle = value;
+    ctx.strokeStyle = value;
     if(threed){
         for (const rect of data) {
+            const upside = rect.upside.map(point => ({ x: halfWidth + point.x * halfWidth, y: halfHeight + point.y * halfHeight }));
+            const downside = rect.downside.map(point => ({ x: halfWidth + point.x * halfWidth, y: halfHeight + point.y * halfHeight }));
+            const Xs = [...upside.map(point => point.x), ...downside.map(point => point.x)];
+            const Ys = [...upside.map(point => point.y), ...downside.map(point => point.y)];
+            const minX = Math.min(...Xs), maxX = Math.max(...Xs), minY = Math.min(...Ys), maxY = Math.max(...Ys);
+            ctx.fillText(`[${rect.number}] ${rect.nickname}`, minX + (maxX - minX) / 2, minY);
             ctx.beginPath();
             if(tracer){
                 ctx.moveTo(canvas.width / 2, 0);
-                ctx.lineTo(rect.upside[0].x, rect.upside[0].y);
+                ctx.lineTo(minX, minY);
             }
-            const lastUpIdx = rect.upside.length - 1;
-            ctx.moveTo(rect.upside[lastUpIdx].x, rect.upside[lastUpIdx].y);
-            for (const point of rect.upside) {
+            const lastUpIdx = upside.length - 1;
+            ctx.moveTo(upside[lastUpIdx].x, upside[lastUpIdx].y);
+            for (const point of upside) {
                 ctx.lineTo(point.x, point.y);
             }
-            const lastDownIdx = rect.downside.length - 1;
-            ctx.moveTo(rect.downside[lastDownIdx].x, rect.downside[lastDownIdx].y);
-            for (const point of rect.downside) {
+            const lastDownIdx = downside.length - 1;
+            ctx.moveTo(downside[lastDownIdx].x, downside[lastDownIdx].y);
+            for (const point of downside) {
                 ctx.lineTo(point.x, point.y);
             }
-            rect.upside.forEach((point, idx) => {
+            upside.forEach((point, idx) => {
                 ctx.moveTo(point.x, point.y);
-                ctx.lineTo(rect.downside[idx].x, rect.downside[idx].y);
+                ctx.lineTo(downside[idx].x, downside[idx].y);
             });
             ctx.stroke();
             ctx.closePath();
         }
     } else {
         for (const rect of data) {
-            const Xs = [...rect.upside.map(point => point.x), ...rect.downside.map(point => point.x)];
-            const Ys = [...rect.upside.map(point => point.y), ...rect.downside.map(point => point.y)];
-            const minX = Math.min(...Xs);
-            const maxX = Math.max(...Xs);
-            const minY = Math.min(...Ys);
-            const maxY = Math.max(...Ys);
+            const upside = rect.upside.map(point => ({ x: halfWidth + point.x * halfWidth, y: halfHeight + point.y * halfHeight }));
+            const downside = rect.downside.map(point => ({ x: halfWidth + point.x * halfWidth, y: halfHeight + point.y * halfHeight }));
+            const Xs = [...upside.map(point => point.x), ...downside.map(point => point.x)];
+            const Ys = [...upside.map(point => point.y), ...downside.map(point => point.y)];
+            const minX = Math.min(...Xs), maxX = Math.max(...Xs), minY = Math.min(...Ys), maxY = Math.max(...Ys);
+            ctx.fillText(`[${rect.number}] ${rect.nickname}`, minX + (maxX - minX) / 2, minY);
             ctx.beginPath();
             if(tracer){
                 ctx.moveTo(canvas.width / 2, 0);

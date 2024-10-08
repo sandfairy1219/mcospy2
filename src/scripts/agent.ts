@@ -61,6 +61,7 @@ const eposOffset = {
 };
 const camFov = [92, 52];
 
+let isArm = false
 let xa:NativePointer = null;
 let an:NativePointer = null;
 let cd:NativePointer = null;
@@ -101,27 +102,38 @@ Java.perform(() => {
             } else if(name === 'addr'){
                 const r = Process.enumerateRanges('r--');
                 const rw = Process.enumerateRanges('rw-');
+                const rx = Process.enumerateRanges('r-x');
                 const _xa = r.filter((range:RangeDetails) =>
                     range.file &&
                     range.file.path.includes('libMyGame.so')
-                )[0];
+                );
+                if(_xa[0]) xa = _xa[0].base
+                else {
+                    const __xa = rx.filter((range:RangeDetails) =>
+                        range.file &&
+                        range.file.path.includes('split_config.arm64_v8a.apk') &&
+                        range.size >= 0x442_8000
+                    );
+                    if(__xa[0]) {
+                        xa = __xa[0].base;
+                        isArm = true;
+                    }
+                }
                 const _an = rw.filter((range:RangeDetails) =>
                     (!range.file) &&
-                    range.size >= 21921792
-                )[0];
+                    range.size >= 0x14E_8000
+                );
+                log(_an.slice(0, 10))
+                const __an = isArm ? _an[1] : _an[0];
+                if(__an) an = __an.base;
                 // const _cd = rw.filter((range:RangeDetails) =>
                 //     range.file &&
                 //     range.file.path.includes('libnms.so') &&
                 //     range.size >= 4096
                 // )[0];
-                if(_xa) xa = _xa.base;
-                if(_an) an = _an.base;
                 // if(_cd) cd = _cd.base;
                 if(!xa || !an) return recv(api);
                 send(['Address.init', xa.toString(), an.toString()])
-                // Interceptor.attach(xa.add(0x34FE200), function(){
-                //     log(this.context);
-                // })
             } else if(name === 'cheats'){
                 if(!an || !xa) return recv(api);
                 cheats[args[0]] = args[1];
@@ -672,10 +684,10 @@ function qwordToHex(qword: Int64): string {
 function forceWriteS32(_ptr:NativePointer, value:number){
     Memory.protect(_ptr, Process.pageSize, 'rwx');
     _ptr.writeS32(value);
-    Memory.protect(_ptr, Process.pageSize, 'r--');
+    Memory.protect(_ptr, Process.pageSize, isArm ? 'r-x' : 'r--');
 }
 function forceWriteFloat(_ptr:NativePointer, value:number){
     Memory.protect(_ptr, Process.pageSize, 'rwx');
     _ptr.writeFloat(value);
-    Memory.protect(_ptr, Process.pageSize, 'r--');
+    Memory.protect(_ptr, Process.pageSize, isArm ? 'r-x' : 'r--');
 }
