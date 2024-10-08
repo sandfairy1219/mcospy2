@@ -156,8 +156,9 @@ app.on("ready", async () => {
         keybinds = _keybinds;
         config = _config;
         if(_layoutBounds) layout.setBounds(_layoutBounds);
-        layout.webContents.send("init", config);
+        layout.webContents.send("init-config", config);
     });
+    ipcMain.on("get-config", (e) => {e.returnValue = config;});
     ipcMain.on('serial', (e, s:string) => {serial = s});
     ipcMain.on('cookie', (e, c:string) => {cookie = c});
     ipcMain.on("keybind", (e, id, key) => {
@@ -393,11 +394,22 @@ app.on("ready", async () => {
     emitter.on("entity-state", (_state:string, msg:string) => {
         state("entity", _state, msg);
     });
+    emitter.on("clear-all", () => {
+        state("epos", "clear", "");
+        state("entity", "clear", "");
+        layout.webContents.send("clear");
+    });
+    emitter.on("clear-esp", () => {
+        layout.webContents.send("clear");
+    });
     emitter.on("esp", (data:DrawRect[]) => {
         if(!layout.isDestroyed() && layout.isVisible() && cheats['esp']) {
-            layout.webContents.send("draw", data, config['esp-tracer'], config['esp-3d']);
+            layout.webContents.send("draw", data);
         }
     })
+    emitter.on("except-number", (data:number[]) => {
+        main.webContents.send("except-number", data);
+    });
 });
 
 emitter.on("log", (...args:any[]) => {

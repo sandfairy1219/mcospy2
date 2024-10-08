@@ -2,47 +2,56 @@ import { ipcRenderer } from "electron"
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
-ctx.textAlign = "center";
-ctx.textBaseline = "bottom";
-ctx.font = "20px sans-serif";
 
-let configg:Config = {};
+let configg:Config = ipcRenderer.sendSync("get-config");
+ipcRenderer.on("init-config", (event, config:Config) => {configg = config;});
 
-ipcRenderer.on("init", (event, config:Config) => {
-    configg = config;
-    const value = config['esp-color'] || 'red'
-    ctx.fillStyle = value;
-    ctx.strokeStyle = value;
-    canvas.style.borderColor = value;
-});
+canvas.style.borderColor = configg['esp-color'] || 'red';
+
 ipcRenderer.on("config", (event, id:string, value:any) => {
     configg[id] = value;
     if(id === 'esp-color') {
-        ctx.fillStyle = value;
-        ctx.strokeStyle = value;
         canvas.style.borderColor = value;
     };
 });
-ipcRenderer.on("draw", (event, data:DrawRect[], tracer:boolean = false, threed:boolean = false) => {
-    const halfWidth = canvas.width / 2;
-    const halfHeight = canvas.height
+
+ipcRenderer.on("clear", (event) => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const value = config['esp-color'] || 'red'
-    ctx.fillStyle = value;
-    ctx.strokeStyle = value;
-    if(threed){
-        for (const rect of data) {
-            const upside = rect.upside.map(point => ({ x: halfWidth + point.x * halfWidth, y: halfHeight + point.y * halfHeight }));
-            const downside = rect.downside.map(point => ({ x: halfWidth + point.x * halfWidth, y: halfHeight + point.y * halfHeight }));
-            const Xs = [...upside.map(point => point.x), ...downside.map(point => point.x)];
-            const Ys = [...upside.map(point => point.y), ...downside.map(point => point.y)];
-            const minX = Math.min(...Xs), maxX = Math.max(...Xs), minY = Math.min(...Ys), maxY = Math.max(...Ys);
-            ctx.fillText(`[${rect.number}] ${rect.nickname}`, minX + (maxX - minX) / 2, minY);
-            ctx.beginPath();
-            if(tracer){
-                ctx.moveTo(canvas.width / 2, 0);
-                ctx.lineTo(minX, minY);
-            }
+});
+
+ipcRenderer.on("draw", (event, data:DrawRect[]) => {
+    const halfWidth = canvas.width / 2;
+    const halfHeight = canvas.height / 2;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const tracer = configg['esp-tracer'] || false;
+    const threed = configg['esp-3d'] || false;
+    const fontSize = +configg['esp-font-size'] || 16;
+    const showTag = configg['esp-tag'] || false;
+    const tagType = configg['esp-tag-type'] || 'both';
+    ctx.textAlign = "center";
+    ctx.textBaseline = "bottom";
+    ctx.font = `${fontSize}px sans-serif`;
+    for (const rect of data) {
+        const value = (rect.isDead ? configg['esp-dead-color'] : rect.isTeam ? configg['esp-mark-color'] : configg['esp-color']) || 'red';
+        ctx.fillStyle = value;
+        ctx.strokeStyle = value;
+        const upside = rect.upside.map(point => ({ x: halfWidth + point.x * halfWidth, y: halfHeight + point.y * halfHeight }));
+        const downside = rect.downside.map(point => ({ x: halfWidth + point.x * halfWidth, y: halfHeight + point.y * halfHeight }));
+        const Xs = [...upside.map(point => point.x), ...downside.map(point => point.x)];
+        const Ys = [...upside.map(point => point.y), ...downside.map(point => point.y)];
+        const minX = Math.min(...Xs), maxX = Math.max(...Xs), minY = Math.min(...Ys), maxY = Math.max(...Ys);
+        if(showTag) {
+            const onNumber = tagType === 'number' || tagType === 'both'
+            const onNickname = tagType === 'nickname' || tagType === 'both'
+            const tagText = `${onNumber ? `[${rect.number}]` : ""} ${onNickname ? rect.nickname : ""}`;
+            ctx.fillText(tagText, minX + (maxX - minX) / 2, minY);
+        }
+        ctx.beginPath();
+        if(tracer){
+            ctx.moveTo(canvas.width / 2, 0);
+            ctx.lineTo(minX + (maxX - minX) / 2, minY);
+        }
+        if(threed){
             const lastUpIdx = upside.length - 1;
             ctx.moveTo(upside[lastUpIdx].x, upside[lastUpIdx].y);
             for (const point of upside) {
@@ -57,30 +66,15 @@ ipcRenderer.on("draw", (event, data:DrawRect[], tracer:boolean = false, threed:b
                 ctx.moveTo(point.x, point.y);
                 ctx.lineTo(downside[idx].x, downside[idx].y);
             });
-            ctx.stroke();
-            ctx.closePath();
-        }
-    } else {
-        for (const rect of data) {
-            const upside = rect.upside.map(point => ({ x: halfWidth + point.x * halfWidth, y: halfHeight + point.y * halfHeight }));
-            const downside = rect.downside.map(point => ({ x: halfWidth + point.x * halfWidth, y: halfHeight + point.y * halfHeight }));
-            const Xs = [...upside.map(point => point.x), ...downside.map(point => point.x)];
-            const Ys = [...upside.map(point => point.y), ...downside.map(point => point.y)];
-            const minX = Math.min(...Xs), maxX = Math.max(...Xs), minY = Math.min(...Ys), maxY = Math.max(...Ys);
-            ctx.fillText(`[${rect.number}] ${rect.nickname}`, minX + (maxX - minX) / 2, minY);
-            ctx.beginPath();
-            if(tracer){
-                ctx.moveTo(canvas.width / 2, 0);
-                ctx.lineTo(minX, minY);
-            }
+        } else {
             ctx.moveTo(minX, minY);
             ctx.lineTo(maxX, minY);
             ctx.lineTo(maxX, maxY);
             ctx.lineTo(minX, maxY);
             ctx.lineTo(minX, minY);
-            ctx.stroke();
-            ctx.closePath();
         }
+        ctx.stroke();
+        ctx.closePath();
     }
 });
 

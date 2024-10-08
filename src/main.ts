@@ -270,11 +270,59 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'ESP 3D',
         'zh':'ESP 3D',
     },
+    'esp-font-size':{
+        'en':'ESP Font Size',
+        'ko':'ESP 폰트 크기',
+        'ja':'ESPフォントサイズ',
+        'zh':'ESP字体大小',
+    },
+    'esp-tag':{
+        'en':'ESP Tag',
+        'ko':'ESP 태그',
+        'ja':'ESPタグ',
+        'zh':'ESP标签',
+    },
+    'esp-tag-type':{
+        'en':'ESP Tag Type',
+        'ko':'ESP 태그 타입',
+        'ja':'ESPタグタイプ',
+        'zh':'ESP标签类型',
+    },
+    'both':{
+        'en':'Both',
+        'ko':'모두',
+        'ja':'両方',
+        'zh':'全部',
+    },
+    'number':{
+        'en':'Number',
+        'ko':'번호',
+        'ja':'番号',
+        'zh':'号码',
+    },
+    'nickname':{
+        'en':'Nickname',
+        'ko':'닉네임',
+        'ja':'ニックネーム',
+        'zh':'昵称',
+    },
     'esp-color':{
         'en':'ESP Color',
         'ko':'ESP 색상',
         'ja':'ESP色',
         'zh':'ESP颜色',
+    },
+    'esp-mark-color':{
+        'en':'ESP Marked Color',
+        'ko':'ESP 마킹 색상',
+        'ja':'ESPマーク色',
+        'zh':'ESP标记颜色',
+    },
+    'esp-dead-color':{
+        'en':'ESP Dead Color',
+        'ko':'ESP 사망 색상',
+        'ja':'ESP死亡色',
+        'zh':'ESP死亡颜色',
     },
     'esp-pitch-offset':{
         'en':'ESP Pitch Offset',
@@ -742,6 +790,11 @@ function updateExceptNumber(){
     .filter(v => v);
     ipcRenderer.send('except-number', val);
 }
+
+ipcRenderer.on('except-number', (e, val:number[]) => {
+    $i('except-number').value = val.join(',');
+    $i('except-number').dispatchEvent(new Event('change'));
+})
 
 $_('show-layout').addEventListener('change', () => {ipcRenderer.send('show-layout', $i('show-layout').checked);});
 $_('lock-layout').addEventListener('change', () => {ipcRenderer.send('lock-layout', $i('lock-layout').checked);});

@@ -57,9 +57,12 @@ const eposOffset = {
     'ox':0x1AC, // float
     'oy':0x1B0, // float
     'oz':0x1B4, // float
-    'pointer':0xEC0, // pointer
+    'pointer':0xEE8, // pointer
 };
 const camFov = [92, 52];
+const upSize = 9;
+const downSize = -0.5;
+const sideSize = 2.5;
 
 let isArm = false
 let xa:NativePointer = null;
@@ -99,6 +102,7 @@ Java.perform(() => {
                 cheats = args[0];
                 keybinds = args[1];
                 config = args[2];
+                excepts = (config['except-number'] as string || "").split(',').filter(v => v).map(v => parseInt(v) || 0).filter(v => v) || [];
             } else if(name === 'addr'){
                 const r = Process.enumerateRanges('r--');
                 const rw = Process.enumerateRanges('rw-');
@@ -121,9 +125,13 @@ Java.perform(() => {
                 }
                 const _an = rw.filter((range:RangeDetails) =>
                     (!range.file) &&
-                    range.size >= 0x14E_8000
+                    range.size >= (isArm ? 0xA_1000 : 0x14E_8000)
                 );
-                log(_an.slice(0, 10))
+                if(isArm) _an.slice(0, 10).forEach(range => {
+                    const dia = range.base.add(anOffset['cash-base']).readS32();
+                    const gold = range.base.add(anOffset['cash-base']).add(0x10).readS32();
+                    log(range.base, dia, gold)
+                })
                 const __an = isArm ? _an[1] : _an[0];
                 if(__an) an = __an.base;
                 // const _cd = rw.filter((range:RangeDetails) =>
@@ -139,6 +147,9 @@ Java.perform(() => {
                 cheats[args[0]] = args[1];
                 // Enable/Disable values
                 switch(args[0]){
+                    case 'esp':{
+                        if(!args[1]) send(['clear-esp']);
+                    }
                     case 'no-recoil':{
                         forceWriteS32(xa.add(xaOffset['no-recoil']), args[1] ? 505942016 : -1124072416);
                         break;
@@ -188,6 +199,42 @@ Java.perform(() => {
                     entityList = scanEntityList(epos);
                 }
                 if(key === keybinds['clear-all'] && action === 'DOWN') clearAll();
+                if(key === keybinds['esp-mark'] && action === 'DOWN'){
+                    if(!an) return recv(api);
+                    if(an.isNull()) return recv(api);
+                    const cambase = an.add(anOffset['camera-base']);
+                    const camX = cambase.add(0xc).readFloat();
+                    const camY = cambase.add(0x10).readFloat();
+                    const camZ = cambase.add(0x14).readFloat();
+                    const yaw = cambase.add(0x4).readFloat();
+                    const pitch = cambase.readFloat() + (+config['esp-pitch-offset'] || 0);
+                    getFilteredEntityList(false).forEach(entity => {
+                        const x = entity.add(eposOffset['x']).readFloat();
+                        const y = entity.add(eposOffset['y']).readFloat();
+                        const z = entity.add(eposOffset['z']).readFloat();
+                        const number = entity.add(eposOffset['number']).readS32();
+                        const list:Point[] = [
+                            {x: x + sideSize, y: y + upSize, z: z + sideSize},
+                            {x: x - sideSize, y: y + upSize, z: z + sideSize},
+                            {x: x - sideSize, y: y + upSize, z: z - sideSize},
+                            {x: x + sideSize, y: y + upSize, z: z - sideSize},
+                            {x: x + sideSize, y: y + downSize, z: z + sideSize},
+                            {x: x - sideSize, y: y + downSize, z: z + sideSize},
+                            {x: x - sideSize, y: y + downSize, z: z - sideSize},
+                            {x: x + sideSize, y: y + downSize, z: z - sideSize},
+                        ].map(vec3 => calcESP(vec3, {x: camX, y: camY, z: camZ}, yaw, pitch, camFov)).filter(point => point);
+                        const minX = Math.min(...list.map(point => point.x)), maxX = Math.max(...list.map(point => point.x));
+                        const minY = Math.min(...list.map(point => point.y)), maxY = Math.max(...list.map(point => point.y));
+                        if(minX < 0 && maxX > 0 && minY < 0 && maxY > 0){
+                            if(excepts.includes(number)){
+                                excepts = excepts.filter(n => n !== number);
+                            } else {
+                                excepts.push(number);
+                            }
+                            send(['except-number', excepts]);
+                        }
+                    });
+                }
             } else if(name === 'reverse'){
                 reverse();
             } else if(name === 'pos'){
@@ -226,7 +273,7 @@ Java.perform(() => {
     recv(api)
 });
 
-function getFilteredEntityList():NativePointer[]{
+function getFilteredEntityList(exceptTeam:boolean):NativePointer[]{
     if(!epos) return [];
     if(epos.isNull()) return [];
     if(!entityList) return [];
@@ -236,8 +283,12 @@ function getFilteredEntityList():NativePointer[]{
     .filter(entity => !entity.isNull())
     .filter(entity => entity.toString() !== epos.toString())
     .filter(entity => {
-        const except = excepts.includes(entity.add(eposOffset['number']).readS32())
-        return reversed ? except : !except;
+        if(exceptTeam){
+            const except = excepts.includes(entity.add(eposOffset['number']).readS32())
+            return reversed ? except : !except;
+        } else {
+            return true;
+        }
     })
     .filter(entity => entity.add(eposOffset['zr1']).readS32() === 0 && entity.add(eposOffset['zr2']).readS32() === 0)
 }
@@ -267,7 +318,7 @@ function loop(){
             }
             if(cheats['esp']){
                 if(an && !an.isNull() && entityList.length > 0){
-                    const entities = getFilteredEntityList();
+                    const entities = getFilteredEntityList(false);
                     const pitchOffset = +config['esp-pitch-offset'] || 0;
                     const cambase = an.add(anOffset['camera-base']);
                     const camX = cambase.add(0xc).readFloat();
@@ -275,9 +326,6 @@ function loop(){
                     const camZ = cambase.add(0x14).readFloat();
                     const yaw = cambase.add(0x4).readFloat();
                     const pitch = cambase.readFloat() + pitchOffset;
-                    const upSize = 9;
-                    const downSize = -0.5;
-                    const sideSize = 2.5;
                     const data:DrawRect[] = entities.map(entity => {
                         const x = entity.add(eposOffset['x']).readFloat();
                         const y = entity.add(eposOffset['y']).readFloat();
@@ -296,7 +344,9 @@ function loop(){
                             {x: x - sideSize, y: y + downSize, z: z - sideSize},
                             {x: x + sideSize, y: y + downSize, z: z - sideSize},
                         ].map(vec3 => calcESP(vec3, {x: camX, y: camY, z: camZ}, yaw, pitch, camFov)).filter(point => point);
-                        return {upside, downside, number, nickname};
+                        const isTeam = excepts.includes(number);
+                        const isDead = entity.add(eposOffset['hp']).readS16() <= 0;
+                        return {upside, downside, number, nickname, isTeam, isDead};
                     }).filter(rect => rect.upside.length > 3 && rect.downside.length > 3);
                     send(['esp', data]);
                 }
@@ -412,7 +462,7 @@ function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
     });
     _entityList = _entityList.filter(entity => entity.toString().match(/000$/))
     log("Entity Found:", _entityList.length, '\n',
-        _entityList.map(entity => `[${entity.add(eposOffset['number']).readS32()}] ${entity.add(eposOffset['nickname']).readUtf8String()}`).join('\n')
+        _entityList.map(entity => `${entity.toString()} [${entity.add(eposOffset['number']).readS32()}] ${entity.add(eposOffset['nickname']).readUtf8String()}`).join('\n')
     );
     send(['entity-state', 'succeed', `Found: ${_entityList.length}`]);
     return _entityList || [];
@@ -421,8 +471,7 @@ function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
 function clearAll(){
     epos = null;
     entityList = [];
-    send(['epos-state', 'clear', '']);
-    send(['entity-state', 'clear', '']);
+    send(['clear-all']);
 }
 
 function reverse(){
@@ -471,7 +520,7 @@ function aimbot(eposPointer:NativePointer){
     const camZ = cambase.add(0x14).readFloat();
     const yaw = cambase.add(0x4).readFloat();
     const pitch = cambase.readFloat() + pitchOffset;
-    const targets = getFilteredEntityList()
+    const targets = getFilteredEntityList(ignoreTeam)
     .filter(entity => ignoreDead ? entity.add(eposOffset['hp']).readS16() > 0 : true)
     .map((entity:NativePointer) => {
         const dx = entity.add(eposOffset["x"]).readFloat() - camX;
@@ -542,7 +591,7 @@ function blackhole(eposPointer:NativePointer){
     const resX = camX + Math.sin(yaw) * dist;
     const resY = camY + Math.sin(pitch) * dist;
     const resZ = camZ + Math.cos(yaw) * dist;
-    getFilteredEntityList()
+    getFilteredEntityList(ignoreTeam)
     .filter(entity => ignoreDead ? entity.add(eposOffset['hp']).readS16() > 0 : true)
     .forEach((entity:NativePointer) => {
         entity.add(eposOffset['x']).writeFloat(resX);
