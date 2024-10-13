@@ -9,6 +9,9 @@ const xaOffset = {
     'body-one-kill': 0x34FE200, // 506335232 => 505925632
     'head-one-kill': 0x34FE1F8, // -1136594944 => 505925632
     'skill-damage': 0x3265168, // -1203335166 => 1384184322
+    'getHP1': 0x34FE2C8, // -1463649283 => -763101184
+    'getHP2': 0x34FE2F8, // 318782464 => -763101184
+    'getHP3': 0x34FE308, // -1463649283 => -763101184
 }
 const anOffset = {
     "camera-base": 0x8A900C,
@@ -73,7 +76,6 @@ let epos:NativePointer = null;
 let entityList:NativePointer[] = [];
 let excepts:number[] = [];
 
-let frame:number = 60;
 let cheats:{[key:string]:boolean} = {};
 let keybinds:{[key:string]:string} = {};
 let config:{[key:string]:any} = {};
@@ -107,6 +109,7 @@ Java.perform(() => {
                 const r = Process.enumerateRanges('r--');
                 const rw = Process.enumerateRanges('rw-');
                 const rx = Process.enumerateRanges('r-x');
+                const rwx = Process.enumerateRanges('rwx');
                 const _xa = r.filter((range:RangeDetails) =>
                     range.file &&
                     range.file.path.includes('libMyGame.so')
@@ -125,15 +128,19 @@ Java.perform(() => {
                 }
                 const _an = rw.filter((range:RangeDetails) =>
                     (!range.file) &&
-                    range.size >= (isArm ? 0xA_1000 : 0x14E_8000)
+                    range.size >= (isArm ? 0x1000 : 0x14E_8000)
                 );
-                if(isArm) _an.slice(0, 10).forEach(range => {
+                if(_an[0]) an = _an[0].base;
+                if(isArm) rwx.filter((range:RangeDetails) =>
+                    range.size >= 0x1_0000
+                ).forEach((range:RangeDetails) => {
                     const dia = range.base.add(anOffset['cash-base']).readS32();
-                    const gold = range.base.add(anOffset['cash-base']).add(0x10).readS32();
-                    log(range.base, dia, gold)
-                })
-                const __an = isArm ? _an[1] : _an[0];
-                if(__an) an = __an.base;
+                    if(dia === 17){
+                        log("AN Found:", range.base.toString())
+                    } else {
+                        log(range.base.toString(), dia)
+                    }
+                });
                 // const _cd = rw.filter((range:RangeDetails) =>
                 //     range.file &&
                 //     range.file.path.includes('libnms.so') &&
@@ -181,8 +188,6 @@ Java.perform(() => {
                         break;
                     }
                 }
-            } else if(name === 'frame'){
-                frame = args[0];
             } else if(name === 'config'){
                 config[args[0]] = args[1];
             } else if(name === 'keybind'){
@@ -235,6 +240,15 @@ Java.perform(() => {
                         }
                     });
                 }
+                if(key === keybinds['infinite-jump'] && action === 'DOWN' && cheats['infinite-jump']){
+                    if(!epos) return recv(api);
+                    if(epos.isNull()) return recv(api);
+                    const y = epos.add(eposOffset['y']).readFloat();
+                    epos.add(eposOffset['state']).writeS32(isWalking(epos) ? 33 : 32);
+                    epos.add(eposOffset['dy']).writeFloat(-0.01);
+                    epos.add(eposOffset['fall']).writeS8(0);
+                    epos.add(eposOffset['y']).writeFloat(y + 0.1);
+                }
             } else if(name === 'reverse'){
                 reverse();
             } else if(name === 'pos'){
@@ -242,15 +256,15 @@ Java.perform(() => {
             } else if(name === 'skillcode'){
                 skillcode(+args[0]);
             } else if(name === 'change-ads-reward'){
-                if(!an) return;
-                if(an.isNull()) return;
+                if(!an) return recv(api);
+                if(an.isNull()) return recv(api);
                 const cashBase = an.add(anOffset['cash-base']);
                 cashBase.add(0x58).writeS32(19);
             } else if(name === 'scan-epos'){
                 epos = scanEpos();
             } else if(name === 'scan-entity'){
-                if(!epos) return;
-                if(epos.isNull()) return;
+                if(!epos) return recv(api);
+                if(epos.isNull()) return recv(api);
                 entityList = scanEntityList(epos);
             } else if(name === 'clear-all'){
                 clearAll();
@@ -294,9 +308,13 @@ function getFilteredEntityList(exceptTeam:boolean):NativePointer[]{
 }
 
 let lastEpos = false;
+let assistSpeed = 0;
+let lastTime = Date.now();
 
 function loop(){
-    if(!an || !xa) return setTimeout(loop, 1000/frame);
+    const delta = Date.now() - lastTime;
+    lastTime = Date.now();
+    if(!an || !xa) return setTimeout(loop, 1000/(config['frame'] || 60));
     // Pin values
     try{
         const eposPointer = epos;
@@ -313,8 +331,18 @@ function loop(){
             send(['skillcode', sk])
             if(cheats['aimbot']){
                 if(!keybinds['aimbot'] || keymap[keybinds['aimbot']]){
-                    aimbot(eposPointer);
+                    aimbot(eposPointer, delta);
                 }
+            }
+            if(cheats['aim-assist']){
+                if(isShooting(eposPointer)){
+                    const _aimAssistSpeed = config['aim-assist-speed'] || 20;
+                    assistSpeed = _aimAssistSpeed;
+                } else if(assistSpeed > 0.001) {
+                    assistSpeed -= assistSpeed/10;
+                    if(assistSpeed <= 0.001) assistSpeed = 0;
+                }
+                aimassist(eposPointer, delta);
             }
             if(cheats['esp']){
                 if(an && !an.isNull() && entityList.length > 0){
@@ -415,8 +443,9 @@ function loop(){
     } catch(e){
         log(e);
     }
-    setTimeout(loop, 1000/frame);
+    setTimeout(loop, 1000/(config['frame'] || 60));
 }
+lastTime = Date.now();
 loop();
 
 function scanEpos():NativePointer{
@@ -429,13 +458,14 @@ function scanEpos():NativePointer{
     send(['epos-state', 'pending', 'Scanning']);
     const _arr = an.add(anOffset['position-base']).readByteArray(0xC);
     const _pattern = bufferToHex(_arr);
-    const _ranges = Process.enumerateRanges('rw-').filter(range =>
+    cas = Process.enumerateRanges('rw-').filter(range =>
         !range.file &&
-        range.size >= 0x10_0000 &&
-        range.size % 0x10_0000 == 0
+        range.size >= 0x20_0000 &&
+        range.size < 0x1000_0000 &&
+        range.size % 0x10_0000 == 0 &&
+        range.base.toString().length > 10
     );
-    cas = _ranges;
-    for(let range of _ranges){
+    for(let range of cas){
         const eposes = Memory.scanSync(range.base, range.size, _pattern);
         if(eposes.length > 0){
             const _epos = eposes.find(np => np.address.toString().match(/190$/));
@@ -472,6 +502,7 @@ function clearAll(){
     epos = null;
     entityList = [];
     send(['clear-all']);
+    assistSpeed = 0;
 }
 
 function reverse(){
@@ -503,13 +534,13 @@ function skillcode(num:number){
     eposPointer.add(eposOffset['sk']).writeS8(num);
 }
 
-function aimbot(eposPointer:NativePointer){
+function aimbot(eposPointer:NativePointer, delta:number){
     if(!an) return;
     if(!eposPointer) return;
     if(eposPointer.isNull()) return;
     const cambase = an.add(anOffset['camera-base']);
     const mode = config['aimbot-mode'] || 'normal';
-    const speed = config['aimbot-speed'] || 20;
+    const speed = (config['aimbot-speed'] || 20) * (delta/10);
     const angle = config['aimbot-angle'] || 10;
     const ignoreTeam = config['aimbot-ignore'] || false;
     const ignoreDead = config['aimbot-ignore-dead'] || false;
@@ -557,6 +588,53 @@ function aimbot(eposPointer:NativePointer){
     }
 }
 
+function aimassist(eposPointer:NativePointer, delta:number){
+    if(!an) return;
+    if(!eposPointer) return;
+    if(eposPointer.isNull()) return;
+    const cambase = an.add(anOffset['camera-base']);
+    const angle = config['aim-assist-angle'] || 10;
+    const ignoreTeam = config['aim-assist-ignore'] || false;
+    const ignoreDead = config['aim-assist-ignore-dead'] || false;
+    const pitchOffset = +config['aim-assist-pitch-offset'] || 0;
+    const rad = angle/180*Math.PI;
+    const camX = cambase.add(0xc).readFloat();
+    const camY = cambase.add(0x10).readFloat();
+    const camZ = cambase.add(0x14).readFloat();
+    const yaw = cambase.add(0x4).readFloat();
+    const pitch = cambase.readFloat() + pitchOffset;
+    const targets = getFilteredEntityList(ignoreTeam)
+    .filter(entity => ignoreDead ? entity.add(eposOffset['hp']).readS16() > 0 : true)
+    .map((entity:NativePointer) => {
+        const dx = entity.add(eposOffset["x"]).readFloat() - camX;
+        const dy = entity.add(eposOffset["y"]).readFloat()+4.7 - camY;
+        const dz = entity.add(eposOffset["z"]).readFloat() - camZ;
+        const yo = Math.atan2(dx, dz)
+        let ya = yo - yaw;
+        while(ya > Math.PI) ya -= Math.PI * 2;
+        while(ya < -Math.PI) ya += Math.PI * 2;
+        const po = Math.atan2(dy, Math.sqrt(dx * dx + dz * dz))
+        let pi = po - pitch;
+        const from = Math.sqrt(ya * ya + pi * pi);
+        return [yo, po, -ya, -pi, from];
+    }).filter((d:any[]) => d[4] <= rad).sort((a:any[], b:any[]) => a[4] - b[4]);
+    const target = targets[0];
+    if(target){
+        const radyaw = target[2] > 0 ? rad : -rad;
+        const radpitch = target[3] > 0 ? rad : -rad;
+        const ry = target[2] > 0 ? Math.max(radyaw, target[2]) : Math.min(radyaw, target[2]);
+        const rp = target[3] > 0 ? Math.max(radpitch, target[3]) : Math.min(radpitch, target[3]);
+        const ry2 = ry - target[2];
+        const rp2 = rp - target[3];
+        const ry3 = target[2] > 0 ? Math.min(target[2], ry2) : Math.max(target[2], ry2);
+        const rp3 = target[3] > 0 ? Math.min(target[3], rp2) : Math.max(target[3], rp2);
+        const nyaw = yaw - ry3 * (assistSpeed/100 * (delta/10));
+        const npitch = pitch - rp3 * (assistSpeed/100 * (delta/10));
+        cambase.add(0x4).writeFloat(nyaw);
+        cambase.writeFloat(npitch - pitchOffset);
+    }
+}
+
 function calcESP(vec3:{x:number; y:number; z:number;}, cam3:{x:number; y:number; z:number;}, yaw:number, pitch:number, fov:number[]):Point{
     const camX = cam3.x;
     const camY = cam3.y;
@@ -580,6 +658,7 @@ function blackhole(eposPointer:NativePointer){
     if(eposPointer.isNull()) return;
     const ignoreTeam = config['blackhole-ignore'] || false;
     const ignoreDead = config['blackhole-ignore-dead'] || false;
+    const preventLagger = config['blackhole-prevent-lagger'] || false;
     const cambase = an.add(anOffset['camera-base']);
     const camX = cambase.add(0xc).readFloat();
     const camY = cambase.add(0x10).readFloat();
@@ -593,11 +672,33 @@ function blackhole(eposPointer:NativePointer){
     const resZ = camZ + Math.cos(yaw) * dist;
     getFilteredEntityList(ignoreTeam)
     .filter(entity => ignoreDead ? entity.add(eposOffset['hp']).readS16() > 0 : true)
+    .filter(entity => preventLagger ? entity.add(eposOffset['y']).readFloat() < -64 : true)
     .forEach((entity:NativePointer) => {
         entity.add(eposOffset['x']).writeFloat(resX);
         entity.add(eposOffset['y']).writeFloat(resY);
         entity.add(eposOffset['z']).writeFloat(resZ);
     });
+}
+
+function isShooting(eposPointer:NativePointer):boolean{
+    if(!eposPointer) return false;
+    if(eposPointer.isNull()) return false;
+    const state = eposPointer.add(eposOffset['state']).readS32();
+    return state === 8 || state === 9 || state === 10 || state === 11;
+}
+
+function isGround(eposPointer:NativePointer):boolean{
+    if(!eposPointer) return false;
+    if(eposPointer.isNull()) return false;
+    const state = eposPointer.add(eposOffset['state']).readS32();
+    return state % 4 >= 2;
+}
+
+function isWalking(eposPointer:NativePointer):boolean{
+    if(!eposPointer) return false;
+    if(eposPointer.isNull()) return false;
+    const state = eposPointer.add(eposOffset['state']).readS32();
+    return state % 2 === 1;
 }
 
 rpc.exports = {

@@ -252,6 +252,42 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'死を無視',
         'zh':'忽略死亡',
     },
+    'aim-assist':{
+        'en':'Aim Assist',
+        'ko':'에임 어시스트',
+        'ja':'エイムアシスト',
+        'zh':'瞄准辅助',
+    },
+    'aim-assist-speed':{
+        'en':'Aim Assist Speed',
+        'ko':'에임 어시스트 속도',
+        'ja':'エイムアシスト速度',
+        'zh':'瞄准辅助速度',
+    },
+    'aim-assist-limit':{
+        'en':'Aim Assist Angle Limit',
+        'ko':'에임 어시스트 각도 제한',
+        'ja':'エイムアシスト角度制限',
+        'zh':'瞄准辅助角度限制',
+    },
+    'aim-assist-pitch-offset':{
+        'en':'Aim Assist Pitch Offset',
+        'ko':'에임 어시스트 피치 오프셋',
+        'ja':'エイムアシストピッチオフセット',
+        'zh':'瞄准辅助俯仰偏移',
+    },
+    'aim-assist-ignore':{
+        'en':'Ignore Team',
+        'ko':'팀 무시',
+        'ja':'チームを無視',
+        'zh':'忽略团队',
+    },
+    'aim-assist-ignore-death':{
+        'en':'Ignore Death',
+        'ko':'시체 무시',
+        'ja':'死を無視',
+        'zh':'忽略死亡',
+    },
     'esp':{
         'en':'ESP',
         'ko':'ESP',
@@ -360,6 +396,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'死を無視',
         'zh':'忽略死亡',
     },
+    'blackhole-prevent-lagger':{
+        'en':'Prevent Lagger',
+        'ko': '고의지연 방지',
+        'ja': '',
+        'zh': '',
+    },
     'shoot-speed':{
         'en':'Shoot Speed',
         'ko':'발사 속도',
@@ -437,6 +479,18 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ko':'플라이 속도',
         'ja':'フライ速度',
         'zh':'飞行速度',
+    },
+    'infinite-jump':{
+        'en':'Infinite Jump',
+        'ko':'무한 점프',
+        'ja':'無限ジャンプ',
+        'zh':'无限跳跃',
+    },
+    'infinite-jump-keybind':{
+        'en':'Infinite Jump Keybind',
+        'ko':'무한 점프 단축키',
+        'ja':'無限ジャンプキーバインド',
+        'zh':'无限跳跃键绑定',
     },
     'one-kill':{
         'en':'One Kill',

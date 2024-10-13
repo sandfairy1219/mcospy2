@@ -148,6 +148,29 @@
                 </div>
             </details>
             <details>
+                <summary id="aim-assist" data-lang="aim-assist"></summary>
+                <div>
+                    <div data-lang="aim-assist-speed"></div>
+                    <input class="config" type="number" id="aim-assist-speed" min="1" max="100" value="20">
+                </div>
+                <div>
+                    <div data-lang="aim-assist-limit"></div>
+                    <input class="config" type="number" id="aim-assist-limit" min="0" max="90" value="3">
+                </div>
+                <div>
+                    <div data-lang="aim-assist-pitch-offset"></div>
+                    <input class="config" type="number" id="aim-assist-pitch-offset" min="-3" max="3" value="0">
+                </div>
+                <div>
+                    <div data-lang="aim-assist-ignore"></div>
+                    <input class="config" type="checkbox" id="aim-assist-ignore">
+                </div>
+                <div>
+                    <div data-lang="aim-assist-ignore-death"></div>
+                    <input class="config" type="checkbox" id="aim-assist-ignore-death">
+                </div>
+            </details>
+            <details>
                 <summary id="esp" data-lang="esp"></summary>
                 <div>
                     <div data-lang="esp-tracer"></div>
@@ -212,6 +235,10 @@
                     <div data-lang="blackhole-ignore-death"></div>
                     <input class="config" type="checkbox" id="blackhole-ignore-death">
                 </div>
+                <div>
+                    <div data-lang="blackhole-prevent-lagger"></div>
+                    <input class="config" type="checkbox" id="blackhole-prevent-lagger">
+                </div>
             </details>
             <details>
                 <summary id="shoot-speed" data-lang="shoot-speed"></summary>
@@ -265,6 +292,13 @@
                 </div>
             </details>
             <details>
+                <summary id="infinite-jump" data-lang="infinite-jump"></summary>
+                <div>
+                    <div data-lang="infinite-jump-keybind"></div>
+                    <input type="text" id="key-infinite-jump" class="keybind" data-lang-ph="keybind">
+                </div>
+            </details>
+            <details>
                 <summary class="no" id="one-kill" data-lang="one-kill"></summary>
             </details>
             <details>
@@ -314,6 +348,10 @@
             </details>
         </section>
         <section id="settings" class="hide">
+            <main>
+                <div data-lang="frame"></div>
+                <input class="config" type="number" id="frame" min="1" max="120" value="60">
+            </main>
         </section>
         <section id="dev-mode" class="hide">
             <details>
