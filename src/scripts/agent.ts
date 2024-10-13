@@ -487,7 +487,8 @@ function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
     send(['entity-state', 'pending', 'Scanning']);
     const _pattern = bufferToHex(_eposPointer.add(eposOffset['pointer']).readByteArray(0x8));
     cas.forEach(range => {
-        const entities = Memory.scanSync(range.base, range.size, _pattern);
+        const entities = Memory.scanSync(range.base, range.size, _pattern)
+        .filter(entity => !entity.address.isNull())
         _entityList = [..._entityList, ...entities.map(entity => entity.address.add(-eposOffset['pointer']))];
     });
     _entityList = _entityList.filter(entity => entity.toString().match(/000$/))

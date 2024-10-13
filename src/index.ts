@@ -259,7 +259,7 @@ app.on("ready", async () => {
                             Cocos2dxActivity["getCookie"].implementation = function (str) {
                                 let result = this["getCookie"](str);
                                 send(result);
-                                return \`\${result}\`;
+                                return result;
                             };
                         });
                     });
