@@ -12,6 +12,7 @@ const xaOffset = {
     'getHP1': 0x34FE2C8, // -1463649283 => -763101184
     'getHP2': 0x34FE2F8, // 318782464 => -763101184
     'getHP3': 0x34FE308, // -1463649283 => -763101184
+    'cookerbuff': 0x34FEA18, // 506335232 => 505925632
 }
 const anOffset = {
     "camera-base": 0x8A900C,
@@ -185,6 +186,12 @@ Java.perform(() => {
                     }
                     case 'skill-damage':{
                         forceWriteS32(xa.add(xaOffset['skill-damage']), args[1] ? 1384184322 : -1203335166);
+                        break;
+                    }
+                    case 'infinite-hp':{
+                        forceWriteS32(xa.add(xaOffset['getHP1']), args[1] ? -763101184 : -1463649283);
+                        forceWriteS32(xa.add(xaOffset['getHP2']), args[1] ? -763101184 : 318782464);
+                        forceWriteS32(xa.add(xaOffset['getHP3']), args[1] ? -763101184 : -1463649283);
                         break;
                     }
                 }
