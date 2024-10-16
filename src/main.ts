@@ -54,6 +54,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'設定',
         'zh':'设置',
     },
+    'plugins':{
+        'en':'Plugins',
+        'ko':'플러그인',
+        'ja':'プラグイン',
+        'zh':'插件',
+    },
     'dev-mode':{
         'en':'Developer Mode',
         'ko':'개발자 모드',
@@ -534,6 +540,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'プレイヤーを隠す',
         'zh':'隐藏玩家',
     },
+    'cooker-buff':{
+        'en':'Cooker Buff',
+        'ko':'쿠커 버프',
+        'ja':'クッカーバフ',
+        'zh':'烹饪器BUFF',
+    },
     'changer':{
         'en':'Changer',
         'ko':'체인저',
@@ -563,7 +575,73 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ko':'광고 보상 변경',
         'ja':'広告報酬変更',
         'zh':'更改广告奖励',
-    }
+    },
+    'general':{
+        'en':'General',
+        'ko':'일반',
+        'ja':'一般',
+        'zh':'一般',
+    },
+    'frame':{
+        'en':'Frame',
+        'ko':'프레임',
+        'ja':'フレーム',
+        'zh':'帧',
+    },
+    "mobile-controller": {
+        "en": "Mobile Controller",
+        "ko": "모바일 컨트롤러",
+        "ja": "モバイルコントローラ",
+        "zh": "移动控制器"
+    },
+    "utility": {
+        "en": "Utility",
+        "ko": "유틸리티",
+        "ja": "ユーティリティ",
+        "zh": "效用"
+    },
+    "replay": {
+        "en": "Replay",
+        "ko": "리플레이",
+        "ja": "リプレイ",
+        "zh": "重播"
+    },
+    'manager':{
+        'en':'Manager',
+        'ko':'매니저',
+        'ja':'マネージャ',
+        'zh':'管理者',
+    },
+    'start':{
+        'en':'Start',
+        'ko':'시작',
+        'ja':'スタート',
+        'zh':'开始',
+    },
+    'stop':{
+        'en':'Stop',
+        'ko':'중지',
+        'ja':'ストップ',
+        'zh':'停止',
+    },
+    'port':{
+        'en':'Port',
+        'ko':'포트',
+        'ja':'ポート',
+        'zh':'端口',
+    },
+    "gyro-scope": {
+        "en": "Gyro Scope",
+        "ko": "자이로 스코프",
+        "ja": "ジャイロスコープ",
+        "zh": "陀螺仪"
+    },
+    "gyro-scope-sensitivity": {
+        "en": "Gyro Scope Sensitivity",
+        "ko": "자이로 스코프 감도",
+        "ja": "ジャイロスコープ感度",
+        "zh": "陀螺仪灵敏度"
+    },
 }
 
 function lng(la:string, str:string):string{
@@ -624,6 +702,7 @@ for(const key in config){
         else _el.value = config[key];
     }
 }
+$_('mobile-controller').classList.toggle('hide', !config['plugin-server-mobile-controller']);
 const toggleCheat = (e:Event) => {
     const _tar = e.currentTarget as HTMLInputElement;
     const [key, val] = [_tar.id.split('toggle-')[1], _tar.checked];
@@ -701,6 +780,7 @@ $$_('.config').forEach((el:HTMLElement) => {
     } else if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') {
         el.addEventListener('change', () => {
             const _el = el as HTMLInputElement;
+            if(_el.id === 'plugin-server-mobile-controller') $_('mobile-controller').classList.toggle('hide', !_el.checked);
             config[_el.id] = _el.type === 'checkbox' ? _el.checked : _el.value;
             localStorage.setItem('config', JSON.stringify(config));
             ipcRenderer.send('config', el.id, config[el.id]);
@@ -740,6 +820,7 @@ ipcRenderer.on('token', (e, token:Token|string) => {
         $_('logerr').textContent = token;
     } else {
         localStorage.setItem('token', JSON.stringify(token.key));
+        if(token.perms.includes('dev')) $_('selector-dev-mode').classList.remove('hide');
         $_('login').classList.add('hide');
         $_('app').classList.remove('hide');
     }
@@ -859,3 +940,6 @@ ipcRenderer.on('resize-layout', (e, bounds:Electron.Rectangle) => {
 
 $_('get-ranges').addEventListener('click', () => {ipcRenderer.send('get-ranges', $i('base').value);});
 $_('find-ranges').addEventListener('click', () => {ipcRenderer.send('find-ranges', $i('base').value);});
+
+$_('server-start').addEventListener('click', () => {ipcRenderer.send('server-start', +$i('server-port').value || 3000);});
+$_('server-stop').addEventListener('click', () => {ipcRenderer.send('server-stop');});

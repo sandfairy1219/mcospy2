@@ -9,9 +9,6 @@ const xaOffset = {
     'body-one-kill': 0x34FE200, // 506335232 => 505925632
     'head-one-kill': 0x34FE1F8, // -1136594944 => 505925632
     'skill-damage': 0x3265168, // -1203335166 => 1384184322
-    'getHP1': 0x34FE2C8, // -1463649283 => -763101184
-    'getHP2': 0x34FE2F8, // 318782464 => -763101184
-    'getHP3': 0x34FE308, // -1463649283 => -763101184
     'cookerbuff': 0x34FEA18, // 506335232 => 505925632
 }
 const anOffset = {
@@ -188,10 +185,8 @@ Java.perform(() => {
                         forceWriteS32(xa.add(xaOffset['skill-damage']), args[1] ? 1384184322 : -1203335166);
                         break;
                     }
-                    case 'infinite-hp':{
-                        forceWriteS32(xa.add(xaOffset['getHP1']), args[1] ? -763101184 : -1463649283);
-                        forceWriteS32(xa.add(xaOffset['getHP2']), args[1] ? -763101184 : 318782464);
-                        forceWriteS32(xa.add(xaOffset['getHP3']), args[1] ? -763101184 : -1463649283);
+                    case 'cooker-buff':{
+                        forceWriteS32(xa.add(xaOffset['cookerbuff']), args[1] ? 505925632 : 506335232);
                         break;
                     }
                 }
@@ -285,6 +280,8 @@ Java.perform(() => {
                 const f = Process.enumerateRanges('rw-').find(range => range.base.equals(ptr(args[0])))
                 const c = !r.file && r.size >= 0x20_0000 && r.size % 0x10_0000 == 0
                 log(r, f, c)
+            } else if(name === 'gyro'){
+                gyro(args[0]);
             }
         } catch(e){
             log("[ERROR]", e);
@@ -433,6 +430,7 @@ function loop(){
                 if(!exceptTimer) eposPointer.add(eposOffset['timer']).writeFloat(+config['upskill-value'] || 0);
             }
             if(cheats['grenade'] && (!keybinds['grenade'] || keymap[keybinds['grenade']])){
+                an.add(anOffset['grenade-base']).writeS8(1);
                 eposPointer.add(eposOffset['gc']).writeFloat(0);
             }
             if(cheats['hide-me']){
@@ -490,13 +488,18 @@ function scanEpos():NativePointer{
 function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
     if(!_eposPointer) return [];
     if(_eposPointer.isNull()) return [];
+    if(_eposPointer.add(eposOffset['pointer']).isNull()) return [];
     let _entityList:NativePointer[] = [];
-    send(['entity-state', 'pending', 'Scanning']);
     const _pattern = bufferToHex(_eposPointer.add(eposOffset['pointer']).readByteArray(0x8));
+    send(['entity-state', 'pending', 'Scanning']);
     cas.forEach(range => {
-        const entities = Memory.scanSync(range.base, range.size, _pattern)
-        .filter(entity => !entity.address.isNull())
-        _entityList = [..._entityList, ...entities.map(entity => entity.address.add(-eposOffset['pointer']))];
+        try{
+            const entities = Memory.scanSync(range.base, range.size, _pattern)
+            .filter(entity => !entity.address.isNull())
+            _entityList = [..._entityList, ...entities.map(entity => entity.address.add(-eposOffset['pointer']))];
+        } catch(e){
+            // log(e);
+        }
     });
     _entityList = _entityList.filter(entity => entity.toString().match(/000$/))
     log("Entity Found:", _entityList.length, '\n',
@@ -707,6 +710,24 @@ function isWalking(eposPointer:NativePointer):boolean{
     if(eposPointer.isNull()) return false;
     const state = eposPointer.add(eposOffset['state']).readS32();
     return state % 2 === 1;
+}
+
+function gyro(data:{
+    alpha:number;
+    beta:number;
+    gamma:number;
+}){
+    if(!an) return;
+    if(an.isNull()) return;
+    const cambase = an.add(anOffset['camera-base']);
+    const yaw = cambase.add(0x4).readFloat();
+    const pitch = cambase.readFloat();
+    const sensitivity = (config['gyro-scope-sensitivity'] || 10) / 180 * Math.PI;
+    const alpha = data.alpha * sensitivity;
+    const beta = data.beta * sensitivity;
+    const gamma = data.gamma * sensitivity;
+    cambase.add(0x4).writeFloat(yaw + alpha);
+    cambase.writeFloat(pitch + beta);
 }
 
 rpc.exports = {

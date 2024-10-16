@@ -12,6 +12,9 @@ import frida from "frida";
 import { existsSync, readFileSync } from "fs";
 import { adb, checkFridaPerm, conenctFrida, connectAdbDevice, executeProcess, fileExist, fileName, getArch, getUrl, startFrida } from "./data/frida";
 import { exec } from "child_process";
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
 
 const process_name = 'com.gameparadiso.milkchoco';
 const frida_version = '16.4.10';
@@ -36,6 +39,30 @@ const listener = new GlobalKeyboardListener();
 // listen for global key events
 listener.addListener((event, down) => {
     emitter.emit("gk", event, down);
+});
+
+// vars
+let serial:string = "127.0.0.1:5555";
+let adbId:string = '';
+let fridaDevice:frida.Device = null;
+let cookie:string = '';
+let exp:frida.ScriptExports = null;
+let cheats:Cheats = {};
+let config:Config = {};
+let keybinds:Keybinds = {};
+
+// express server
+const appServer = express();
+const server = createServer(appServer);
+const io = new Server(server);
+appServer.use(express.static(path.join(__dirname, './../public')));
+appServer.get('/', (req, res) => {res.sendFile(path.join(__dirname, './../public/routes/main.html'))});
+appServer.get('/mobile', (req, res) => {
+    if(config['plugin-server-mobile-controller']){
+        res.sendFile(path.join(__dirname, './../public/routes/mobile_controller.html'))
+    } else {
+        res.send("Mobile controller disabled");
+    }
 });
 // exit app
 const exitApp = () => {
@@ -69,6 +96,10 @@ app.on("ready", async () => {
     });
     main.once('close', exitApp);
     main.once('closed', exitApp);
+    const state = (id:string, state:string, log:string) => {
+        if(main.isDestroyed()) return;
+        main.webContents.send("update-state", id, state, log);
+    };
 
     const layout = createWindow("layout", 800, 600, false, {
         maximizable: true,
@@ -141,16 +172,6 @@ app.on("ready", async () => {
         main.webContents.send("resize-layout", layout.getBounds());
     });
 
-    // vars
-    let serial:string = "127.0.0.1:5555";
-    let adbId:string = '';
-    let frida:frida.Device = null;
-    let cookie:string = '';
-    let exp:frida.ScriptExports = null;
-    let cheats:Cheats = {};
-    let config:Config = {};
-    let keybinds:Keybinds = {};
-
     // initialize
     ipcMain.on("init", (e, _keybinds, _config, _layoutBounds:Electron.Rectangle|null) => {
         keybinds = _keybinds;
@@ -174,10 +195,6 @@ app.on("ready", async () => {
         cheats[id] = _state;
         emitter.emit("cheats", id, _state);
     });
-    const state = (id:string, state:string, log:string) => {
-        if(main.isDestroyed()) return;
-        main.webContents.send("update-state", id, state, log);
-    };
 
     const _main = async () => {
         try{
@@ -242,16 +259,16 @@ app.on("ready", async () => {
     ipcMain.on("connect-frida", async (e) => {
         state("frida", "pending", "Connecting to frida server");
         await conenctFrida(serial, () => state("frida", "error", "Frida server crashed"), (d) => {
-            frida = d;
+            fridaDevice = d;
             state("frida", "active", "Connected to frida server");
         });
     });
 
     ipcMain.on("get-cookie", async (e) => {
-        if(!frida) return state("session", "error", "Frida not connected");
+        if(!fridaDevice) return state("session", "error", "Frida not connected");
         state("session", "pending", "Getting cookie");
         try{
-            const [dispose, script] = await executeProcess(process_name, frida, `
+            const [dispose, script] = await executeProcess(process_name, fridaDevice, `
                 setTimeout(() => {
                     setImmediate(function() {
                         Java.perform(() => {
@@ -286,11 +303,11 @@ app.on("ready", async () => {
     });
 
     ipcMain.on("start-agent", async (e) => {
-        if(!frida) return state("session", "error", "Frida not connected");
+        if(!fridaDevice) return state("session", "error", "Frida not connected");
         state("session", "pending", "Starting agent");
         let found:boolean = false;
         try{
-            const [dispose, script] = await executeProcess(process_name, frida, agentScript.replace("/*cookie*/", cookie),
+            const [dispose, script] = await executeProcess(process_name, fridaDevice, agentScript.replace("/*cookie*/", cookie),
                 (message:frida.Message, data:Buffer) => {
                     if(message.type === 'send') {
                         const [channel, ...args] = [...message.payload];
@@ -354,6 +371,9 @@ app.on("ready", async () => {
                     ipcMain.on("find-ranges", (e, data:string) => {
                         script.post(['find-ranges', data]);
                     });
+                    emitter.on("gyro", (data) => {
+                        script.post(['gyro', data]);
+                    });
                 },
                 () => {
                     main.webContents.send("init", false);
@@ -368,8 +388,10 @@ app.on("ready", async () => {
                     ipcMain.removeAllListeners("scan-entity");
                     ipcMain.removeAllListeners("clear-all");
                     ipcMain.removeAllListeners("except-number");
+                    ipcMain.removeAllListeners("change-ads-reward");
                     ipcMain.removeAllListeners("get-ranges");
                     ipcMain.removeAllListeners("find-ranges");
+                    emitter.removeAllListeners("gyro");
                     exp = null;
                     cheats = {};
                     state("session", "error", "Session disposed");
@@ -410,6 +432,34 @@ app.on("ready", async () => {
     })
     emitter.on("except-number", (data:number[]) => {
         main.webContents.send("except-number", data);
+    });
+
+    // server
+    ipcMain.on("server-start", (e, port:number) => {
+        state('express', 'pending', 'Starting server');
+        server.listen(port, () => {
+            state('express', 'active', `Started on port ${port}`);
+        });
+    });
+    ipcMain.on("server-stop", (e) => {
+        state('express', 'pending', 'Stopping server');
+        server.close(() => {
+            state('express', 'error', 'Server stopped');
+        });
+    });
+
+    // socket
+    io.on("connection", (socket) => {
+        console.log("Socket connected");
+        socket.on("disconnect", () => {
+            console.log("Socket disconnected");
+        });
+        socket.on("gyro", (data) => {
+            if(config['gyro-scope']) emitter.emit("gyro", data);
+        });
+        socket.on("key", (key:string) => {
+            console.log("Keydown", key);
+        });
     });
 });
 

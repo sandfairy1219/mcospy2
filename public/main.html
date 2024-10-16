@@ -40,7 +40,9 @@
             <button class="w-full selector" id="selector-initialize" data-lang="initialize"></button>
             <button class="w-full selector" id="selector-cheats" data-lang="cheats"></button>
             <button class="w-full selector" id="selector-settings" data-lang="settings"></button>
-            <button class="w-full selector" id="selector-dev-mode" data-lang="dev-mode"></button>
+            <button class="w-full selector" id="selector-plugins" data-lang="plugins"></button>
+            <button class="w-full selector" id="selector-server" data-lang="server"></button>
+            <button class="w-full selector hide" id="selector-dev-mode" data-lang="dev-mode"></button>
         </section>
         <section id="initialize" class="hide">
             <div>
@@ -114,138 +116,138 @@
             </div>
             <details>
                 <summary id="aimbot" data-lang="aimbot"></summary>
-                <div>
+                <main>
                     <div data-lang="keybind"></div>
                     <input type="text" id="key-aimbot" class="keybind" data-lang-ph="keybind">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="aimbot-mode"></div>
                     <select class="config" id="aimbot-mode">
                         <option value="normal" data-lang="normal"></option>
                         <option value="smooth" data-lang="smooth"></option>
                         <option value="instant" data-lang="instant"></option>
                     </select>
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="aimbot-speed"></div>
                     <input class="config" type="number" id="aimbot-speed" min="1" max="100" value="20">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="aimbot-limit"></div>
                     <input class="config" type="number" id="aimbot-limit" min="0" max="90" value="3">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="aimbot-pitch-offset"></div>
                     <input class="config" type="number" id="aimbot-pitch-offset" min="-3" max="3" value="0">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="aimbot-ignore"></div>
                     <input class="config" type="checkbox" id="aimbot-ignore">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="aimbot-ignore-death"></div>
                     <input class="config" type="checkbox" id="aimbot-ignore-death">
-                </div>
+                </main>
             </details>
             <details>
                 <summary id="aim-assist" data-lang="aim-assist"></summary>
-                <div>
+                <main>
                     <div data-lang="aim-assist-speed"></div>
                     <input class="config" type="number" id="aim-assist-speed" min="1" max="100" value="20">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="aim-assist-limit"></div>
                     <input class="config" type="number" id="aim-assist-limit" min="0" max="90" value="3">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="aim-assist-pitch-offset"></div>
                     <input class="config" type="number" id="aim-assist-pitch-offset" min="-3" max="3" value="0">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="aim-assist-ignore"></div>
                     <input class="config" type="checkbox" id="aim-assist-ignore">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="aim-assist-ignore-death"></div>
                     <input class="config" type="checkbox" id="aim-assist-ignore-death">
-                </div>
+                </main>
             </details>
             <details>
                 <summary id="esp" data-lang="esp"></summary>
-                <div>
+                <main>
                     <div data-lang="esp-tracer"></div>
                     <input class="config" type="checkbox" id="esp-tracer">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="esp-3d"></div>
                     <input class="config" type="checkbox" id="esp-3d">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="esp-font-size"></div>
                     <input class="config" type="number" id="esp-font-size" min="1" max="100" value="16">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="esp-tag"></div>
                     <input class="config" type="checkbox" id="esp-tag">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="esp-tag-type"></div>
                     <select class="config" id="esp-tag-type">
                         <option value="both" data-lang="both"></option>
                         <option value="number" data-lang="number"></option>
                         <option value="nickname" data-lang="nickname"></option>
                     </select>
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="esp-color"></div>
                     <input class="config" type="color" id="esp-color" value="#ff0000">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="esp-mark-color"></div>
                     <input class="config" type="color" id="esp-mark-color" value="#0000ff">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="esp-dead-color"></div>
                     <input class="config" type="color" id="esp-dead-color" value="#aaaaaa">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="esp-pitch-offset"></div>
                     <input class="config" type="number" id="esp-pitch-offset" min="-3" max="3" value="0">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="esp-mark-keybind"></div>
                     <input type="text" id="key-esp-mark" class="keybind" data-lang-ph="keybind">
-                </div>
+                </main>
             </details>
             <details>
                 <summary id="blackhole" data-lang="blackhole"></summary>
-                <div>
+                <main>
                     <div data-lang="keybind"></div>
                     <input type="text" id="key-blackhole" class="keybind" data-lang-ph="keybind">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="blackhole-distance"></div>
                     <input class="config" type="number" id="blackhole-distance" min="1" max="100" value="20">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="blackhole-ignore"></div>
                     <input class="config" type="checkbox" id="blackhole-ignore">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="blackhole-ignore-death"></div>
                     <input class="config" type="checkbox" id="blackhole-ignore-death">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="blackhole-prevent-lagger"></div>
                     <input class="config" type="checkbox" id="blackhole-prevent-lagger">
-                </div>
+                </main>
             </details>
             <details>
                 <summary id="shoot-speed" data-lang="shoot-speed"></summary>
-                <div>
+                <main>
                     <div data-lang="keybind"></div>
                     <input type="text" id="key-shoot-speed" class="keybind" data-lang-ph="keybind">
-                </div>
+                </main>
             </details>
             <details>
                 <summary class="no" id="no-recoil" data-lang="no-recoil"></summary>
@@ -267,36 +269,36 @@
             </details>
             <details>
                 <summary id="move-speed" data-lang="move-speed"></summary>
-                <div>
+                <main>
                     <div data-lang="keybind"></div>
                     <input type="text" id="key-move-speed" class="keybind" data-lang-ph="keybind">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="move-speed-value"></div>
                     <input class="config" type="number" id="move-speed-value" min="0.1" max="100" value="3">
-                </div>
+                </main>
             </details>
             <details>
                 <summary id="fly" data-lang="fly"></summary>
-                <div>
+                <main>
                     <div data-lang="fly-up-keybind"></div>
                     <input type="text" id="key-fly-up" class="keybind" data-lang-ph="keybind">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="fly-down-keybind"></div>
                     <input type="text" id="key-fly-down" class="keybind" data-lang-ph="keybind">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="fly-speed"></div>
                     <input class="config" type="number" id="fly-speed" min="0" max="100" value="4">
-                </div>
+                </main>
             </details>
             <details>
                 <summary id="infinite-jump" data-lang="infinite-jump"></summary>
-                <div>
+                <main>
                     <div data-lang="infinite-jump-keybind"></div>
                     <input type="text" id="key-infinite-jump" class="keybind" data-lang-ph="keybind">
-                </div>
+                </main>
             </details>
             <details>
                 <summary class="no" id="one-kill" data-lang="one-kill"></summary>
@@ -306,55 +308,104 @@
             </details>
             <details>
                 <summary id="upskill" data-lang="upskill"></summary>
-                <div>
+                <main>
                     <div data-lang="keybind"></div>
                     <input type="text" id="key-upskill" class="keybind" data-lang-ph="keybind">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="upskill-value"></div>
                     <input class="config" type="number" id="upskill-value" min="0" max="9999" value="0">
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="upskill-except-timer"></div>
                     <input class="config" type="checkbox" id="upskill-except-timer">
-                </div>
+                </main>
             </details>
             <details>
                 <summary id="grenade" data-lang="grenade"></summary>
-                <div>
+                <main>
                     <div data-lang="keybind"></div>
                     <input type="text" id="key-grenade" class="keybind" data-lang-ph="keybind">
-                </div>
+                </main>
             </details>
             <details>
                 <summary class="no" id="hide-me" data-lang="hide-me"></summary>
             </details>
             <details>
-                <summary class="no" id="infinite-hp" data-lang="infinite-hp"></summary>
+                <summary class="no" id="cooker-buff" data-lang="cooker-buff"></summary>
             </details>
             <details>
                 <summary data-lang="changer"></summary>
-                <div>
+                <main>
                     <input class="w-full text-center" type="text" id="pos-x" placeholder="X">
                     <input class="w-full text-center" type="text" id="pos-y" placeholder="Y">
                     <input class="w-full text-center" type="text" id="pos-z" placeholder="Z">
                     <button class="w-full" id="pos-reverse" data-lang="reverse"></button>
-                </div>
-                <div>
+                </main>
+                <main>
                     <div data-lang="reverse-keybind"></div>
                     <input type="text" id="key-reverse" class="keybind" data-lang-ph="keybind">
-                </div>
-                <div>
+                </main>
+                <main>
                     <input class="w-full text-center" type="text" id="skillcode" data-lang-ph="skillcode">
-                </div>
+                </main>
                 <button class="w-full" id="change-ads-reward" data-lang="change-ads-reward"></button>
             </details>
         </section>
         <section id="settings" class="hide">
-            <main>
-                <div data-lang="frame"></div>
-                <input class="config" type="number" id="frame" min="1" max="120" value="60">
-            </main>
+            <details>
+                <summary data-lang="general"></summary>
+                <main>
+                    <div data-lang="frame"></div>
+                    <input class="config" type="number" id="frame" min="1" max="120" value="60">
+                </main>
+            </details>
+        </section>
+        <section id="plugins" class="hide">
+            <details>
+                <summary data-lang="server"></summary>
+                <main>
+                    <div data-lang="mobile-controller"></div>
+                    <input class="config" type="checkbox" id="plugin-server-mobile-controller">
+                </main>
+            </details>
+            <details>
+                <summary data-lang="utility"></summary>
+                <main>
+                    <div data-lang="replay"></div>
+                    <input class="config" type="checkbox" id="plugin-utility-replay">
+                </main>
+            </details>
+        </section>
+        <section id="server" class="hide">
+            <details>
+                <summary data-lang="manager"></summary>
+                <div>
+                    <div id="state-express" class="state"></div>
+                    <div data-lang="server"></div>
+                    <div id="state-express-log" class="log"></div>
+                </div>
+                <div>
+                    <button class="w-full h-full" id="server-start" data-lang="start"></button>
+                    <button class="w-full h-full" id="server-stop" data-lang="stop"></button>
+                </div>
+                <main>
+                    <div data-lang="port"></div>
+                    <input class="config" type="number" id="server-port" min="1" max="65535" value="3000">
+                </main>
+            </details>
+            <details id="mobile-controller" class="hide">
+                <summary data-lang="mobile-controller"></summary>
+                <div class="text-neutral-400 text-sm">localhost:PORT/mobile</div>
+                <main>
+                    <div data-lang="gyro-scope"></div>
+                    <input class="config" type="checkbox" id="gyro-scope">
+                </main>
+                <main>
+                    <div data-lang="gyro-scope-sensitivity"></div>
+                    <input class="config" type="number" id="gyro-scope-sensitivity" min="1" max="100" value="10">
+                </main>
+            </details>
         </section>
         <section id="dev-mode" class="hide">
             <details>
