@@ -102,6 +102,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'ADB接続',
         'zh':'连接ADB',
     },
+    'connect-serial':{
+        'en':'Connect Serial',
+        'ko':'시리얼 연결',
+        'ja':'シリアル接続',
+        'zh':'连接序列号',
+    },
     'start-server':{
         'en':'Start Server',
         'ko':'서버 시작',
@@ -841,7 +847,8 @@ ipcRenderer.send('serial', $i('serial').value);
 $i('serial').addEventListener('change', () => {ipcRenderer.send('serial', $i('serial').value);});
 $i('cookie').addEventListener('change', () => {ipcRenderer.send('cookie', $i('cookie').value);});
 
-$_('connect-adb').addEventListener('click', () => {ipcRenderer.send('connect-adb', $i('serial').value);});
+$_('connect-adb').addEventListener('click', () => {ipcRenderer.send('connect-adb', $i('serial').value, true);});
+$_('connect-serial').addEventListener('click', () => {ipcRenderer.send('connect-adb', $i('serial').value, false);});
 $_('start-server').addEventListener('click', () => {ipcRenderer.send('start-server');});
 $_('download-server').addEventListener('click', () => {ipcRenderer.send('download-server');});
 $_('upload-server').addEventListener('click', () => {ipcRenderer.send('upload-server');});

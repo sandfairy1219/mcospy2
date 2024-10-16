@@ -196,9 +196,19 @@ app.on("ready", async () => {
         emitter.emit("cheats", id, _state);
     });
 
-    const _main = async () => {
+    const _main = async (onip:boolean) => {
         try{
-            adbId = await connectAdbDevice(serial);
+            if(onip){
+                adbId = await connectAdbDevice(serial);
+            } else {
+                const ip = await adb.getIpAddress(serial);
+                if(ip.length > 0) {
+                    await adb.tcpip(serial);
+                    adbId = serial;
+                } else {
+                    state("adb", "error", "Failed to get ip address");
+                }
+            }
             if(adbId === '') return state("adb", "error", "Failed to connect to adb");
             state("adb", "active", `Connected to adb`);
         } catch(err){
@@ -206,16 +216,16 @@ app.on("ready", async () => {
             state("adb", "error", "Failed to connect to adb");
         }
     }
-    ipcMain.on("connect-adb", async (e) => {
+    ipcMain.on("connect-adb", async (e, serial:string, onip:boolean) => {
         state("adb", "pending", "Trying to connect to adb");
         try{
             await adb.startServer();
             state("adb", "pending", "Server started");
-            await _main();
+            await _main(onip);
         } catch(err){
             Logger.error("ADB error", err);
             state("adb", "pending", "Server error");
-            await _main();
+            await _main(onip);
         }
     });
 
@@ -244,16 +254,21 @@ app.on("ready", async () => {
     ipcMain.on("start-server", async (e) => {
         if(adbId === '') return state("server", "error", "ADB not connected");
         state("server", "pending", "Starting frida server");
-        const arch = await getArch(adbId);
-        if(arch === '') return state("server", "error", "Failed to get arch");
-        const filename = await fileExist(adbId, frida_version);
-        if(filename === '') return state("server", "error", "Cannot find frida server");
-        const perm = await checkFridaPerm(adbId, filename);
-        if(!perm) return state("server", "error", "Frida permissions denied");
-        if(!await startFrida(adbId, filename, () => state("server", "error", "Frida server crashed"))) {
-            return state("server", "error", "Failed to start frida server");
+        try{
+            const arch = await getArch(adbId);
+            if(arch === '') return state("server", "error", "Failed to get arch");
+            const filename = await fileExist(adbId, frida_version);
+            if(filename === '') return state("server", "error", "Cannot find frida server");
+            const perm = await checkFridaPerm(adbId, filename);
+            if(!perm) return state("server", "error", "Frida permissions denied");
+            if(!await startFrida(adbId, filename, () => state("server", "error", "Frida server crashed"))) {
+                return state("server", "error", "Failed to start frida server");
+            }
+            state("server", "active", "Frida server started");
+        } catch(e) {
+            Logger.error("Frida server error", e);
+            state("server", "error", "Failed to start frida server");
         }
-        state("server", "active", "Frida server started");
     });
 
     ipcMain.on("connect-frida", async (e) => {

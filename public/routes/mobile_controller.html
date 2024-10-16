@@ -35,7 +35,7 @@
             document.getElementById('alpha').innerText = `Alpha : ${alpha.toFixed(1)}`;
             document.getElementById('beta').innerText = `Beta : ${beta.toFixed(1)}`;
             document.getElementById('gamma').innerText = `Gamma : ${gamma.toFixed(1)}`;
-            socket.emit('gyro', { alpha:alphaDiff.toFixed(1), beta:betaDiff.toFixed(1), gamma:gammaDiff.toFixed(1) });
+            socket.emit('gyro', { alpha:alphaDiff, beta:betaDiff, gamma:gammaDiff });
         });
         window.addEventListener('keydown', function(event) {
             let key = event.key;
