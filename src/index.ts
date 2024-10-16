@@ -68,6 +68,7 @@ appServer.get('/mobile', (req, res) => {
 const exitApp = () => {
     Logger.log("App closed");
     app.quit();
+    server.close();
     process.exit(0);
 };
 
