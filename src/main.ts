@@ -642,6 +642,18 @@ const lan:{[key:string]:{[key:string]:string}} = {
         "ja": "ジャイロスコープ",
         "zh": "陀螺仪"
     },
+    'gyro-scope-use-gamma':{
+        'en':'Gyro Scope Use Gamma',
+        'ko':'자이로 스코프 감마 사용',
+        'ja':'ジャイロスコープガンマ使用',
+        'zh':'陀螺仪使用伽马',
+    },
+    "gyro-scope-invert":{
+        "en": "Gyro Scope Invert",
+        "ko": "자이로 스코프 반전",
+        "ja": "ジャイロスコープ反転",
+        "zh": "陀螺仪反转"
+    },
     "gyro-scope-sensitivity": {
         "en": "Gyro Scope Sensitivity",
         "ko": "자이로 스코프 감도",

@@ -726,8 +726,9 @@ function gyro(data:{
     const alpha = data.alpha * sensitivity;
     const beta = data.beta * sensitivity;
     const gamma = data.gamma * sensitivity;
+    const pitchAdd = (config['gyro-scope-use-gamma'] ? gamma : beta) * (config['gyro-scope-invert'] ? -1 : 1);
     cambase.add(0x4).writeFloat(yaw + alpha);
-    cambase.writeFloat(pitch + gamma);
+    cambase.writeFloat(pitch + pitchAdd);
 }
 
 rpc.exports = {
