@@ -65,6 +65,20 @@ const upSize = 9;
 const downSize = -0.5;
 const sideSize = 2.5;
 
+interface Point{
+    x:number;
+    y:number;
+}
+
+interface DrawRect{
+    upside:Point[];
+    downside:Point[];
+    number:number;
+    nickname:string;
+    isTeam:boolean;
+    isDead:boolean;
+}
+
 let isArm = false
 let xa:NativePointer = null;
 let an:NativePointer = null;
