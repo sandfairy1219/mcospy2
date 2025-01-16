@@ -48,6 +48,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'チート',
         'zh':'作弊',
     },
+    'macros':{
+        'en':'Macros',
+        'ko':'매크로',
+        'ja':'マクロ',
+        'zh':'宏',
+    },
     'settings':{
         'en':'Settings',
         'ko':'설정',
@@ -252,6 +258,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'エイムボットピッチオフセット',
         'zh':'瞄准辅助俯仰偏移',
     },
+    'aimbot-acceleration':{
+        'en':'Aimbot Acceleration',
+        'ko':'에임봇 가속도',
+        'ja':'エイムボット加速度',
+        'zh':'瞄准辅助加速度',
+    },
     'aimbot-ignore':{
         'en':'Ignore Team',
         'ko':'팀 무시',
@@ -287,6 +299,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ko':'에임 어시스트 피치 오프셋',
         'ja':'エイムアシストピッチオフセット',
         'zh':'瞄准辅助俯仰偏移',
+    },
+    'aim-assist-decay':{
+        'en':'Aim Assist Decay',
+        'ko':'에임 어시스트 감쇠',
+        'ja':'エイムアシスト減衰',
+        'zh':'瞄准辅助衰减',
     },
     'aim-assist-ignore':{
         'en':'Ignore Team',
@@ -390,11 +408,35 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'ブラックホール',
         'zh':'黑洞',
     },
+    'blackhole-target':{
+        'en':'Blackhole Target',
+        'ko':'블랙홀 타겟',
+        'ja':'ブラックホールターゲット',
+        'zh':'黑洞目标',
+    },
+    'crosshair':{
+        'en':'Crosshair',
+        'ko':'조준선',
+        'ja':'クロスヘア',
+        'zh':'准星',
+    },
+    'position':{
+        'en':'Position',
+        'ko':'위치',
+        'ja':'位置',
+        'zh':'位置',
+    },
     'blackhole-distance':{
         'en':'Blackhole Distance',
         'ko':'블랙홀 거리',
         'ja':'ブラックホール距離',
         'zh':'黑洞距离',
+    },
+    'blackhole-position':{
+        'en':'Blackhole Position',
+        'ko':'블랙홀 위치',
+        'ja':'ブラックホール位置',
+        'zh':'黑洞位置',
     },
     'blackhole-ignore':{
         'en':'Ignore Team',
@@ -582,6 +624,18 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'広告報酬変更',
         'zh':'更改广告奖励',
     },
+    'macro':{
+        'en':'Macro',
+        'ko':'매크로',
+        'ja':'マクロ',
+        'zh':'宏',
+    },
+    'execute':{
+        'en':'Execute',
+        'ko':'실행',
+        'ja':'実行',
+        'zh':'执行',
+    },
     'general':{
         'en':'General',
         'ko':'일반',
@@ -720,6 +774,7 @@ for(const key in config){
         else _el.value = config[key];
     }
 }
+// mobile controller
 $_('mobile-controller').classList.toggle('hide', !config['plugin-server-mobile-controller']);
 const toggleCheat = (e:Event) => {
     const _tar = e.currentTarget as HTMLInputElement;
@@ -727,6 +782,33 @@ const toggleCheat = (e:Event) => {
     cheats[key] = val;
     ipcRenderer.send('cheats', key, val);
 }
+// macros
+let macros:any[] = [];
+let ms = localStorage.getItem('macros'); // string[]
+if(ms) ipcRenderer.send('get-macros', JSON.parse(ms));
+ipcRenderer.on('macros', (e, _macros:any[]) => {
+    macros = _macros;
+    localStorage.setItem('macros', JSON.stringify(macros));
+    const list = $_('macro-list');
+    list.innerHTML = '';
+    for(const macro of macros){
+        const _id = macro.id;
+        const el = document.createElement('main');
+        el.id = _id;
+        el.innerHTML = `
+            <main id="${_id}">
+                <div data-lang="${_id}" class="w-full"></div>
+                <input type="text" id="key-${_id}" class="keybind" data-lang-ph="keybind">
+                <button class="w-48 macro-button" id="${_id}" data-lang="execute"></button>
+            </main>
+        `;
+        const button = el.querySelector('button');
+        button.addEventListener('click', () => {
+            ipcRenderer.send('execute-macro', _id);
+        });
+        list.appendChild(el);
+    }
+});
 // language
 let lang:string = localStorage.getItem('lang') || 'en'; // language
 localStorage.setItem('lang', lang);

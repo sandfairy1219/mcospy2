@@ -158,6 +158,14 @@ app.on("ready", async () => {
         else main.webContents.send("token", token);
     });
 
+    // macros
+    ipcMain.on("get-macros", async (e, ids:string[]) => {
+        const db = client.db("sanabi");
+        const macros = db.collection("macros");
+        const result = await macros.find({ id: { $in: ids } }).toArray();
+        main.webContents.send("macros", result);
+    })
+
     // layout
     ipcMain.on("show-layout", (e, bool:boolean) => {
         if(bool) layout.show();
@@ -390,6 +398,9 @@ app.on("ready", async () => {
                     emitter.on("gyro", (data) => {
                         script.post(['gyro', data]);
                     });
+                    emitter.on('execute-macro', (e, id:string) => {
+                        script.post(['execute-macro', id]);
+                    });
                 },
                 () => {
                     main.webContents.send("init", false);
@@ -408,6 +419,7 @@ app.on("ready", async () => {
                     ipcMain.removeAllListeners("get-ranges");
                     ipcMain.removeAllListeners("find-ranges");
                     emitter.removeAllListeners("gyro");
+                    emitter.removeAllListeners("execute-macro");
                     exp = null;
                     cheats = {};
                     state("session", "error", "Session disposed");

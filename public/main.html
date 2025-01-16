@@ -39,9 +39,10 @@
         <section id="selector">
             <button class="w-full selector" id="selector-initialize" data-lang="initialize"></button>
             <button class="w-full selector" id="selector-cheats" data-lang="cheats"></button>
+            <button class="w-full selector" id="selector-macros" data-lang="macros"></button>
             <button class="w-full selector" id="selector-settings" data-lang="settings"></button>
-            <button class="w-full selector" id="selector-plugins" data-lang="plugins"></button>
             <button class="w-full selector" id="selector-server" data-lang="server"></button>
+            <button class="w-full selector" id="selector-plugins" data-lang="plugins"></button>
             <button class="w-full selector hide" id="selector-dev-mode" data-lang="dev-mode"></button>
         </section>
         <section id="initialize" class="hide">
@@ -144,6 +145,10 @@
                     <input class="config" type="number" id="aimbot-pitch-offset" min="-3" max="3" value="0">
                 </main>
                 <main>
+                    <div data-lang="aimbot-acceleration"></div>
+                    <input class="config" type="checkbox" id="aimbot-acceleration">
+                </main>
+                <main>
                     <div data-lang="aimbot-ignore"></div>
                     <input class="config" type="checkbox" id="aimbot-ignore">
                 </main>
@@ -165,6 +170,10 @@
                 <main>
                     <div data-lang="aim-assist-pitch-offset"></div>
                     <input class="config" type="number" id="aim-assist-pitch-offset" min="-3" max="3" value="0">
+                </main>
+                <main>
+                    <div data-lang="aim-assist-decay"></div>
+                    <input class="config" type="number" id="aim-assist-decay" min="0" max="1" value="0.1">
                 </main>
                 <main>
                     <div data-lang="aim-assist-ignore"></div>
@@ -229,8 +238,23 @@
                     <input type="text" id="key-blackhole" class="keybind" data-lang-ph="keybind">
                 </main>
                 <main>
+                    <div data-lang="blackhole-target"></div>
+                    <select class="config" id="blackhole-target">
+                        <option value="crosshair" data-lang="crosshair"></option>
+                        <option value="position" data-lang="position"></option>
+                    </select>
+                </main>
+                <main>
                     <div data-lang="blackhole-distance"></div>
                     <input class="config" type="number" id="blackhole-distance" min="1" max="100" value="20">
+                </main>
+                <main>
+                    <div data-lang="blackhole-position"></div>
+                </main>
+                <main>
+                    <input class="config w-full text-center" type="number" id="blackhole-x" value="0" min="-9999" max="9999">
+                    <input class="config w-full text-center" type="number" id="blackhole-y" value="0" min="-9999" max="9999">
+                    <input class="config w-full text-center" type="number" id="blackhole-z" value="0" min="-9999" max="9999">
                 </main>
                 <main>
                     <div data-lang="blackhole-ignore"></div>
@@ -354,6 +378,27 @@
                 </main>
                 <button class="w-full" id="change-ads-reward" data-lang="change-ads-reward"></button>
             </details>
+            <details>
+                <summary data-lang="macro"></summary>
+                <div id="macro-list"></div>
+            </details>
+        </section>
+        <section id="macros" class="hide">
+            <input type="text" data-lang-ph="search" id="search-macro" class="w-full">
+            <div id="macros-list">
+                <main>
+                    <div type="text" id="list-id" data-lang="id" class="w-full"></div>
+                    <button id="id-add" class="macro-apply w-16">+</button>
+                </main>
+                <main>
+                    <div type="text" id="list-id" data-lang="id" class="w-full"></div>
+                    <button id="id-add" class="w-16">+</button>
+                </main>
+                <main>
+                    <div type="text" id="list-id" data-lang="id" class="w-full"></div>
+                    <button id="id-add" class="w-16">+</button>
+                </main>
+            </div>
         </section>
         <section id="settings" class="hide">
             <details>
@@ -361,22 +406,6 @@
                 <main>
                     <div data-lang="frame"></div>
                     <input class="config" type="number" id="frame" min="1" max="120" value="60">
-                </main>
-            </details>
-        </section>
-        <section id="plugins" class="hide">
-            <details>
-                <summary data-lang="server"></summary>
-                <main>
-                    <div data-lang="mobile-controller"></div>
-                    <input class="config" type="checkbox" id="plugin-server-mobile-controller">
-                </main>
-            </details>
-            <details>
-                <summary data-lang="utility"></summary>
-                <main>
-                    <div data-lang="replay"></div>
-                    <input class="config" type="checkbox" id="plugin-utility-replay">
                 </main>
             </details>
         </section>
@@ -415,6 +444,22 @@
                 <main>
                     <div data-lang="gyro-scope-sensitivity"></div>
                     <input class="config" type="number" id="gyro-scope-sensitivity" min="1" max="100" value="10">
+                </main>
+            </details>
+        </section>
+        <section id="plugins" class="hide">
+            <details>
+                <summary data-lang="server"></summary>
+                <main>
+                    <div data-lang="mobile-controller"></div>
+                    <input class="config" type="checkbox" id="plugin-server-mobile-controller">
+                </main>
+            </details>
+            <details>
+                <summary data-lang="utility"></summary>
+                <main>
+                    <div data-lang="replay"></div>
+                    <input class="config" type="checkbox" id="plugin-utility-replay">
                 </main>
             </details>
         </section>

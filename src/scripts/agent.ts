@@ -1,22 +1,58 @@
 "cut";
 const xaOffset = {
-    'no-recoil': 0x331078C, // -1124072416 => 505942016
-    'no-clip': 0x330B8AC, // 0.01 => 100
-    'no-spread1': 0x35020C4, // -1119869952 => 505942016
-    'no-spread2': 0x35020DC, // -1119870976 => 505942016
-    'no-reload': 0x35020AC, // -1136562176 => 505925632
+    'no-recoil': 0x330E7CC, // -1124072416 => 505942016
+    // 18 20 20 1E 0D 02 00 54 01 00 40 BD 21 00 44 F9 00
+    // 1.50.0 0x331078C
+    'no-clip': 0x33098EC, // 0.01 => 100
+    // 0A D7 23 3C
+    // 1.50.0 0x330B8AC
+    'no-spread1': 0x34F9304, // -1119869952 => 505942016
+    // 00 24 40 BD  C0 03 5F D6 FD 7B BF A9
+    // 1.50.0 0x35020C4
+    'no-spread2': 0x34F931C, // -1119870976 => 505942016
+    // 00 20 40 BD C0 03 5F D6 FD 7B BE A9
+    // 1.50.0 0x35020DC
+    'no-reload': 0x34F92EC, // -1136562176 => 505925632
+    // 00 70 41 BC C0 03 5F D6 FD 7B BF A9
+    // 1.50.0 0x35020AC
     'instant-respawn': 0x30B6FD8, // 505415712 => 505415680
-    'body-one-kill': 0x3502210, // 506335232 => 505925632
-    'head-one-kill': 0x3502208, // -1136594944 => 505925632
-    'skill-damage': 0x3266178, // -1203335166 => 1384184322
-    'cookerbuff': 0x3502A28, // 506335232 => 505925632
+    // 20 08 20 1E C0 03 5F D6 6F 12 83 3A FD 7B BE A9
+    // 1.50.0 0x30B6FD8
+    'body-one-kill': 0x34F9450, // 506335232 => 505925632
+    // 00 10 2E 1E C0 03 5F D6 FD 7B BF A9
+    // 1.50.0 0x3502210
+    'head-one-kill': 0x34F9448, // -1136594944 => 505925632
+    // 00 F0 40 BC C0 03 5F D6 00 10 2E 1E
+    // 1.50.0 0x3502208
+    'skill-damage': 0x32651B8, // -1203335166 => 1384184322
+    // 02 90 46 B8 E0 03 02 2A C0 03 5F D6 42 0C 40 F9
+    // 1.50.0 0x3266178
+    'cookerbuff': 0x34F9C68, // 506335232 => 505925632
+    // 00 10 2E 1E C0 03 5F D6
+    // 1.50.0 0x3502A28
 }
 const anOffset = {
-    "camera-base": 0x8A900C,
-    "position-base": 0x7A37E0,
-    "cash-base": 0x2CDF60,
-    "skill-base": 0x8B58A5,
-    "grenade-base": 0x8B5805,
+    "camera-base": 0x8A917C,
+    // 1.50.0 0x8A900C
+    "yaw": 0x8A918C,
+    "pitch": 0x8A917C,
+    "camX": 0x8A9188,
+    "camY": 0x8A918C,
+    "camZ": 0x8A9190,
+    "cam-distance": 0x8A91A0,
+
+    "position-base": 0x7A3950,
+    // 1.50.0 0x7A37E0
+    "x": 0x7A3950,
+    "y": 0x7A3954,
+    "z": 0x7A3958,
+
+    "cash-base": 0x2CE0C8,
+    // 1.50.0 0x2CDF60
+    "skill-base": 0x8B5A15,
+    // 1.50.0 0x8B58A5
+    "grenade-base": 0x8B5969,
+    // 1.50.0 0x8B5805
 }
 const cdOffset = {
     "epos-pointer": [0x668, 0x58, 0x178, 0x130, 0x200, 0x158],
@@ -79,6 +115,20 @@ interface DrawRect{
     isDead:boolean;
 }
 
+interface Macro{
+    id: string;
+    events: MacroEvent[];
+}
+
+interface MacroEvent{
+    base: "xa" | "an" | "epos";
+    type: "float" | "int32" | "int16" | "byte";
+    offset: string; // offset name in xaOffset, anOffset, eposOffset
+    target?: "self" | "enemy" | "all"; // only for epos
+    index?: number; // only for epos & target is entity
+    value: number;
+}
+
 let isArm = false
 let xa:NativePointer = null;
 let an:NativePointer = null;
@@ -92,6 +142,7 @@ let cheats:{[key:string]:boolean} = {};
 let keybinds:{[key:string]:string} = {};
 let config:{[key:string]:any} = {};
 let keymap:{[key:string]:boolean} = {};
+let macros:Macro[] = [];
 
 const log = (...args:any[]) => send(['log', ...args]);
 
@@ -255,6 +306,13 @@ Java.perform(() => {
                             send(['except-number', excepts]);
                         }
                     });
+                    macros.forEach(macro => {
+                        if(keybinds[macro.id]){
+                            if(key === keybinds[macro.id] && action === 'DOWN'){
+                                executeMacro(macro.events);
+                            }
+                        }
+                    });
                 }
                 if(key === keybinds['infinite-jump'] && action === 'DOWN' && cheats['infinite-jump']){
                     if(!epos) return recv(api);
@@ -296,6 +354,9 @@ Java.perform(() => {
                 log(r, f, c)
             } else if(name === 'gyro'){
                 gyro(args[0]);
+            } else if(name === 'execute-macro'){
+                const macro = macros.find(macro => macro.id === args[0]);
+                if(macro) executeMacro(macro.events);
             }
         } catch(e){
             log("[ERROR]", e);
@@ -322,7 +383,10 @@ function getFilteredEntityList(exceptTeam:boolean):NativePointer[]{
             return true;
         }
     })
-    .filter(entity => entity.add(eposOffset['zr1']).readS32() === 0 && entity.add(eposOffset['zr2']).readS32() === 0)
+    .filter(entity => 
+        entity.add(eposOffset['zr1']).readS32() === 0
+        && entity.add(eposOffset['zr2']).readS32() === 0
+    )
 }
 
 let lastEpos = false;
@@ -357,7 +421,7 @@ function loop(){
                     const _aimAssistSpeed = config['aim-assist-speed'] || 20;
                     assistSpeed = _aimAssistSpeed;
                 } else if(assistSpeed > 0.001) {
-                    assistSpeed -= assistSpeed/10;
+                    assistSpeed -= assistSpeed * (config['aim-assist-decay'] || 0.1);
                     if(assistSpeed <= 0.001) assistSpeed = 0;
                 }
                 aimassist(eposPointer, delta);
@@ -497,6 +561,7 @@ function scanEpos():NativePointer{
         }
     }
     send(['epos-state', 'error', 'Not Found']);
+    return null;
 }
 
 function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
@@ -579,9 +644,17 @@ function aimbot(eposPointer:NativePointer, delta:number){
     const targets = getFilteredEntityList(ignoreTeam)
     .filter(entity => ignoreDead ? entity.add(eposOffset['hp']).readS16() > 0 : true)
     .map((entity:NativePointer) => {
-        const dx = entity.add(eposOffset["x"]).readFloat() - camX;
-        const dy = entity.add(eposOffset["y"]).readFloat()+4.7 - camY;
-        const dz = entity.add(eposOffset["z"]).readFloat() - camZ;
+        let dx = entity.add(eposOffset["x"]).readFloat() - camX;
+        let dy = entity.add(eposOffset["y"]).readFloat()+4.7 - camY;
+        let dz = entity.add(eposOffset["z"]).readFloat() - camZ;
+        if(config["aimbot-acceleration"]){
+            dx += entity.add(eposOffset["dx"]).readFloat();
+            if(!isGround(entity)) dy -= entity.add(eposOffset["dy"]).readFloat();
+            dz += entity.add(eposOffset["dz"]).readFloat();
+            dx -= eposPointer.add(eposOffset["dx"]).readFloat();
+            if(!isGround(eposPointer)) dy += eposPointer.add(eposOffset["dy"]).readFloat();
+            dz -= eposPointer.add(eposOffset["dz"]).readFloat();
+        }
         const yo = Math.atan2(dx, dz)
         let ya = yo - yaw;
         while(ya > Math.PI) ya -= Math.PI * 2;
@@ -684,6 +757,9 @@ function blackhole(eposPointer:NativePointer){
     const ignoreTeam = config['blackhole-ignore'] || false;
     const ignoreDead = config['blackhole-ignore-dead'] || false;
     const preventLagger = config['blackhole-prevent-lagger'] || false;
+    const target = config['blackhole-target'] || 'crosshair';
+    let resX:number, resY:number, resZ:number;
+    if(target === 'crosshair'){
     const cambase = an.add(anOffset['camera-base']);
     const camX = cambase.add(0xc).readFloat();
     const camY = cambase.add(0x10).readFloat();
@@ -692,15 +768,20 @@ function blackhole(eposPointer:NativePointer){
     const pitch = cambase.readFloat();
     const camDist = - cambase.add(0x24).readFloat();
     const dist = camDist + (+config['blackhole-distance'] || 20);
-    const resX = camX + Math.sin(yaw) * dist;
-    const resY = camY + Math.sin(pitch) * dist;
-    const resZ = camZ + Math.cos(yaw) * dist;
+    resX = camX + Math.sin(yaw) * dist;
+    resY = camY + Math.sin(pitch) * dist;
+    resZ = camZ + Math.cos(yaw) * dist;
+    } else if(target === 'position'){
+        resX = +config['blackhole-x'] || 0;
+        resY = +config['blackhole-y'] || 0;
+        resZ = +config['blackhole-z'] || 0;
+    }
     getFilteredEntityList(ignoreTeam)
     .filter(entity => ignoreDead ? entity.add(eposOffset['hp']).readS16() > 0 : true)
     .filter(entity => preventLagger ? entity.add(eposOffset['y']).readFloat() < -64 : true)
     .forEach((entity:NativePointer) => {
         entity.add(eposOffset['x']).writeFloat(resX);
-        entity.add(eposOffset['y']).writeFloat(resY);
+        entity.add(eposOffset['y']).writeFloat(resY - 4.7);
         entity.add(eposOffset['z']).writeFloat(resZ);
     });
 }
@@ -743,6 +824,73 @@ function gyro(data:{
     const pitchAdd = (config['gyro-scope-use-gamma'] ? gamma : beta) * (config['gyro-scope-invert'] ? -1 : 1);
     cambase.add(0x4).writeFloat(yaw + alpha);
     cambase.writeFloat(pitch + pitchAdd);
+}
+
+function executeMacro(events:MacroEvent[]){
+    if(!xa) return;
+    if(xa.isNull()) return;
+    if(!an) return;
+    if(an.isNull()) return;
+    if(!epos) return;
+    if(epos.isNull()) return;
+    events.forEach(event => {
+        if(event.base === "epos"){
+            const offset = eposOffset[event.offset as keyof typeof eposOffset];
+            const value = event.value;
+            const type = event.type;
+            const apply = (base:NativePointer) => {
+                if(type === "byte"){
+                    base.add(offset).writeS8(value);
+                } else if(type === "int16"){
+                    base.add(offset).writeU16(value);
+                } else if(type === "int32"){
+                    base.add(offset).writeU32(value);
+                } else if(type === "float"){
+                    base.add(offset).writeFloat(value);
+                }
+            }
+            if(event.target === "self"){
+                const base = epos;
+                apply(base);
+            } else if(event.target === "all"){
+                const entities = getFilteredEntityList(false);
+                if(entities.length > 0){
+                    if(event.index !== undefined){
+                        apply(entities[event.index]);
+                    } else {
+                        entities.forEach(entity => {
+                            apply(entity);
+                        });
+                    }
+                }
+            } else if(event.target === "enemy"){
+                const entities = getFilteredEntityList(true);
+                if(entities.length > 0){
+                    if(event.index !== undefined){
+                        apply(entities[event.index]);
+                    } else {
+                        entities.forEach(entity => {
+                            apply(entity);
+                        });
+                    }
+                }
+            }
+        } else {
+            const base = event.base === "xa" ? xa : an;
+            const offset = event.base === "xa" ? xaOffset[event.offset as keyof typeof xaOffset] : anOffset[event.offset as keyof typeof anOffset];
+            const value = event.value;
+            const type = event.type;
+            if(type === "byte"){
+                base.add(offset).writeS8(value);
+            } else if(type === "int16"){
+                base.add(offset).writeU16(value);
+            } else if(type === "int32"){
+                base.add(offset).writeU32(value);
+            } else if(type === "float"){
+                base.add(offset).writeFloat(value);
+            }
+        }
+    });
 }
 
 rpc.exports = {
