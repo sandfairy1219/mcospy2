@@ -96,6 +96,27 @@ const eposOffset = {
     'oz':0x1B4, // float
     'pointer':0xEE8, // pointer
 };
+
+// 0 = ground stop
+// 1 = ground walk
+// 2 = air stop
+// 3 = air walk
+// 8 = shoot stop
+// 9 = shoot walk
+// 10 = shoot air stop
+// 11 = shoot air walk
+// 128 = grenade stop
+// 127 = grenade walk
+// 126 = grenade air stop
+// 125 = grenade air walk
+// 64 = reload
+// 65 = reload walk
+// 66 = reload air stop
+// 67 = reload air walk
+// 32 = jump
+// 33 = jump walk
+// 16 = death
+
 const camFov = [92, 52];
 const upSize = 9;
 const downSize = -0.5;
@@ -189,6 +210,7 @@ Java.perform(() => {
                         isArm = true;
                     }
                 }
+                isArm = isArm || (Process.arch === 'arm64');
                 const _an = rw.filter((range:RangeDetails) =>
                     (!range.file) &&
                     range.size >= (isArm ? 0x1000 : 0x14E_8000)
@@ -204,12 +226,6 @@ Java.perform(() => {
                         log(range.base.toString(), dia)
                     }
                 });
-                // const _cd = rw.filter((range:RangeDetails) =>
-                //     range.file &&
-                //     range.file.path.includes('libnms.so') &&
-                //     range.size >= 4096
-                // )[0];
-                // if(_cd) cd = _cd.base;
                 if(!xa || !an) return recv(api);
                 send(['Address.init', xa.toString(), an.toString()])
             } else if(name === 'cheats'){
@@ -334,6 +350,14 @@ Java.perform(() => {
                 if(an.isNull()) return recv(api);
                 const cashBase = an.add(anOffset['cash-base']);
                 cashBase.add(0x58).writeS32(19);
+            } else if(name === 'ctm-default-milk'){ ctmDefaultMilk();
+            } else if(name === 'ctm-default-choco'){ ctmDefaultChoco();
+            } else if(name === 'ctm-desert-milk'){ ctmDesertMilk();
+            } else if(name === 'ctm-desert-choco'){ ctmDesertChoco();
+            } else if(name === 'ctm-castle-milk'){ ctmCastleMilk();
+            } else if(name === 'ctm-castle-choco'){ ctmCastleChoco();
+            } else if(name === 'ctm-mountain-milk'){ ctmMountainMilk();
+            } else if(name === 'ctm-mountain-choco'){ ctmMountainChoco();
             } else if(name === 'scan-epos'){
                 epos = scanEpos();
             } else if(name === 'scan-entity'){
@@ -455,8 +479,8 @@ function loop(){
                             {x: x + sideSize, y: y + downSize, z: z - sideSize},
                         ].map(vec3 => calcESP(vec3, {x: camX, y: camY, z: camZ}, yaw, pitch, camFov)).filter(point => point);
                         const isTeam = excepts.includes(number);
-                        const isDead = entity.add(eposOffset['hp']).readS16() <= 0;
-                        return {upside, downside, number, nickname, isTeam, isDead};
+                        const _isDead = isDead(entity);
+                        return {upside, downside, number, nickname, isTeam, isDead: _isDead};
                     }).filter(rect => rect.upside.length > 3 && rect.downside.length > 3);
                     send(['esp', data]);
                 }
@@ -642,7 +666,7 @@ function aimbot(eposPointer:NativePointer, delta:number){
     const yaw = cambase.add(0x4).readFloat();
     const pitch = cambase.readFloat() + pitchOffset;
     const targets = getFilteredEntityList(ignoreTeam)
-    .filter(entity => ignoreDead ? entity.add(eposOffset['hp']).readS16() > 0 : true)
+    .filter(entity => ignoreDead ? !isDead(entity) : true)
     .map((entity:NativePointer) => {
         let dx = entity.add(eposOffset["x"]).readFloat() - camX;
         let dy = entity.add(eposOffset["y"]).readFloat()+4.7 - camY;
@@ -702,7 +726,7 @@ function aimassist(eposPointer:NativePointer, delta:number){
     const yaw = cambase.add(0x4).readFloat();
     const pitch = cambase.readFloat() + pitchOffset;
     const targets = getFilteredEntityList(ignoreTeam)
-    .filter(entity => ignoreDead ? entity.add(eposOffset['hp']).readS16() > 0 : true)
+    .filter(entity => ignoreDead ? !isDead(entity) : true)
     .map((entity:NativePointer) => {
         const dx = entity.add(eposOffset["x"]).readFloat() - camX;
         const dy = entity.add(eposOffset["y"]).readFloat()+4.7 - camY;
@@ -757,6 +781,7 @@ function blackhole(eposPointer:NativePointer){
     const ignoreTeam = config['blackhole-ignore'] || false;
     const ignoreDead = config['blackhole-ignore-dead'] || false;
     const preventLagger = config['blackhole-prevent-lagger'] || false;
+    const forceDrop = config['blackhole-force-drop'] || false;
     const target = config['blackhole-target'] || 'crosshair';
     let resX:number, resY:number, resZ:number;
     if(target === 'crosshair'){
@@ -777,12 +802,22 @@ function blackhole(eposPointer:NativePointer){
         resZ = +config['blackhole-z'] || 0;
     }
     getFilteredEntityList(ignoreTeam)
-    .filter(entity => ignoreDead ? entity.add(eposOffset['hp']).readS16() > 0 : true)
+    .filter(entity => ignoreDead ? !isDead(entity) : true)
     .filter(entity => preventLagger ? entity.add(eposOffset['y']).readFloat() < -64 : true)
     .forEach((entity:NativePointer) => {
         entity.add(eposOffset['x']).writeFloat(resX);
         entity.add(eposOffset['y']).writeFloat(resY - 4.7);
         entity.add(eposOffset['z']).writeFloat(resZ);
+        if(forceDrop) {
+            entity.add(eposOffset['dx']).writeFloat(1);
+            entity.add(eposOffset['dy']).writeFloat(0.1);
+            entity.add(eposOffset['dz']).writeFloat(1);
+            if(!isDead(entity)) entity.add(eposOffset['state']).writeS32(1);
+        } else {
+            entity.add(eposOffset['dx']).writeFloat(0);
+            entity.add(eposOffset['dy']).writeFloat(0);
+            entity.add(eposOffset['dz']).writeFloat(0);
+        }
     });
 }
 
@@ -805,6 +840,12 @@ function isWalking(eposPointer:NativePointer):boolean{
     if(eposPointer.isNull()) return false;
     const state = eposPointer.add(eposOffset['state']).readS32();
     return state % 2 === 1;
+}
+
+function isDead(eposPointer:NativePointer):boolean{
+    if(!eposPointer) return false;
+    if(eposPointer.isNull()) return false;
+    return eposPointer.add(eposOffset['hp']).readS16() <= 0 || eposPointer.add(eposOffset['state']).readS32() === 16;
 }
 
 function gyro(data:{
@@ -891,6 +932,139 @@ function executeMacro(events:MacroEvent[]){
             }
         }
     });
+}
+
+async function sleep(ms:number){
+    return await new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function teleport(eposPointer:NativePointer, x:number, y:number, z:number){
+    if(!eposPointer) return;
+    if(eposPointer.isNull()) return;
+    eposPointer.add(eposOffset['x']).writeFloat(x);
+    eposPointer.add(eposOffset['y']).writeFloat(y);
+    eposPointer.add(eposOffset['z']).writeFloat(z);
+    await sleep(170);
+}
+
+async function ctmDefaultMilk(){
+    if(!epos) return;
+    if(epos.isNull()) return;
+    epos.add(eposOffset['state']).writeS32(1);
+    const home = async () => await teleport(epos, -255, 48.22, 0);
+    await teleport(epos, 262, 48.22, -44);
+    await home();
+    await teleport(epos, 262, 48.22, -72);
+    await home();
+    await teleport(epos, 262, 48.22, 44);
+    await home();
+    await teleport(epos, 262, 48.22, 72);
+    await home();
+}
+
+async function ctmDefaultChoco(){
+    if(!epos) return;
+    if(epos.isNull()) return;
+    epos.add(eposOffset['state']).writeS32(1);
+    const home = async () => await teleport(epos, 255, 48.22, 0);
+    await teleport(epos, -262, 48.22, -44);
+    await home();
+    await teleport(epos, -262, 48.22, -72);
+    await home();
+    await teleport(epos, -262, 48.22, 44);
+    await home();
+    await teleport(epos, -262, 48.22, 72);
+    await home();
+}
+
+async function ctmDesertMilk(){
+    if(!epos) return;
+    if(epos.isNull()) return;
+    epos.add(eposOffset['state']).writeS32(1);
+    const home = async () => await teleport(epos, -200, 38.4, 128);
+    await teleport(epos, 209, 38.4, -112);
+    await home();
+    await teleport(epos, 209, 38.4, -144);
+    await home();
+    await teleport(epos, 175, 38.4, -112);
+    await home();
+    await teleport(epos, 175, 38.4, -144);
+    await home();
+}
+
+async function ctmDesertChoco(){
+    if(!epos) return;
+    if(epos.isNull()) return;
+    epos.add(eposOffset['state']).writeS32(1);
+    const home = async () => await teleport(epos, 200, 38.4, -128);
+    await teleport(epos, -209, 38.4, 112);
+    await home();
+    await teleport(epos, -209, 38.4, 144);
+    await home();
+    await teleport(epos, -175, 38.4, 112);
+    await home();
+    await teleport(epos, -175, 38.4, 144);
+    await home();
+}
+
+async function ctmCastleMilk(){
+    if(!epos) return;
+    if(epos.isNull()) return;
+    epos.add(eposOffset['state']).writeS32(1);
+    const home = async () => await teleport(epos, -250, 54.4, 0);
+    await teleport(epos, 242, 19.2, -37);
+    await home();
+    await teleport(epos, 242, 19.2, -60);
+    await home();
+    await teleport(epos, 242, 19.2, 37);
+    await home();
+    await teleport(epos, 242, 19.2, 60);
+    await home();
+}
+
+async function ctmCastleChoco(){
+    if(!epos) return;
+    if(epos.isNull()) return;
+    epos.add(eposOffset['state']).writeS32(1);
+    const home = async () => await teleport(epos, 250, 54.4, 0);
+    await teleport(epos, -242, 19.2, -37);
+    await home();
+    await teleport(epos, -242, 19.2, -60);
+    await home();
+    await teleport(epos, -242, 19.2, 37);
+    await home();
+    await teleport(epos, -242, 19.2, 60);
+    await home();
+}
+
+async function ctmMountainMilk(){
+    if(!epos) return;
+    if(epos.isNull()) return;
+    epos.add(eposOffset['state']).writeS32(1);
+    const home = async () => await teleport(epos, -170, 0, -124);
+    await teleport(epos, 162, 0, 142);
+    await home();
+    await teleport(epos, 162, 0, 158);
+    await home();
+    await teleport(epos, 162, 0, 106);
+    await home();
+    await teleport(epos, 162, 0, 90);
+    await home();
+}
+
+async function ctmMountainChoco(){
+    if(!epos) return;
+    if(epos.isNull()) return;
+    epos.add(eposOffset['state']).writeS32(1);
+    const home = async () => await teleport(epos, 170, 0, 124);
+    await teleport(epos, -162, 0, -142);
+    await home();
+    await teleport(epos, -162, 0, -158);
+    await home();
+    await teleport(epos, -162, 0, -106);
+    await home();
+    await teleport(epos, -162, 0, -90);
+    await home();
 }
 
 rpc.exports = {

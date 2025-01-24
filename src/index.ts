@@ -389,6 +389,14 @@ app.on("ready", async () => {
                     ipcMain.on("change-ads-reward", (e) => {
                         script.post(['change-ads-reward']);
                     });
+                    ipcMain.on("ctm-default-milk", (e) => script.post(['ctm-default-milk']));
+                    ipcMain.on("ctm-default-choco", (e) => script.post(['ctm-default-choco']));
+                    ipcMain.on("ctm-desert-milk", (e) => script.post(['ctm-desert-milk']));
+                    ipcMain.on("ctm-desert-choco", (e) => script.post(['ctm-desert-choco']));
+                    ipcMain.on("ctm-castle-milk", (e) => script.post(['ctm-castle-milk']));
+                    ipcMain.on("ctm-castle-choco", (e) => script.post(['ctm-castle-choco']));
+                    ipcMain.on("ctm-mountain-milk", (e) => script.post(['ctm-mountain-milk']));
+                    ipcMain.on("ctm-mountain-choco", (e) => script.post(['ctm-mountain-choco']));
                     ipcMain.on("get-ranges", (e, data:string) => {
                         script.post(['get-ranges', data]);
                     });

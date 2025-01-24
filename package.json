@@ -1,6 +1,6 @@
 {
   "name": "pixel",
-  "version": "1.6.4",
+  "version": "1.6.5",
   "description": "milkchoco frida cheat tool",
   "main": "dist/index.js",
   "scripts": {

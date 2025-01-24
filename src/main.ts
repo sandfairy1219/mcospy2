@@ -456,6 +456,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja': '',
         'zh': '',
     },
+    'blackhole-force-drop':{
+        'en':'Force Drop',
+        'ko':'강제 드랍',
+        'ja':'強制ドロップ',
+        'zh':'强制下降',
+    },
     'shoot-speed':{
         'en':'Shoot Speed',
         'ko':'발사 속도',
@@ -623,6 +629,48 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ko':'광고 보상 변경',
         'ja':'広告報酬変更',
         'zh':'更改广告奖励',
+    },
+    'ctm':{
+        'en':'Capture The Milk',
+        'ko':'우유 뺏기',
+        'ja':'ミルクを取る',
+        'zh':'抢奶',
+    },
+    'milk':{
+        'en':'Milk',
+        'ko':'밀크',
+        'ja':'ミルク',
+        'zh':'牛奶',
+    },
+    'choco':{
+        'en':'Choco',
+        'ko':'초코',
+        'ja':'チョコ',
+        'zh':'巧克力',
+    },
+    'ctm-default':{
+        'en':'Default Map',
+        'ko':'기본 우뺏',
+        'ja':'デフォルトマップ',
+        'zh':'默认地图',
+    },
+    'ctm-desert':{
+        'en':'Desert Map',
+        'ko':'사막 우뺏',
+        'ja':'砂漠マップ',
+        'zh':'沙漠地图',
+    },
+    'ctm-castle':{
+        'en':'Castle Map',
+        'ko':'성 우뺏',
+        'ja':'城マップ',
+        'zh':'城堡地图',
+    },
+    'ctm-mountain':{
+        'en':'Mountain Map',
+        'ko':'산 우뺏',
+        'ja':'山マップ',
+        'zh':'山地图',
     },
     'macro':{
         'en':'Macro',
@@ -1011,6 +1059,15 @@ sel.addEventListener('change', blurCurrent);
 ipcRenderer.on('skillcode', (e, code:string) => {
     $i('skillcode').value = code;
 })
+
+$_('ctm-default-milk').addEventListener('click', () => {ipcRenderer.send('ctm-default-milk');});
+$_('ctm-default-choco').addEventListener('click', () => {ipcRenderer.send('ctm-default-choco');});
+$_('ctm-desert-milk').addEventListener('click', () => {ipcRenderer.send('ctm-desert-milk');});
+$_('ctm-desert-choco').addEventListener('click', () => {ipcRenderer.send('ctm-desert-choco');});
+$_('ctm-castle-milk').addEventListener('click', () => {ipcRenderer.send('ctm-castle-milk');});
+$_('ctm-castle-choco').addEventListener('click', () => {ipcRenderer.send('ctm-castle-choco');});
+$_('ctm-mountain-milk').addEventListener('click', () => {ipcRenderer.send('ctm-mountain-milk');});
+$_('ctm-mountain-choco').addEventListener('click', () => {ipcRenderer.send('ctm-mountain-choco');});
 
 $_('scan-epos').addEventListener('click', () => {ipcRenderer.send('scan-epos');});
 $_('scan-entity').addEventListener('click', () => {ipcRenderer.send('scan-entity');});
