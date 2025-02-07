@@ -264,6 +264,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'エイムボット加速度',
         'zh':'瞄准辅助加速度',
     },
+    'aimbot-main-weapon-only':{
+        'en':'Aimbot Main Weapon Only',
+        'ko':'에임봇 주무기만',
+        'ja':'エイムボット メイン武器のみ',
+        'zh':'自瞄仅限主武器',
+    },
     'aimbot-ignore':{
         'en':'Ignore Team',
         'ko':'팀 무시',

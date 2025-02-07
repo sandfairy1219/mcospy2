@@ -22,46 +22,58 @@ const xaOffset = {
     // 1.50.0 0x35020AC
     'instant-respawn': 0x3116344, // 505415712 => 505415680
     // 20 08 20 1E C0 03 5F D6 6F 12 83 3A FD 7B BE A9
-    // 1.50.0 0x30B6FD8
+    // 1.50.2 0x30B6FD8
     // 1.50.0 0x30B6FD8
     'body-one-kill': 0x3565340, // 506335232 => 505925632
     // 00 10 2E 1E C0 03 5F D6 FD 7B BF A9
-    // 1.50.0 0x34F9450
+    // 1.50.2 0x34F9450
     // 1.50.0 0x3502210
     'head-one-kill': 0x3565338, // -1136594944 => 505925632
     // 00 F0 40 BC C0 03 5F D6 00 10 2E 1E
-    // 1.50.0 0x34F9448
+    // 1.50.2 0x34F9448
     // 1.50.0 0x3502208
     'skill-damage': 0x32C9A24, // -1203335166 => 1384184322
     // 02 90 46 B8 E0 03 02 2A C0 03 5F D6 42 0C 40 F9
-    // 1.50.0 0x32651B8
+    // 1.50.2 0x32651B8
     // 1.50.0 0x3266178
     'cookerbuff': 0x3565B9C, // 506335232 => 505925632
     // 00 10 2E 1E C0 03 5F D6
-    // 1.50.0 0x34F9C68
+    // 1.50.2 0x34F9C68
     // 1.50.0 0x3502A28
 }
 const anOffset = {
-    "camera-base": 0x8A917C,
+    "camera-base": 0x8AB0CC,
+    // 1.50.2 0x8A917C
     // 1.50.0 0x8A900C
-    "yaw": 0x8A918C,
-    "pitch": 0x8A917C,
-    "camX": 0x8A9188,
-    "camY": 0x8A918C,
-    "camZ": 0x8A9190,
-    "cam-distance": 0x8A91A0,
+    "yaw": 0x8AB0CC + 0x4,
+    "pitch": 0x8AB0CC + 0x0,
+    "camX": 0x8AB0CC + 0xC,
+    "camY": 0x8AB0CC + 0x10,
+    "camZ": 0x8AB0CC + 0x14,
+    "cam-distance": 0x8AB0CC + 0x24,
 
-    "position-base": 0x7A3950,
+    "position-base": 0x7A55E0,
+    // 1.50.2 0x7A3950
     // 1.50.0 0x7A37E0
-    "x": 0x7A3950,
-    "y": 0x7A3954,
-    "z": 0x7A3958,
+    "x": 0x7A55E0 + 0x0,
+    "y": 0x7A55E0 + 0x4,
+    "z": 0x7A55E0 + 0x8,
 
-    "cash-base": 0x2CE0C8,
+    "cash-base": 0x2CF018,
+    "dia": 0x2CF018 + 0x0,
+    "dia-total": 0x2CF018 + 0x8,
+    "dia-used": 0x2CF018 + 0xC,
+    "gold": 0x2CF018 + 0x10,
+    "gold-total": 0x2CF018 + 0x14,
+    "gold-used": 0x2CF018 + 0x18,
+    "clan-gold": 0x2CF018 + 0x1C,
+    // 1.50.2 0x2CE0C8
     // 1.50.0 0x2CDF60
-    "skill-base": 0x8B5A15,
+    "skill-base": 0x8B7985,
+    // 1.50.2 0x8B5A15
     // 1.50.0 0x8B58A5
-    "grenade-base": 0x8B5969,
+    "grenade-base": 0x8B78D9,
+    // 1.50.2 0x8B5969
     // 1.50.0 0x8B5805
 }
 const cdOffset = {
@@ -612,13 +624,21 @@ function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
             .filter(entity => !entity.address.isNull())
             _entityList = [..._entityList, ...entities.map(entity => entity.address.add(-eposOffset['pointer']))];
         } catch(e){
-            // log(e);
+            log(e);
         }
     });
-    _entityList = _entityList.filter(entity => entity.toString().match(/000$/))
-    log("Entity Found:", _entityList.length, '\n',
-        _entityList.map(entity => `${entity.toString()} [${entity.add(eposOffset['number']).readS32()}] ${entity.add(eposOffset['nickname']).readUtf8String()}`).join('\n')
-    );
+    try{
+        _entityList = _entityList.filter(entity => entity.toString().match(/000$/))
+    } catch(e){
+        send(['entity-state', 'error', 'Error filtering']);
+    }
+    try{
+        log("Entity Found:", _entityList.length, '\n',
+            _entityList.map(entity => `${entity.toString()} [${entity.add(eposOffset['number']).readS32()}] ${entity.add(eposOffset['nickname']).readUtf8String()}`).join('\n')
+        );
+    } catch(e){
+        send(['entity-state', 'error', 'Error logging']);
+    }
     send(['entity-state', 'succeed', `Found: ${_entityList.length}`]);
     return _entityList || [];
 }
@@ -663,6 +683,7 @@ function aimbot(eposPointer:NativePointer, delta:number){
     if(!an) return;
     if(!eposPointer) return;
     if(eposPointer.isNull()) return;
+    if(config['aimbot-main-weapon-only'] && eposPointer.add(eposOffset["weapon"]).readS16() == 1) return;
     const cambase = an.add(anOffset['camera-base']);
     const mode = config['aimbot-mode'] || 'normal';
     const speed = (config['aimbot-speed'] || 20) * (delta/10);
