@@ -176,6 +176,8 @@ let isArm = false
 let xa:NativePointer = null;
 let an:NativePointer = null;
 let cd:NativePointer = null;
+let jit:NativePointer = null;
+let jtRange:number = null;
 let cas:RangeDetails[] = [];
 let epos:NativePointer = null;
 let entityList:NativePointer[] = [];
@@ -230,10 +232,9 @@ Java.perform(() => {
                     );
                     if(__xa[0]) {
                         xa = __xa[0].base;
-                        isArm = true;
                     }
                 }
-                isArm = isArm || (Process.arch === 'arm64');
+                isArm = Process.arch.includes('arm');
                 const _an = rw.filter((range:RangeDetails) =>
                     (!range.file) &&
                     range.size >= (isArm ? 0x1000 : 0x14E_8000)
@@ -249,8 +250,14 @@ Java.perform(() => {
                         log(range.base.toString(), dia)
                     }
                 });
+                const _jt = rx.filter(range => range.file && range.file.path.includes("jit"));
+                if(_jt[0]) {
+                    jit = _jt[0].base;
+                    jtRange = _jt[0].size;
+                }
                 if(!xa || !an) return recv(api);
-                send(['Address.init', xa.toString(), an.toString()])
+                if(!isArm && !jit) return recv(api);
+                send(['Address.init', xa.toString(), an.toString(), jit.toString()])
             } else if(name === 'cheats'){
                 if(!an || !xa) return recv(api);
                 cheats[args[0]] = args[1];
@@ -399,6 +406,18 @@ Java.perform(() => {
                 const f = Process.enumerateRanges('rw-').find(range => range.base.equals(ptr(args[0])))
                 const c = !r.file && r.size >= 0x20_0000 && r.size % 0x10_0000 == 0
                 log(r, f, c)
+            } else if(name === 'search-pattern'){
+                if(jit && !jit.isNull()){
+                    log("[JIT] scanning pattern in jit ranges:", args[0], jit.toString(), jtRange)
+                    Memory.scan(jit, jtRange, args[0], {
+                        onMatch: (addr, sz) => {
+                            log("[JIT] pattern found:", addr.toString(), sz)
+                        },
+                        onComplete: () => {
+                            log("[JIT] scan complete")
+                        }
+                    })
+                }
             } else if(name === 'gyro'){
                 gyro(args[0]);
             } else if(name === 'execute-macro'){

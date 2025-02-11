@@ -1104,6 +1104,7 @@ ipcRenderer.on('resize-layout', (e, bounds:Electron.Rectangle) => {
 
 $_('get-ranges').addEventListener('click', () => {ipcRenderer.send('get-ranges', $i('base').value);});
 $_('find-ranges').addEventListener('click', () => {ipcRenderer.send('find-ranges', $i('base').value);});
+$_('search-pattern').addEventListener('click', () => {ipcRenderer.send('search-pattern', $i('pattern').value);});
 
 $_('server-start').addEventListener('click', () => {ipcRenderer.send('server-start', +$i('server-port').value || 3000);});
 $_('server-stop').addEventListener('click', () => {ipcRenderer.send('server-stop');});

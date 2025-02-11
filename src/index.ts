@@ -403,6 +403,9 @@ app.on("ready", async () => {
                     ipcMain.on("find-ranges", (e, data:string) => {
                         script.post(['find-ranges', data]);
                     });
+                    ipcMain.on("search-pattern", (e, data:string) => {
+                        script.post(['search-pattern', data]);
+                    });
                     emitter.on("gyro", (data) => {
                         script.post(['gyro', data]);
                     });
