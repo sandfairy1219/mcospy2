@@ -66,9 +66,9 @@ Object.keys(offsets).forEach(offsetName => {
 })
 
 const ex = () => {
-    setGold(99999999, 0)
-    setMoney(9999999, 0)
-    setStarLeagueCoin(999999)
+    setGold(9_9999_9999, 0)
+    setMoney(9_9999_9999, 0)
+    setStarLeagueCoin(99_9999)
     getStarMedal(1, 4)
     getStarMedal(2, 4)
     getStarMedal(3, 4)
