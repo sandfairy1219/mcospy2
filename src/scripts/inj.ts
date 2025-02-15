@@ -1,4 +1,4 @@
-const cookieMode = false;
+const cookieMode = true;
 const cookie = "3367af5c2f_ac269a16fe991b32d07f98c6cb2efd54_07ed2591a14619e6b32121443fa28508";
 
 let modl = Module.findBaseAddress("libMyGame.so")
@@ -255,11 +255,21 @@ const main = async () => {
     if(!Process.arch.includes("arm")) return console.log("[!] Only can execute this script on ARM.");
     if(modl.isNull()) return console.log("[!] No Module Found.");
     console.log("[*] Initialized");
+    console.log("\n")
+    console.log("======== Pixel Injection CLI v1.0 ========")
+    console.log("dia(number)           - Get Diamonds")
+    console.log("gold(number)          - Get Golds")
+    console.log("league(number)        - Get StarLeague Coins")
+    console.log("point(number)         - Get Points")
+    console.log("skill( 1 | 0 )        - Set Skill Cooltime to 1 sec")
+    console.log("clanexp(number)       - Set Clan's Exp (need sub clan master or higher)")
+    console.log("item(n1, n2, n3, n4)  - Buy Item (character, slot, itemId, amount)")
+    console.log("unlockAll(number)     - Buy All Items by Character")
     
-    dia = func(cheatOffsets.setMoney);
-    gold = func(cheatOffsets.setGold);
+    dia = (amount:number) => func(cheatOffsets.setMoney)(amount, 0);
+    gold = (amount:number) => func(cheatOffsets.setGold)(amount, 0);
     league = func(cheatOffsets.setStarLeagueCoin);
-    point = func(cheatOffsets.setPoint);
+    point = (amount:number) => func(cheatOffsets.setPoint)(amount, 0);
     skill = func(cheatOffsets.setAllSkillCoolTimeOneSecond);
     clanexp = func(cheatOffsets.setClanExp);
     item = func(buyOffsets.buyItem);
@@ -285,15 +295,15 @@ Java.perform(async () => {
         implements: [callbackClass],
         methods: {
             OnHackDetected: function (code, message) {
-                console.log("[FAKE] Hack Detected! (Blocked)");
+                console.log("[*] Hack Detected! (Blocked)");
                 console.log(code, message)
             },
             OnLog: function (logMessage) {
-                console.log("[FAKE] Xigncode Log:", logMessage);
+                console.log("[*] Xigncode Log:", logMessage);
                 return;
             },
             SendPacket: function (data) {
-                console.log("[FAKE] SendPacket intercepted!");
+                console.log("[*] SendPacket intercepted!");
                 return 0;
             }
         }
