@@ -606,6 +606,39 @@ function loop(){
                 if(keybinds['fly-up'] && keymap[keybinds['fly-up']]) eposPointer.add(eposOffset['y']).writeFloat(y + (config['fly-speed'] || 1));
                 if(keybinds['fly-down'] && keymap[keybinds['fly-down']]) eposPointer.add(eposOffset['y']).writeFloat(y - (config['fly-speed'] || 1));
             }
+            if(cheats['freecam']){
+                const camspeed = config["freecam-cam-speed"] || 0.05;
+                const mvspeed = config["freecam-move-speed"] || 2;
+                const pc = an.add(anOffset["pitch"])
+                const yw = an.add(anOffset["yaw"])
+                const x = eposPointer.add(eposOffset["x"])
+                const y = eposPointer.add(eposOffset["x"])
+                const z = eposPointer.add(eposOffset["x"])
+                if(keymap["NUMPAD 8"]){
+                    pc.writeFloat(pc.readFloat() + camspeed)
+                }
+                if(keymap["NUMPAD 2"]){
+                    pc.writeFloat(pc.readFloat() - camspeed)
+                }
+                if(keymap["NUMPAD 4"]){
+                    yw.writeFloat(yw.readFloat() - camspeed)
+                }
+                if(keymap["NUMPAD 6"]){
+                    yw.writeFloat(yw.readFloat() + camspeed)
+                }
+                if(keymap["UP ARROW"]){
+                    
+                }
+                if(keymap["DOWN ARROW"]){
+                    
+                }
+                if(keymap["LEFT ARROW"]){
+                    
+                }
+                if(keymap["RIGHT ARROW"]){
+                    
+                }
+            }
             if(cheats['upskill'] && (!keybinds['upskill'] || keymap[keybinds['upskill']])){
                 const hp = eposPointer.add(eposOffset['hp']).readS16();
                 eposPointer.add(eposOffset['hp']).writeS16(hp + 1);
