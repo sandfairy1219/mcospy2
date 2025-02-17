@@ -27,6 +27,7 @@ ipcRenderer.on("draw", (event, data:DrawRect[]) => {
     const threed = configg['esp-3d'] || false;
     const fontSize = +configg['esp-font-size'] || 16;
     const showTag = configg['esp-tag'] || false;
+    const showBar = configg['esp-bar'] || false;
     const tagType = configg['esp-tag-type'] || 'both';
     ctx.textAlign = "center";
     ctx.textBaseline = "bottom";
@@ -40,11 +41,25 @@ ipcRenderer.on("draw", (event, data:DrawRect[]) => {
         const Xs = [...upside.map(point => point.x), ...downside.map(point => point.x)];
         const Ys = [...upside.map(point => point.y), ...downside.map(point => point.y)];
         const minX = Math.min(...Xs), maxX = Math.max(...Xs), minY = Math.min(...Ys), maxY = Math.max(...Ys);
+        const barHeight = showBar ? 10 : 0;
         if(showTag) {
             const onNumber = tagType === 'number' || tagType === 'both'
             const onNickname = tagType === 'nickname' || tagType === 'both'
             const tagText = `${onNumber ? `[${rect.number}]` : ""} ${onNickname ? rect.nickname : ""}`;
-            ctx.fillText(tagText, minX + (maxX - minX) / 2, minY);
+            ctx.fillText(tagText, minX + (maxX - minX) / 2, minY - barHeight);
+        }
+        if(showBar) {
+            const hpPerc = rect.hp / rect.total;
+            const barPerc = rect.barrier / rect.total;
+            const barWidth = maxX - minX;
+            const barY = minY - barHeight;
+            const hpWidth = barWidth * hpPerc;
+            const barrerWidth = barWidth * barPerc;
+            ctx.strokeRect(minX, barY, barWidth, barHeight);
+            ctx.fillRect(minX, barY, hpWidth, barHeight);
+            ctx.globalAlpha = 0.8;
+            ctx.fillRect(minX + hpWidth, barY, barrerWidth, barHeight);
+            ctx.globalAlpha = 1;
         }
         ctx.beginPath();
         if(tracer){

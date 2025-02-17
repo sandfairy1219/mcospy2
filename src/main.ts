@@ -378,6 +378,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'ニックネーム',
         'zh':'昵称',
     },
+    'esp-bar':{
+        'en':'ESP HP Bar',
+        'ko':'ESP 체력바',
+        'ja':'ESP HPバー',
+        'zh':'ESP 生命值条',
+    },
     'esp-color':{
         'en':'ESP Color',
         'ko':'ESP 색상',

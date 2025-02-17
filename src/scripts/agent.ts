@@ -119,6 +119,35 @@ const eposOffset = {
     'pointer':0xEE8, // pointer
 };
 
+const charHealth = [
+    {hp: 208, barrier: 27},
+    {hp: 249, barrier: 45},
+    {hp: 240, barrier: 31},
+    {hp: 269, barrier: 30},
+    {hp: 240, barrier: 59},
+    {hp: 263, barrier: 55},
+    {hp: 244, barrier: 19},
+    {hp: 191, barrier: 18},
+    {hp: 265, barrier: 24},
+    {hp: 255, barrier: 16},
+    {hp: 271, barrier: 10},
+    {hp: 288, barrier: 73},
+    {hp: 236, barrier: 13},
+    {hp: 256, barrier: 23},
+    {hp: 222, barrier: 18},
+    {hp: 254, barrier: 22},
+    {hp: 224, barrier: 21},
+    {hp: 220, barrier: 15},
+    {hp: 274, barrier: 27},
+    {hp: 247, barrier: 32},
+    {hp: 220, barrier: 25},
+    {hp: 253, barrier: 16},
+    {hp: 240, barrier: 0},
+    {hp: 245, barrier: 20},
+    {hp: 200, barrier: 70},
+    {hp: 225, barrier: 35},
+]
+
 // 0 = ground stop
 // 1 = ground walk
 // 2 = air stop
@@ -154,6 +183,9 @@ interface DrawRect{
     downside:Point[];
     number:number;
     nickname:string;
+    hp:number;
+    barrier:number;
+    total:number;
     isTeam:boolean;
     isDead:boolean;
 }
@@ -197,9 +229,9 @@ Java.perform(() => {
         send(["XigncodeClientSystem.initialize", activity, str, str2, str3]);
         return 0;
     };
-    let Cocos2dxActivity = Java.use("org.cocos2dx.lib.Cocos2dxActivity");
-    Cocos2dxActivity["getCookie"].implementation = function (str:string) {
-        let result = this["getCookie"](str);
+    // let Cocos2dxActivity = Java.use("org.cocos2dx.lib.Cocos2dxActivity");
+    XigncodeClientSystem["getCookie2"].implementation = function (str:string) {
+        let result = this["getCookie2"](str);
         log(result)
         send(["Cocos2dxActivity.getCookie"]);
         return '/*cookie*/';
@@ -508,6 +540,11 @@ function loop(){
                         const z = entity.add(eposOffset['z']).readFloat();
                         const number = entity.add(eposOffset['number']).readS32();
                         const nickname = entity.add(eposOffset['nickname']).readUtf8String();
+                        const hp = entity.add(eposOffset["hp"]).readS16();
+                        const barrier = entity.add(eposOffset["barrier"]).readS16();
+                        const char:number = entity.add(eposOffset["sk"]).readU8();
+                        const health = charHealth[char-1] || {hp: 200, barrier:0};
+                        const total = health.hp + health.barrier;
                         const upside = [
                             {x: x + sideSize, y: y + upSize, z: z + sideSize},
                             {x: x - sideSize, y: y + upSize, z: z + sideSize},
@@ -522,7 +559,10 @@ function loop(){
                         ].map(vec3 => calcESP(vec3, {x: camX, y: camY, z: camZ}, yaw, pitch, camFov)).filter(point => point);
                         const isTeam = excepts.includes(number);
                         const _isDead = isDead(entity);
-                        return {upside, downside, number, nickname, isTeam, isDead: _isDead};
+                        return {
+                            upside, downside, number, nickname, isTeam, isDead: _isDead,
+                            hp, barrier, total
+                        };
                     }).filter(rect => rect.upside.length > 3 && rect.downside.length > 3);
                     send(['esp', data]);
                 }
