@@ -1,6 +1,6 @@
 {
   "name": "pixel",
-  "version": "1.6.7",
+  "version": "1.6.8",
   "description": "milkchoco frida cheat tool",
   "main": "dist/index.js",
   "scripts": {
@@ -10,7 +10,9 @@
     "build": "tsc && npx tailwindcss -i ./public/global.css -o ./public/output.css --minify && tsc --project tsconfig.scripts.json",
     "clean:win": "rd /s /q dist && rd /s /q build && del public/output.css /q",
     "clean:linux": "rm -rf dist build public/output.css",
-    "download:binding": "start https://github.com/frida/frida/releases/download/16.4.10/frida-v16.4.10-electron-v125-win32-x64.tar.gz"
+    "download:binding": "start https://github.com/frida/frida/releases/download/16.4.10/frida-v16.4.10-electron-v125-win32-x64.tar.gz",
+    "spawn": "frida -Uf com.gameparadiso.milkchoco -l public/scripts/inj.js",
+    "attach": "frida -UN com.gameparadiso.milkchoco -l public/scripts/inj.js"
   },
   "keywords": [],
   "author": "",

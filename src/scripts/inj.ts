@@ -1,83 +1,84 @@
-const cookieMode = true;
-const cookie = "3367af5c2f_ac269a16fe991b32d07f98c6cb2efd54_07ed2591a14619e6b32121443fa28508";
+const cookieMode = false;
+const cookie = "4067b85442_77c97a5744dcd026f7823ae1d4b6e27f_c33baf8dea961608f02b627974407565";
 
-let modl = Module.findBaseAddress("libMyGame.so")
+const libMyGame = "libMyGame.so";
+let modl = Module.findBaseAddress(libMyGame);
 
 interface OffsetInfo {
     name: string;
-    offset: string;
+    str: string;
     args: NativeFunctionArgumentType[];
 }
 
 const cheatOffsets: Record<string, OffsetInfo> = {
     setClanExp: {
         name: "setClanExp",
-        offset: "0x334F480",
+        str: "_ZN16SystemPacketSend15CheatSetClanExpEj",
         args: ["uint"],
     },
     forceEndGame: {
         name: "forceEndGame",
-        offset: "334F564",
+        str: "_ZN16SystemPacketSend17CheatForceEndGameENS_16ForceEndGameTypeE",
         args: ["pointer"],
     },
     disconnectGameServer: {
         name: "disconnectGameServer",
-        offset: "0x334F648",
+        str: "_ZN16SystemPacketSend39CheatDisconnectGameServerFromDataServerEh",
         args: ["uchar"],
     },
     setLatency: {
         name: "setLatency",
-        offset: "0x334F72C",
+        str: "_ZN16SystemPacketSend15CheatSetLatencyEj",
         args: ["uint"],
     },
     setStarLeaguePoint: {
         name: "setStarLeaguePoint",
-        offset: "0x334FBE8",
+        str: "_ZN16SystemPacketSend23CheatSetStarLeaguePointEt",
         args: ["uint16"],
     },
     getStarLeagueReward: {
         name: "getStarLeagueReward",
-        offset: "0x334FCCC",
+        str: "_ZN16SystemPacketSend24CheatGetStarLeagueRewardEv",
         args: ["void"],
     },
     setStarLeagueCoin: {
         name: "setStarLeagueCoin",
-        offset: "0x334FD64",
+        str: "_ZN16SystemPacketSend22CheatSetStarLeagueCoinEj",
         args: ["uint"],
     },
     setGradeAndPoint: {
         name: "setGradeAndPoint",
-        offset: "0x3353E34",
+        str: "_ZN16SystemPacketSend21CheatSetGradeAndPointEhj",
         args: ["uchar", "uint"],
     },
     setPoint: {
         name: "setPoint",
-        offset: "0x3353F28",
+        str: "_ZN16SystemPacketSend13CheatSetPointEhj",
         args: ["uchar", "uint"],
     },
     setGold: {
         name: "setGold",
-        offset: "0x3354838",
+        str: "_ZN16SystemPacketSend12CheatSetGoldEii",
         args: ["int", "int"],
     },
     setBMoney: {
         name: "setBMoney",
-        offset: "0x3354960",
+        str: "_ZN16SystemPacketSend14CheatSetBMoneyEii",
         args: ["int", "int"],
     },
     setMoney: {
         name: "setMoney",
-        offset: "0x3354A88",
+        str: "_ZN16SystemPacketSend13CheatSetMoneyEii",
         args: ["int", "int"],
     },
     setAllSkillCoolTimeOneSecond: {
         name: "setAllSkillCoolTimeOneSecond",
-        offset: "0x3355124",
+        str: "_ZN16SystemPacketSend33CheatSetAllSkillCoolTimeOneSecondEb",
         args: ["bool"],
     },
     getStarLeagueMedal: {
         name: "getStarLeagueMedal",
-        offset: "0x3355C70",
+        str: "_ZN16SystemPacketSend23CheatGetStarLeagueMedalEhm",
         args: ["uchar", "ulong"],
     },
 }
@@ -85,97 +86,223 @@ const cheatOffsets: Record<string, OffsetInfo> = {
 const buyOffsets: Record<string, OffsetInfo> = {
     buyWithGold: {
         name: "buyWithGold",
-        offset: "0x334D8D4",
+        str: "_ZN16SystemPacketSend11BuyWithGoldEh",
         args: ["uchar"],
     },
     buyCharacter: {
         name: "buyCharacter",
-        offset: "0x334D974",
+        str: "_ZN16SystemPacketSend12BuyCharacterEh",
         args: ["uchar"],
     },
     buyBoost: {
         name: "buyBoost",
-        offset: "0x334DA14",
+        str: "_ZN16SystemPacketSend8BuyBoostEh",
         args: ["uchar"],
     },
     buyWithClanGold: {
         name: "buyWithClanGold",
-        offset: "0x334DAB4",
+        str: "_ZN16SystemPacketSend15BuyWithClanGoldEh",
         args: ["uchar"],
     },
     buyResetKillDeathRatio: {
         name: "buyResetKillDeathRatio",
-        offset: "0x334DB54",
+        str: "_ZN16SystemPacketSend22BuyResetKillDeathRatioEh",
         args: ["uchar"],
     },
     buyItem: {
         name: "buyItem",
-        offset: "0x3351678",
+        str: "_ZN16SystemPacketSend7BuyItemEhhhh",
         args: ["uchar", "uchar", "uchar", "uchar"], // character, slot, itemid, count (grenade)
     },
     buyRandomOption: {
         name: "buyRandomOption",
-        offset: "0x3351740",
+        str: "_ZN16SystemPacketSend15BuyRandomOptionEhhhh",
         args: ["uchar", "uchar", "uchar", "uchar"], // character, slot, ?, ?
     },
     buyToyItem: {
         name: "buyToyItem", // guess sky kong kong
-        offset: "0x3351740",
+        str: "_ZN16SystemPacketSend10BuyToyItemEjhi",
         args: ["uint", "uchar", "int"],
     },
     equip: {
         name: "equip",
-        offset: "0x3351ED0",
+        str: "_ZN16SystemPacketSend5EquipEhhh",
         args: ["uchar", "uchar", "uchar"],
     },
+    getRewardClassPacket: {
+        name: "getRewardClassPackage",
+        str: "_ZN16SystemPacketSend12ClassPackage23GetRewardInClassPackageEhhmhhhh",
+        args: [],
+    }
 }
 
-const inGameOffset: Record<string, OffsetInfo> = {
+const inGameOffsets: Record<string, OffsetInfo> = {
     hitUser: {
         name: "hitUser",
-        offset: "0x335204C",
+        str: "_ZN16SystemPacketSend7HitUserERK9UserInforhS2_RKN7cocos2d4Vec3Esf",
         args: ["pointer", "uchar", "pointer", "pointer", "int16", "float"],
     },
     buffHitElectric: {
         name: "buffHitElectric",
-        offset: "0x3352B9C",
+        str: "_ZN16SystemPacketSend15BuffHitElectricERK9UserInforjj",
         args: ["pointer", "uint", "uint"],
     },
     buffHitElectricAi: {
         name: "buffHitElectricAi",
-        offset: "0x3352C9C",
+        str: "_ZN16SystemPacketSend21BuffHitElectricAIUserERK9UserInforjj",
         args: ["pointer", "uint", "uint"],
     },
     buffHitElectricOff: {
         name: "buffHitElectricOff",
-        offset: "0x335F2C4",
+        str: "_ZN19SystemOfflinePacket15BuffHitElectricERK9UserInforjj",
         args: ["pointer", "uint", "uint"],
     },
     debuffSkillMagoTotem: {
         name: "debuffSkillMagoTotem",
-        offset: "0x3355DF8",
+        str: "_ZN16SystemPacketSend20DeBuffSkillMagoTotemEjj",
         args: ["uint", "uint"],
+    },
+    timeOverRespawn: {
+        name: "timeOverRespawn",
+        str: "_ZN16SystemPacketSend22TimeOverRespawnWaitingERK9UserInfor",
+        args: ["pointer"],
+    },
+    changeMissionCount: {
+        name: "changeMissionCount",
+        str: "_ZN16SystemPacketSend22SendChangeMissionCountEjmjt",
+        args: ["uint", "ulong", "uint", "uchar"],
+    },
+    completeGameData: {
+        name: "completeGameData",
+        str: "_ZN16SystemPacketSend20SendCompleteGameDataEi",
+        args: ["uint"],
     },
 }
 
-const charStatusOffset: Record<string, OffsetInfo> = {
+const charStatusOffsets: Record<string, OffsetInfo> = {
     getMaxHP: {
         name: "getMaxHP",
-        offset: "0x3565450",
+        str: "_ZN20CharStatusCalculator8GetMaxHPERK9UserInforh",
         args: ["pointer", "uchar"],
-    }
+    },
+    getMaxBarrier: {
+        name: "getMaxBarrier",
+        str: "_ZN20CharStatusCalculator13GetMaxBarrierERK9UserInfor",
+        args: ["pointer", "uchar"],
+    },
+    getShootDelay: {
+        name: "getShootDelay",
+        str: "_ZN20CharStatusCalculator13GetShootDelayERK9UserInfor",
+        args: ["pointer", "uchar"],
+    },
+    getReloadSpeed: {
+        name: "getReloadSpeed",
+        str: "_ZN20CharStatusCalculator18GetReloadSpeedRateERK9UserInfor",
+        args: ["pointer", "uchar"],
+    },
+    getMoveSpeed: {
+        name: "getMoveSpeed",
+        str: "_ZN20CharStatusCalculator12GetMoveSpeedER9UserInfor",
+        args: ["pointer", "uchar"],
+    },
+    getSkillDamage: {
+        name: "getSkillDamage",
+        str: "_ZN20CharStatusCalculator14GetSkillDamageERK9UserInfor",
+        args: ["pointer", "uchar"],
+    },
+    getSkillCooltime: {
+        name: "getSkillCooltime",
+        str: "_ZN20CharStatusCalculator16GetSkillCoolTimeERK9UserInfor",
+        args: ["pointer", "uchar"],
+    },
+    getShotgunBullet: {
+        name: "getShotgunBullet",
+        str: "_ZN20CharStatusCalculator16GetShotGunBulletERK9UserInfor",
+        args: ["pointer", "uchar"],
+    },
+    getBodyshotDamage: {
+        name: "getBodyshotDamage",
+        str: "_ZN20CharStatusCalculator21GetBodyShotDamageRateERK9UserInfor",
+        args: ["pointer", "uchar"],
+    },
+    getHeadshotDamage: {
+        name: "getHeadshotDamage",
+        str: "_ZN20CharStatusCalculator21GetHeadShotDamageRateERK9UserInfor",
+        args: ["pointer", "uchar"],
+    },
 }
 
 const clanOffsets: Record<string, OffsetInfo> = {
     matchEndGame: {
         name: "matchEndGame",
-        offset: "0x33536CC",
+        str: "_ZN16SystemPacketSend16ClanMatchEndGameEjhj",
         args: ["uint", "uchar", "uint"],
     },
     reqInfoEndMatch: {
         name: "reqInfoEndMatch",
-        offset: "0x334E488",
+        str: "_ZN16SystemPacketSend30ClanRequestInformationEndMatchEj",
         args: ["uint"],
+    },
+}
+
+const globalOffsets: Record<string, OffsetInfo> = {
+    testDeleteAccount: {
+        name: "testDeleteAccount",
+        str: "_ZN16SystemPacketSend17TestDeleteAccountEv",
+        args: ["void"],
+    },
+    chatting: {
+        name: "chatting",
+        str: "_ZN16SystemPacketSend8ChattingEhOSs",
+        args: ["uchar", "pointer"],
+    },
+    getUserByOrder: {
+        name: "getUserByOrder",
+        str: "_ZN15UserInfoManager14GetUserByOrderEh",
+        args: ["uchar"],
+    },
+    getUserByUserSeq: {
+        name: "getUserByUserSeq",
+        str: "_ZN15UserInfoManager16GetUserByUserSeqEj",
+        args: ["uint"],
+    },
+}
+
+const cameraOffsets: Record<string, OffsetInfo> = {
+    update: {
+        name: "update",
+        str: "_ZN10GameCamera6UpdateEf",
+        args: ["float"],
+    },
+    setCameraPos: {
+        name: "setCameraPos",
+        str: "_ZN10GameCamera12SetCameraPosER9GameSceneb",
+        args: ["pointer", "bool"],
+    },
+    updateAimAssist: {
+        name: "updateAimAssist",
+        str: "_ZN9GameScene15UpdateAimAssistEf",
+        args: ["float"],
+    },
+    isAimAssist: {
+        name: "isAimAssist",
+        str: "_ZNK9GameScene11IsAimAssistEv",
+        args: ["void"],
+    },
+    sendAimAssist: {
+        name: "sendAimAssist",
+        str: "_ZN16SystemPacketSend19SendAimAssistOptionEb",
+        args: ["bool"],
+    },
+    canTrackAimAssist: {
+        name: "canTrackAimAssist",
+        str: "_ZN9GameScene26CanTrackTargetForAimAssistEP9UserInforS1_",
+        args: ["pointer", "pointer"],
+    },
+    onClickedAimAssist: {
+        name: "onClickedAimAssist",
+        str: "_ZN20UIPopupOptionSetting30OnClickedToggle_EventAimAssistEPN7cocos2d3RefE",
+        args: ["pointer"],
     },
 }
 
@@ -184,62 +311,66 @@ async function sleep(ms: number) {
 }
 
 function attach(ofst:OffsetInfo){
-    const pt = modl.add(ptr(ofst.offset))
-    Interceptor.attach(pt, {
-        onEnter: (args) => {
-            let _args = []
-            for(let i = 0; i < ofst.args.length; i++){
-                let type = ofst.args[i]
-                let tar = args[i]
-                let val;
-                switch (type) {
-                    case "bool":
-                        val = !!tar.toInt32();
-                        break;
-                    case "char":
-                    case "int16":
-                    case "int":
-                        val = tar.toInt32();
-                        break;
-                    case "uchar":
-                    case "uint16":
-                    case "uint":
-                        val = tar.toUInt32();
-                        break;
-                    case "long":
-                        val = tar.readLong();
-                        break;
-                    case "ulong":
-                        val = tar.readULong();
-                        break;
-                    case "float":
-                        val = tar.readFloat();
-                        break;
-                    case "double":
-                        val = tar.readDouble();
-                        break;
-                    case "void":
-                        val = tar;
-                        break;
-                    case "pointer":
-                        val = tar.toString();
-                        break;
-                    default:
-                        val = tar;
-                        break;
+    const pt = Module.findExportByName(libMyGame, ofst.str);
+    if(pt){
+        Interceptor.attach(pt, {
+            onEnter: (args) => {
+                let _args = [];
+                for(let i = 0; i < ofst.args.length; i++){
+                    let type = ofst.args[i]
+                    let tar = args[i]
+                    let val;
+                    switch (type) {
+                        case "bool":
+                            val = !!tar.toInt32();
+                            break;
+                        case "char":
+                        case "int16":
+                        case "int":
+                            val = tar.toInt32();
+                            break;
+                        case "uchar":
+                        case "uint16":
+                        case "uint":
+                            val = tar.toUInt32();
+                            break;
+                        case "long":
+                            val = tar.readLong();
+                            break;
+                        case "ulong":
+                            val = tar.readULong();
+                            break;
+                        case "float":
+                            val = tar.toString();
+                            break;
+                        case "double":
+                            val = tar.toString();
+                            break;
+                        case "void":
+                            val = tar;
+                            break;
+                        case "pointer":
+                            val = tar.toString();
+                            break;
+                        default:
+                            val = tar;
+                            break;
+                    }
+                    _args.push(val)
                 }
-                _args.push(val)
+                console.log(`[+] ${ofst.name} (${pt.toString()}) Called:`, ..._args)
+            },
+            onLeave: (retval) => {
+                console.log("[-]", pt.toString(), "Returned:", retval, retval.toUInt32())
             }
-            console.log(`[+] ${ofst.name} (${pt.toString()}) Called:`, ..._args)
-        },
-        onLeave: (retval) => {
-            console.log("[-]", pt.toString(), "Returned:", retval, retval.toUInt32())
-        }
-    })
+        })
+    }
 }
 
 function func(ofst: OffsetInfo): NativeFunction<any, any>{
-    return new NativeFunction(modl.add(ofst.offset), "bool", ofst.args)
+    const pt = Module.findExportByName(libMyGame, ofst.str)
+    if(pt) return new NativeFunction(pt, "bool", ofst.args)
+    else return null;
 }
 
 function isValidAddress(ptrAddr:NativePointer) {
@@ -250,12 +381,13 @@ function isValidAddress(ptrAddr:NativePointer) {
     }
 }
 
+let players:Set<string> = new Set();
 let dia: any, gold: any, league: any, point: any, skill: any, clanexp: any, item: any, char: any, unlockAll: any;
 const main = async () => {
     if(!Process.arch.includes("arm")) return console.log("[!] Only can execute this script on ARM.");
     if(modl.isNull()) return console.log("[!] No Module Found.");
+
     console.log("[*] Initialized");
-    console.log("\n")
     console.log("======== Pixel Injection CLI v1.0 ========")
     console.log("dia(number)           - Get Diamonds")
     console.log("gold(number)          - Get Golds")
@@ -265,7 +397,6 @@ const main = async () => {
     console.log("clanexp(number)       - Set Clan's Exp (need sub clan master or higher)")
     console.log("item(n1, n2, n3, n4)  - Buy Item (character, slot, itemId, amount)")
     console.log("unlockAll(number)     - Buy All Items by Character")
-    
     dia = (amount:number) => func(cheatOffsets.setMoney)(amount, 0);
     gold = (amount:number) => func(cheatOffsets.setGold)(amount, 0);
     league = func(cheatOffsets.setStarLeagueCoin);
@@ -286,6 +417,23 @@ const main = async () => {
 
     attach(clanOffsets.matchEndGame)
     attach(clanOffsets.reqInfoEndMatch)
+
+    Interceptor.attach(Module.findExportByName(libMyGame, globalOffsets.getUserByUserSeq.str), {
+        onLeave: retval => {
+            players.add(retval.toString())
+            players.forEach(player => {
+                try{
+                    ptr(player).add(0x0).readUInt();
+                    const n = ptr(player).add(0x88).readCString();
+                    const zr1 = ptr(player).add(0x18C).readFloat();
+                    const zr2 = ptr(player).add(0x19C).readFloat();
+                    if(zr1 !== 0 || zr2 !== 0 || n === "") players.delete(player);
+                } catch (e){
+                    players.delete(player)
+                }
+            })
+        }
+    })
 }
 
 Java.perform(async () => {
@@ -322,36 +470,7 @@ Java.perform(async () => {
     }
     while(!modl){
         await sleep(500)
-        modl = Module.getBaseAddress("libMyGame.so")
+        modl = Module.getBaseAddress(libMyGame)
     }
     await main().catch(e => console.log("[!]", e))
 })
-
-function debuffHack(num:number) {
-    const elec = func(inGameOffset.buffHitElectric);
-
-    let players = new Set<NativePointer>()
-    Interceptor.attach(modl.add(ptr(inGameOffset.hitUser.offset)), {
-        onEnter: (args) => {
-            const pt = args[2]
-            players.add(pt)
-        }
-    })
-    let idx = 0
-    setInterval(() => {
-        let pls = Array.from(players)
-        if(pls.length === 0) return;
-        let p = pls[idx]
-        if(!p) return;
-        try{
-            if(p && !p.isNull()){
-                elec(p, num, num)
-            } else {
-                players.delete(p)
-            }
-        } catch(e) {
-            players.delete(p)
-        }
-        idx = (idx + 1) % pls.length
-    }, 10)
-}
