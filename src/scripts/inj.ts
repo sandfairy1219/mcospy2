@@ -1,5 +1,5 @@
 const cookieMode = false;
-const cookie = "4067b85442_77c97a5744dcd026f7823ae1d4b6e27f_c33baf8dea961608f02b627974407565";
+const cookie = "4167b91571_b1c6d0c8bc5b1d7783a8c6faeec50dc4_e4395e811f1a0fd9ff17f8d92fdcd1c1";
 
 const libMyGame = "libMyGame.so";
 let modl = Module.findBaseAddress(libMyGame);
@@ -157,10 +157,25 @@ const inGameOffsets: Record<string, OffsetInfo> = {
         str: "_ZN19SystemOfflinePacket15BuffHitElectricERK9UserInforjj",
         args: ["pointer", "uint", "uint"],
     },
+    debuffToUser: {
+        name: "debuffToUser",
+        str: "_ZN9GameScene25ElectricDebuffToUserSkillER9UserInforR5CBuff",
+        args: ["pointer", "pointer"],
+    },
     debuffSkillMagoTotem: {
         name: "debuffSkillMagoTotem",
         str: "_ZN16SystemPacketSend20DeBuffSkillMagoTotemEjj",
         args: ["uint", "uint"],
+    },
+    medicSelfHeal: {
+        name: "medicSelfHeal",
+        str: "_ZN19SystemOfflinePacket20ProcessMedicSelfHealERK9UserInfor",
+        args: ["pointer"],
+    },
+    magoHeal: {
+        name: "magoHeal",
+        str: "_ZN19SystemOfflinePacket20ProcessMedicSelfHealERK9UserInfor",
+        args: ["pointer", "pointer"],
     },
     timeOverRespawn: {
         name: "timeOverRespawn",
@@ -223,12 +238,12 @@ const charStatusOffsets: Record<string, OffsetInfo> = {
     getBodyshotDamage: {
         name: "getBodyshotDamage",
         str: "_ZN20CharStatusCalculator21GetBodyShotDamageRateERK9UserInfor",
-        args: ["pointer", "uchar"],
+        args: ["pointer"],
     },
     getHeadshotDamage: {
         name: "getHeadshotDamage",
         str: "_ZN20CharStatusCalculator21GetHeadShotDamageRateERK9UserInfor",
-        args: ["pointer", "uchar"],
+        args: ["pointer"],
     },
 }
 
@@ -381,31 +396,25 @@ function isValidAddress(ptrAddr:NativePointer) {
     }
 }
 
+let mynum:number = 0;
+let excs:number[] = [];
+let me:string = "";
 let players:Set<string> = new Set();
-let dia: any, gold: any, league: any, point: any, skill: any, clanexp: any, item: any, char: any, unlockAll: any;
+let dia: any, gold: any, league: any, point: any, skill: any, clan: any, item: any, char: any, unlock: any, elec: any, elecAll: any;
 const main = async () => {
     if(!Process.arch.includes("arm")) return console.log("[!] Only can execute this script on ARM.");
     if(modl.isNull()) return console.log("[!] No Module Found.");
 
-    console.log("[*] Initialized");
-    console.log("======== Pixel Injection CLI v1.0 ========")
-    console.log("dia(number)           - Get Diamonds")
-    console.log("gold(number)          - Get Golds")
-    console.log("league(number)        - Get StarLeague Coins")
-    console.log("point(number)         - Get Points")
-    console.log("skill( 1 | 0 )        - Set Skill Cooltime to 1 sec")
-    console.log("clanexp(number)       - Set Clan's Exp (need sub clan master or higher)")
-    console.log("item(n1, n2, n3, n4)  - Buy Item (character, slot, itemId, amount)")
-    console.log("unlockAll(number)     - Buy All Items by Character")
+    console.log("[*] Initialized - Pixel Injection CLI v1.2");
     dia = (amount:number) => func(cheatOffsets.setMoney)(amount, 0);
     gold = (amount:number) => func(cheatOffsets.setGold)(amount, 0);
     league = func(cheatOffsets.setStarLeagueCoin);
     point = (amount:number) => func(cheatOffsets.setPoint)(amount, 0);
     skill = func(cheatOffsets.setAllSkillCoolTimeOneSecond);
-    clanexp = func(cheatOffsets.setClanExp);
+    clan = func(cheatOffsets.setClanExp);
     item = func(buyOffsets.buyItem);
     char = func(buyOffsets.buyCharacter);
-    unlockAll = (ch:number) => {
+    unlock = (ch:number) => {
         for(let i = 1; i < 254; i++){item(ch, 0, i, 1)}
         for(let i = 1; i < 254; i++){item(ch, 1, i, 1)}
         for(let i = 1; i < 254; i++){item(ch, 2, i, 1)}
@@ -414,16 +423,27 @@ const main = async () => {
         for(let i = 1; i < 127; i++){item(ch, 6, i, 1)}
         for(let i = 1; i < 127; i++){item(ch, 7, i, 1)}
     }
+    elec = func(inGameOffsets.buffHitElectric);
+    elecAll = () => {
+        if(mynum){
+            Array.from(players).forEach(str => {
+                const num = ptr(str).readS32();
+                if(num !== mynum && !excs.includes(num)) elec(ptr(str), mynum, mynum)
+            })
+        }
+    }
 
-    attach(clanOffsets.matchEndGame)
-    attach(clanOffsets.reqInfoEndMatch)
+    // setInterval(elecAll, 100)
 
     Interceptor.attach(Module.findExportByName(libMyGame, globalOffsets.getUserByUserSeq.str), {
         onLeave: retval => {
-            players.add(retval.toString())
+            players.add(retval.toString());
+            me = "";
             players.forEach(player => {
                 try{
-                    ptr(player).add(0x0).readUInt();
+                    if(ptr(player).add(0x0).readUInt() == mynum){
+                        me = player;
+                    }
                     const n = ptr(player).add(0x88).readCString();
                     const zr1 = ptr(player).add(0x18C).readFloat();
                     const zr2 = ptr(player).add(0x19C).readFloat();
