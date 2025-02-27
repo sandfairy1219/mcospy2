@@ -15,6 +15,7 @@ import { exec } from "child_process";
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { _anOffset, _cdOffset, _eposOffset, _xaOffset } from "./offsets";
 
 const process_name = 'com.gameparadiso.milkchoco';
 const frida_version = '16.4.10';
@@ -42,6 +43,7 @@ listener.addListener((event, down) => {
 });
 
 // vars
+let tk:Token|null = null;
 let serial:string = "127.0.0.1:5555";
 let adbId:string = '';
 let fridaDevice:frida.Device = null;
@@ -155,7 +157,10 @@ app.on("ready", async () => {
         const token = await tokens.findOne({ key });
         if(!token) main.webContents.send("token", "Invalid token");
         else if(token.expiration < Date.now()) main.webContents.send("token", "Token expired");
-        else main.webContents.send("token", token);
+        else {
+            tk = token as unknown as Token;
+            main.webContents.send("token", token);
+        }
     });
 
     // macros
@@ -289,6 +294,7 @@ app.on("ready", async () => {
     });
 
     ipcMain.on("get-cookie", async (e) => {
+        if(!tk) return state("session", "error", "Token required");
         if(!fridaDevice) return state("session", "error", "Frida not connected");
         state("session", "pending", "Getting cookie");
         try{
@@ -327,11 +333,19 @@ app.on("ready", async () => {
     });
 
     ipcMain.on("start-agent", async (e) => {
+        if(!tk) return state("session", "error", "Token required");
         if(!fridaDevice) return state("session", "error", "Frida not connected");
         state("session", "pending", "Starting agent");
         let found:boolean = false;
         try{
-            const [dispose, script] = await executeProcess(process_name, fridaDevice, agentScript.replace("/*cookie*/", cookie),
+            const [dispose, script] = await executeProcess(process_name, fridaDevice,
+                agentScript
+                .replace("/*cookie*/", cookie)
+                .replace("/*xaOffset*/", JSON.stringify(_xaOffset))
+                .replace("/*anOffset*/", JSON.stringify(_anOffset))
+                .replace("/*cdOffset*/", JSON.stringify(_cdOffset))
+                .replace("/*eposOffset*/", JSON.stringify(_eposOffset))
+                ,
                 (message:frida.Message, data:Buffer) => {
                     if(message.type === 'send') {
                         const [channel, ...args] = [...message.payload];
@@ -353,67 +367,70 @@ app.on("ready", async () => {
                 () => {
                     state("session", "pending", "Agent attached");
                     layout.webContents.send("init-config", config);
-                    emitter.on("config", (key, value) => {
-                        script.post(['config', key, value]);
-                    });
-                    emitter.on("keybind", (key, value) => {
-                        script.post(['keybind', key, value]);
-                    });
-                    emitter.on("cheats", (key, value) => {
-                        script.post(['cheats', key, value]);
-                    });
-                    emitter.on("gk", (event:IGlobalKeyEvent, down) => {
-                        script.post(['keyevent', event.name, event.state, down]);
-                    });
-                    ipcMain.on("reverse", (e) => {
-                        script.post(['reverse']);
-                    });
-                    ipcMain.on("pos", (e, pos:number[]) => {
-                        script.post(['pos', pos]);
-                    });
-                    ipcMain.on("skillcode", (e, code:number) => {
-                        script.post(['skillcode', code]);
-                    });
-                    ipcMain.on("scan-epos", (e) => {
-                        script.post(['scan-epos']);
-                    });
-                    ipcMain.on("scan-entity", (e) => {
-                        script.post(['scan-entity']);
-                    });
-                    ipcMain.on("clear-all", (e) => {
-                        script.post(['clear-all']);
-                    });
-                    ipcMain.on("except-number", (e, data:number[]) => {
-                        script.post(['except-number', data]);
-                    });
-                    ipcMain.on("change-ads-reward", (e) => {
-                        script.post(['change-ads-reward']);
-                    });
-                    ipcMain.on("ctm-default-milk", (e) => script.post(['ctm-default-milk']));
-                    ipcMain.on("ctm-default-choco", (e) => script.post(['ctm-default-choco']));
-                    ipcMain.on("ctm-desert-milk", (e) => script.post(['ctm-desert-milk']));
-                    ipcMain.on("ctm-desert-choco", (e) => script.post(['ctm-desert-choco']));
-                    ipcMain.on("ctm-castle-milk", (e) => script.post(['ctm-castle-milk']));
-                    ipcMain.on("ctm-castle-choco", (e) => script.post(['ctm-castle-choco']));
-                    ipcMain.on("ctm-mountain-milk", (e) => script.post(['ctm-mountain-milk']));
-                    ipcMain.on("ctm-mountain-choco", (e) => script.post(['ctm-mountain-choco']));
-                    ipcMain.on("get-ranges", (e, data:string) => {
-                        script.post(['get-ranges', data]);
-                    });
-                    ipcMain.on("find-ranges", (e, data:string) => {
-                        script.post(['find-ranges', data]);
-                    });
-                    ipcMain.on("search-pattern", (e, data:string) => {
-                        script.post(['search-pattern', data]);
-                    });
-                    emitter.on("gyro", (data) => {
-                        script.post(['gyro', data]);
-                    });
-                    emitter.on('execute-macro', (e, id:string) => {
-                        script.post(['execute-macro', id]);
-                    });
+                    if(tk){
+                        emitter.on("config", (key, value) => {
+                            script.post(['config', key, value]);
+                        });
+                        emitter.on("keybind", (key, value) => {
+                            script.post(['keybind', key, value]);
+                        });
+                        emitter.on("cheats", (key, value) => {
+                            script.post(['cheats', key, value]);
+                        });
+                        emitter.on("gk", (event:IGlobalKeyEvent, down) => {
+                            script.post(['keyevent', event.name, event.state, down]);
+                        });
+                        ipcMain.on("reverse", (e) => {
+                            script.post(['reverse']);
+                        });
+                        ipcMain.on("pos", (e, pos:number[]) => {
+                            script.post(['pos', pos]);
+                        });
+                        ipcMain.on("skillcode", (e, code:number) => {
+                            script.post(['skillcode', code]);
+                        });
+                        ipcMain.on("scan-epos", (e) => {
+                            script.post(['scan-epos']);
+                        });
+                        ipcMain.on("scan-entity", (e) => {
+                            script.post(['scan-entity']);
+                        });
+                        ipcMain.on("clear-all", (e) => {
+                            script.post(['clear-all']);
+                        });
+                        ipcMain.on("except-number", (e, data:number[]) => {
+                            script.post(['except-number', data]);
+                        });
+                        ipcMain.on("change-ads-reward", (e) => {
+                            script.post(['change-ads-reward']);
+                        });
+                        ipcMain.on("ctm-default-milk", (e) => script.post(['ctm-default-milk']));
+                        ipcMain.on("ctm-default-choco", (e) => script.post(['ctm-default-choco']));
+                        ipcMain.on("ctm-desert-milk", (e) => script.post(['ctm-desert-milk']));
+                        ipcMain.on("ctm-desert-choco", (e) => script.post(['ctm-desert-choco']));
+                        ipcMain.on("ctm-castle-milk", (e) => script.post(['ctm-castle-milk']));
+                        ipcMain.on("ctm-castle-choco", (e) => script.post(['ctm-castle-choco']));
+                        ipcMain.on("ctm-mountain-milk", (e) => script.post(['ctm-mountain-milk']));
+                        ipcMain.on("ctm-mountain-choco", (e) => script.post(['ctm-mountain-choco']));
+                        ipcMain.on("get-ranges", (e, data:string) => {
+                            script.post(['get-ranges', data]);
+                        });
+                        ipcMain.on("find-ranges", (e, data:string) => {
+                            script.post(['find-ranges', data]);
+                        });
+                        ipcMain.on("search-pattern", (e, data:string) => {
+                            script.post(['search-pattern', data]);
+                        });
+                        emitter.on("gyro", (data) => {
+                            script.post(['gyro', data]);
+                        });
+                        emitter.on('execute-macro', (e, id:string) => {
+                            script.post(['execute-macro', id]);
+                        });
+                    }
                 },
                 () => {
+                    layout.webContents.send("init-config", config);
                     main.webContents.send("init", false);
                     emitter.removeAllListeners("config");
                     emitter.removeAllListeners("keybind");
