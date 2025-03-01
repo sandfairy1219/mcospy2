@@ -1,5 +1,17 @@
-const cookieMode = false;
-const cookie = "4167b91571_b1c6d0c8bc5b1d7783a8c6faeec50dc4_e4395e811f1a0fd9ff17f8d92fdcd1c1";
+const bypassMode = false;
+const cookie = "4867c29830_fcc5e3411fcd34c6ed1e67db20b481c7_ff69ca77c51dc4663ea95f3281620200";
+
+let mynum:number = 0;
+let excs:number[] = [];
+const inj_defaultConfig = {
+    elec: false,
+    mago: false,
+    bh: false,
+    ws: true,
+    nr: true,
+    mv: false,
+    skc: true,
+}
 
 const libMyGame = "libMyGame.so";
 let modl = Module.findBaseAddress(libMyGame);
@@ -9,6 +21,48 @@ interface OffsetInfo {
     str: string;
     args: NativeFunctionArgumentType[];
 }
+
+const eposOffsets = {
+    'number': 0x0, // int32
+    'exp': 0x4, // int32
+    'totalkill': 0x8, // int32
+    'totaldeath': 0xC, // int32
+    'totalassist': 0x10, // int32
+    'kda': 0x14, // float
+    'kill': 0x18, // int32
+    'death': 0x1C, // int32
+    'assist': 0x20, // int32
+    'hp':0x2C, // int16
+    'weapon':0x2E, // int16
+    'barrier':0x30, // int16
+    'nickname':0x88, // string 10
+    'sk':0xAD, // byte
+    'fall':0xAF, // byte
+    'timer':0xC8, // float
+    'sc':0xCC, // float
+    'dc':0xE0, // float
+    'w1c':0xE8, // float
+    'w2c':0xEC, // float
+    'dz':0xFC, // float
+    'dx':0x100, // float
+    'dz2':0x110, // float
+    'dx2':0x114, // float
+    'state':0x12C, // int32
+    'dy':0x134, // float
+    'gx':0x13C, // float
+    'gy':0x140, // float
+    'gz':0x144, // float
+    'zr1':0x18C, // float
+    'x': 0x190, // float
+    'y': 0x194, // float
+    'z': 0x198, // float
+    'zr2':0x19C, // float
+    'gc':0x1A8, // float
+    'ox':0x1AC, // float
+    'oy':0x1B0, // float
+    'oz':0x1B4, // float
+    'pointer':0xEE8, // pointer
+};
 
 const cheatOffsets: Record<string, OffsetInfo> = {
     setClanExp: {
@@ -167,15 +221,25 @@ const inGameOffsets: Record<string, OffsetInfo> = {
         str: "_ZN16SystemPacketSend20DeBuffSkillMagoTotemEjj",
         args: ["uint", "uint"],
     },
+    updateHookSkill: {
+        name: "updateHookSkill",
+        str: "_ZN9GameScene15UpdateHookSkillEP9UserInfor",
+        args: ["pointer"],
+    },
     medicSelfHeal: {
         name: "medicSelfHeal",
         str: "_ZN19SystemOfflinePacket20ProcessMedicSelfHealERK9UserInfor",
         args: ["pointer"],
     },
-    magoHeal: {
-        name: "magoHeal",
-        str: "_ZN19SystemOfflinePacket20ProcessMedicSelfHealERK9UserInfor",
-        args: ["pointer", "pointer"],
+    buffOnWheelleg: {
+        name: "buffOnWheelleg",
+        str: "_ZN16SystemPacketSend14BuffOnWheellegERK9UserInfor",
+        args: ["pointer"],
+    },
+    buffMagoTotem: {
+        name: "buffMagoTotem",
+        str: "_ZN16SystemPacketSend18BuffSkillMagoTotemEjRKSt4listIjSaIjEE",
+        args: ["uint", "pointer"],
     },
     timeOverRespawn: {
         name: "timeOverRespawn",
@@ -185,12 +249,62 @@ const inGameOffsets: Record<string, OffsetInfo> = {
     changeMissionCount: {
         name: "changeMissionCount",
         str: "_ZN16SystemPacketSend22SendChangeMissionCountEjmjt",
-        args: ["uint", "ulong", "uint", "uchar"],
+        args: ["uint", "ulong", "uint", "uint16"],
     },
     completeGameData: {
         name: "completeGameData",
         str: "_ZN16SystemPacketSend20SendCompleteGameDataEi",
         args: ["uint"],
+    },
+    MoveAi: {
+        name: "MoveAi",
+        str: "_ZN14UserMoveSystem6MoveAIERNS_13CollisionDataERN7cocos2d4Vec3ES4_fR9GameSceneR9UserInforf",
+        args: ["pointer", "pointer", "pointer", "float", "pointer", "pointer", "float"],
+    },
+    getMySkillCoolTime: {
+        name: "getMySkillCoolTime",
+        str: "_ZN5Skill18GetMySkillCoolTimeEv",
+        args: ["void"],
+    },
+    getMaxSkill: {
+        name: "getMaxSkill",
+        str: "_ZN5Skill16GetMaxSkillCountEh",
+        args: ["uchar"],
+    },
+    getCurSkill: {
+        name: "getCurSkill",
+        str: "_ZN5Skill16GetCurSkillCountEv",
+        args: ["void"],
+    },
+    isSkillManyTimes: {
+        name: "isSkillManyTimes",
+        str: "_ZN5Skill16IsSkillManyTimesEh",
+        args: ["uchar"],
+    },
+    calculateSpeed: {
+        name: "calculateSpeed",
+        str: "_ZN14UserMoveSystem14CalculateSpeedERfR9GameSceneR9UserInforf",
+        args: ["float", "pointer", "pointer", "float"],
+    },
+    createMoveSpeed: {
+        name: "createMoveSpeed",
+        str: "_ZN16SystemPacketSend19CreateMoveSpeedBuffEjj",
+        args: ["uint", "uint"],
+    },
+    createMaxBarrier: {
+        name: "createMaxBarrier",
+        str: "_ZN16SystemPacketSend20CreateMaxBarrierBuffEjj",
+        args: ["uint", "uint"],
+    },
+    createDamageReduction: {
+        name: "createDamageReduction",
+        str: "_ZN16SystemPacketSend25CreateDamagereductionBuffERK9UserInfor",
+        args: ["pointer"],
+    },
+    createChooChoo: {
+        name: "createChooChoo",
+        str: "_ZN16SystemPacketSend18CreateChooChooBuffERK9UserInfor",
+        args: ["pointer"],
     },
 }
 
@@ -245,6 +359,44 @@ const charStatusOffsets: Record<string, OffsetInfo> = {
         str: "_ZN20CharStatusCalculator21GetHeadShotDamageRateERK9UserInfor",
         args: ["pointer"],
     },
+    cookerBuffWeight: {
+        name: "cookerBuffWeight",
+        str: "_ZN20CharStatusCalculator19GetCookerBuffWeightERK9UserInfor",
+        args: ["pointer"],
+    },
+}
+
+const charRefOffsets: Record<string, OffsetInfo> = {
+    getJumpSpeed: {
+        name: "getJumpSpeed",
+        str: "_ZNK13CCharacterRef12GetJumpSpeedEh",
+        args: ["uchar"],
+    },
+    getMoveSpeed: {
+        name: "getMoveSpeed",
+        str: "_ZNK13CCharacterRef12GetMoveSpeedEh",
+        args: ["uchar"],
+    },
+    getMaxBarrier: {
+        name: "getMaxBarrier",
+        str: "_ZNK13CCharacterRef13GetMaxBarrierEh",
+        args: ["uchar"],
+    },
+    getSkillDamage: {
+        name: "getSkillDamage",
+        str: "_ZNK13CCharacterRef14GetSkillDamageEh",
+        args: ["uchar"],
+    },
+    getSkillCooltime: {
+        name: "getSkillCooltime",
+        str: "_ZNK13CCharacterRef16GetSkillCoolTimeEh",
+        args: ["uchar"],
+    },
+    getBarrierRecovery: {
+        name: "getBarrierRecovery",
+        str: "_ZNK13CCharacterRef18GetBarrierRecoveryEh",
+        args: ["uchar"],
+    },
 }
 
 const clanOffsets: Record<string, OffsetInfo> = {
@@ -260,7 +412,45 @@ const clanOffsets: Record<string, OffsetInfo> = {
     },
 }
 
+const cloudOffsets: Record<string, OffsetInfo> = {
+    getSkillTime: {
+        name: "getSkillTime",
+        str: "_ZN5Cloud8CharData12GetSkillTimeEv",
+        args: ["void"],
+    },
+    getSkillElapsed: {
+        name: "getSkillElapsed",
+        str: "_ZN5Cloud8CharData19GetSkillElapsedTimeEv",
+        args: ["void"],
+    },
+    isSkillAvailable: {
+        name: "isSkillAvailable",
+        str: "_ZN5Cloud8CharData16IsSkillAvailableEv",
+        args: ["void"],
+    },
+    getSendContribPacketTime: {
+        name: "getSendContribPacketTime",
+        str: "_ZN5Cloud8GameData24GetSendContribPacketTimeEv",
+        args: ["void"],
+    },
+    setSendContribPacketTime: {
+        name: "setSendContribPacketTime",
+        str: "_ZN5Cloud8GameData24SetSendContribPacketTimeEf",
+        args: ["float"],
+    },
+}
+
 const globalOffsets: Record<string, OffsetInfo> = {
+    updatePacketReceiveTime: {
+        name: "updatePacketReceiveTime",
+        str: "_ZN16SystemPacketSend23UpdatePacketReceiveTimeEf",
+        args: ["float"],
+    },
+    requestLogin: {
+        name: "requestLogin",
+        str: "_ZN16SystemPacketSend12RequestLoginEiRKSsS1_",
+        args: ["int", "pointer", "pointer"],
+    },
     testDeleteAccount: {
         name: "testDeleteAccount",
         str: "_ZN16SystemPacketSend17TestDeleteAccountEv",
@@ -280,6 +470,11 @@ const globalOffsets: Record<string, OffsetInfo> = {
         name: "getUserByUserSeq",
         str: "_ZN15UserInfoManager16GetUserByUserSeqEj",
         args: ["uint"],
+    },
+    resetPacketReceive: {
+        name: "resetPacketReceive",
+        str: "_ZN16SystemPacketSend22ResetPacketReceiveTimeEv",
+        args: ["void"],
     },
 }
 
@@ -321,8 +516,50 @@ const cameraOffsets: Record<string, OffsetInfo> = {
     },
 }
 
-async function sleep(ms: number) {
+async function inj_sleep(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
+}
+function changeArgs(args:NativeFunctionArgumentType[], target:InvocationArguments){
+    let _args = [];
+    for(let i = 0; i < args.length; i++){
+        let type = args[i]
+        let tar = target[i]
+        let val;
+        switch (type) {
+            case "bool":
+                val = !!tar.toInt32();
+                break;
+            case "char":
+            case "int16":
+            case "int":
+            case "long":
+                val = tar.toInt32();
+                break;
+            case "uchar":
+            case "uint16":
+            case "uint":
+            case "ulong":
+                val = tar.toUInt32();
+                break;
+            case "float":
+                val = tar.toString();
+                break;
+            case "double":
+                val = tar.toString();
+                break;
+            case "void":
+                val = tar;
+                break;
+            case "pointer":
+                val = tar.toString();
+                break;
+            default:
+                val = tar;
+                break;
+        }
+        _args.push(val)
+    }
+    return _args;
 }
 
 function attach(ofst:OffsetInfo){
@@ -330,62 +567,36 @@ function attach(ofst:OffsetInfo){
     if(pt){
         Interceptor.attach(pt, {
             onEnter: (args) => {
-                let _args = [];
-                for(let i = 0; i < ofst.args.length; i++){
-                    let type = ofst.args[i]
-                    let tar = args[i]
-                    let val;
-                    switch (type) {
-                        case "bool":
-                            val = !!tar.toInt32();
-                            break;
-                        case "char":
-                        case "int16":
-                        case "int":
-                            val = tar.toInt32();
-                            break;
-                        case "uchar":
-                        case "uint16":
-                        case "uint":
-                            val = tar.toUInt32();
-                            break;
-                        case "long":
-                            val = tar.readLong();
-                            break;
-                        case "ulong":
-                            val = tar.readULong();
-                            break;
-                        case "float":
-                            val = tar.toString();
-                            break;
-                        case "double":
-                            val = tar.toString();
-                            break;
-                        case "void":
-                            val = tar;
-                            break;
-                        case "pointer":
-                            val = tar.toString();
-                            break;
-                        default:
-                            val = tar;
-                            break;
-                    }
-                    _args.push(val)
-                }
+                const _args = changeArgs(ofst.args, args);
                 console.log(`[+] ${ofst.name} (${pt.toString()}) Called:`, ..._args)
             },
             onLeave: (retval) => {
-                console.log("[-]", pt.toString(), "Returned:", retval, retval.toUInt32())
+                console.log(`[-] ${ofst.name} (${pt.toString()}) Returned:`, retval, retval.toUInt32())
             }
         })
     }
+}
+
+function attachStr(str: string, fargs?: NativeFunctionArgumentType[]){
+    const pt = Module.findExportByName(libMyGame, str);
+    Interceptor.attach(pt, {
+        onEnter: args => {
+            console.log(`[+] (${pt.toString()}) Called:`, fargs ? changeArgs(fargs, args) : args[0])
+        },
+        onLeave: (retval) => {
+            console.log(`[-] (${pt.toString()}) Returned:`, retval, retval.toUInt32())
+        }
+    })
 }
 
 function func(ofst: OffsetInfo): NativeFunction<any, any>{
     const pt = Module.findExportByName(libMyGame, ofst.str)
     if(pt) return new NativeFunction(pt, "bool", ofst.args)
     else return null;
+}
+
+function intercept(ofst: OffsetInfo, callbacksOrProbe: InvocationListenerCallbacks | InstructionProbeCallback) {
+    Interceptor.attach(Module.findExportByName(libMyGame, ofst.str), callbacksOrProbe)
 }
 
 function isValidAddress(ptrAddr:NativePointer) {
@@ -396,57 +607,162 @@ function isValidAddress(ptrAddr:NativePointer) {
     }
 }
 
-let mynum:number = 0;
-let excs:number[] = [];
-let me:string = "";
+class Ch{
+    elec:boolean = inj_defaultConfig.elec;
+    mago:boolean = inj_defaultConfig.mago;
+    bh:boolean = inj_defaultConfig.bh;
+    ws:boolean = inj_defaultConfig.ws;
+    nr:boolean = inj_defaultConfig.nr;
+    mv:boolean = inj_defaultConfig.mv;
+    skc:boolean = inj_defaultConfig.skc;
+    _clip:boolean = true;
+    _onek:boolean = false;
+    _onesk:boolean = false;
+
+    me:string = "";
+
+    sk(n: number){
+        if(this.me && ptr(this.me) && !ptr(this.me).isNull()){
+            ptr(this.me).add(eposOffsets.sk).writeU8(n);
+        };
+    }
+
+    set clip(b:boolean){
+        this._clip = b;
+        const pt = Module.findExportByName(libMyGame, inGameOffsets.MoveAi.str).sub(0x4);
+        Memory.protect(pt, Process.pageSize, 'rwx');
+        pt.writeFloat(b ? 0.01 : 100);
+        Memory.protect(pt, Process.pageSize, 'r-x');
+    }
+    set onek(b:boolean){
+        this._onek = b;
+        const bd = Module.findExportByName(libMyGame, charStatusOffsets.getBodyshotDamage.str);
+        Memory.protect(bd, Process.pageSize, 'rwx');
+        bd.writeS32(b ? 505_925_632 : 506_335_232);
+        Memory.protect(bd, Process.pageSize, 'r-x');
+        const hd = Module.findExportByName(libMyGame, charStatusOffsets.getHeadshotDamage.str).add(0x10);
+        Memory.protect(hd, Process.pageSize, 'rwx');
+        hd.writeS32(b ? 505_925_632 : -1_136_594_944);
+        Memory.protect(hd, Process.pageSize, 'r-x');
+    }
+    set onesk(b:boolean){
+        this._onesk = b;
+        const pt = Module.findExportByName(libMyGame, charRefOffsets.getSkillDamage.str).add(0x18);
+        Memory.protect(pt, Process.pageSize, 'rwx');
+        pt.writeS32(b ? 1_384_382_464 : 704_775_136);
+        Memory.protect(pt, Process.pageSize, 'r-x');
+    }
+}
+
+let ch = new Ch()
 let players:Set<string> = new Set();
-let dia: any, gold: any, league: any, point: any, skill: any, clan: any, item: any, char: any, unlock: any, elec: any, elecAll: any;
-const main = async () => {
-    if(!Process.arch.includes("arm")) return console.log("[!] Only can execute this script on ARM.");
+let dia: any, gold: any, league: any, medal: any, point: any, skill: any, clan: any,
+    eq: any, item: any, char: any, unlock: any,
+    ex: any, unlockAll: any;
+const inj_all = (callback:(pt: NativePointer) => void) => {
+    if(mynum) Array.from(players).forEach(str => callback(ptr(str)))
+}
+const inj_main = async () => {
+    if(!Process.arch.includes("arm")) return console.log("[!] Only ARM architect can execute this script.");
     if(modl.isNull()) return console.log("[!] No Module Found.");
 
-    console.log("[*] Initialized - Pixel Injection CLI v1.2");
+    console.log("[*] Initialized - Pixel Injection CLI v1.3");
     dia = (amount:number) => func(cheatOffsets.setMoney)(amount, 0);
     gold = (amount:number) => func(cheatOffsets.setGold)(amount, 0);
     league = func(cheatOffsets.setStarLeagueCoin);
+    medal = func(cheatOffsets.getStarLeagueMedal);
     point = (amount:number) => func(cheatOffsets.setPoint)(amount, 0);
     skill = func(cheatOffsets.setAllSkillCoolTimeOneSecond);
     clan = func(cheatOffsets.setClanExp);
+    eq = func(buyOffsets.equip);
     item = func(buyOffsets.buyItem);
     char = func(buyOffsets.buyCharacter);
     unlock = (ch:number) => {
-        for(let i = 1; i < 254; i++){item(ch, 0, i, 1)}
-        for(let i = 1; i < 254; i++){item(ch, 1, i, 1)}
-        for(let i = 1; i < 254; i++){item(ch, 2, i, 1)}
-        for(let i = 1; i < 254; i++){item(ch, 3, i, 1)}
-        for(let i = 1; i < 254; i++){item(ch, 4, i, 1)}
-        for(let i = 1; i < 127; i++){item(ch, 6, i, 1)}
-        for(let i = 1; i < 127; i++){item(ch, 7, i, 1)}
+        for(let i = 1; i <= 255; i++){item(ch, 0, i, 1)}
+        for(let i = 1; i <= 255; i++){item(ch, 1, i, 1)}
+        for(let i = 1; i <= 255; i++){item(ch, 2, i, 1)}
+        for(let i = 1; i <= 255; i++){item(ch, 3, i, 1)}
+        for(let i = 1; i <= 255; i++){item(ch, 4, i, 1)}
+        for(let i = 1; i <= 127; i++){item(ch, 6, i, 1)}
+        for(let i = 1; i <= 127; i++){item(ch, 7, i, 1)}
     }
-    elec = func(inGameOffsets.buffHitElectric);
-    elecAll = () => {
-        if(mynum){
-            Array.from(players).forEach(str => {
-                const num = ptr(str).readS32();
-                if(num !== mynum && !excs.includes(num)) elec(ptr(str), mynum, mynum)
-            })
+    ex = () => {
+        dia(15_9999_9999)
+        gold(15_9999_9999)
+        league(15_9999_9999)
+        point(15_9999_9999)
+        for(let i = 1; i <= 12; i++){
+            medal(i, 4)
         }
     }
+    unlockAll = () => {
+        for(let i = 2; i <= 26; i++){char(i)}
+        for(let i = 1; i <= 26; i++){unlock(i)}
+    }
 
-    // setInterval(elecAll, 100)
+    // Debug Zone
+    attach(buyOffsets.equip)
+    // ==========
+    
+    attach(cloudOffsets.getSendContribPacketTime)
+    intercept(inGameOffsets.getMaxSkill, {onLeave: retval => {if(ch.skc) retval.replace(12 as any)}})
+    intercept(inGameOffsets.getCurSkill, {onLeave: retval => {if(ch.skc) retval.replace(12 as any)}})
+    intercept(inGameOffsets.isSkillManyTimes, {onLeave: retval => {if(ch.skc) retval.replace(1 as any)}})
+    intercept(cloudOffsets.getSkillTime, {onLeave: retval => {if(ch.skc) retval.writeFloat(1)}})
 
-    Interceptor.attach(Module.findExportByName(libMyGame, globalOffsets.getUserByUserSeq.str), {
+    setInterval(() => {
+        inj_all(async pt => {
+            const num = pt.readS32();
+            if(ch.elec){
+                if(num !== mynum && !excs.includes(num)) func(inGameOffsets.buffHitElectric)(pt, mynum, mynum)
+            }
+            if(ch.mago){
+                await inj_sleep(400)
+                if(num !== mynum && !excs.includes(num)) func(inGameOffsets.debuffSkillMagoTotem)(mynum, num)
+            }
+        })
+    }, 800)
+    setInterval(() => {
+        if(mynum){
+            const mypt = ptr(ch.me);
+            if(!mypt || mypt.isNull()) return;
+            let x = mypt.add(eposOffsets.x).readFloat(), y = mypt.add(eposOffsets.y).readFloat(), z = mypt.add(eposOffsets.z).readFloat();
+            let st = mypt.add(eposOffsets.state).readS32();
+            if(ch.bh){
+                inj_all(pt => {
+                    const num = pt.readS32();
+                    if(num !== mynum && !excs.includes(num)){
+                        pt.add(eposOffsets.x).writeFloat(x);
+                        pt.add(eposOffsets.y).writeFloat(y);
+                        pt.add(eposOffsets.z).writeFloat(z + 10);
+                    }
+                })
+            }
+            if(ch.ws){
+                mypt.add(eposOffsets.w1c).writeFloat(0);
+                mypt.add(eposOffsets.w2c).writeFloat(0);
+            }
+            if(ch.nr){
+                if(st >= 64 && st <= 67) mypt.add(eposOffsets.timer).writeFloat(9999);
+            }
+            if(ch.mv){
+                mypt.add(eposOffsets.dx).writeFloat(Math.min(Math.max(mypt.add(eposOffsets.dx2).readFloat()*3, -3), 3))
+                mypt.add(eposOffsets.dz).writeFloat(Math.min(Math.max(mypt.add(eposOffsets.dz2).readFloat()*3, -3), 3))
+            }
+        }
+    }, 10)
+
+    intercept(globalOffsets.getUserByUserSeq, {
         onLeave: retval => {
             players.add(retval.toString());
-            me = "";
+            ch.me = "";
             players.forEach(player => {
                 try{
-                    if(ptr(player).add(0x0).readUInt() == mynum){
-                        me = player;
-                    }
-                    const n = ptr(player).add(0x88).readCString();
-                    const zr1 = ptr(player).add(0x18C).readFloat();
-                    const zr2 = ptr(player).add(0x19C).readFloat();
+                    const pt = ptr(player);
+                    if(pt.add(0x0).readUInt() == mynum) ch.me = player;
+                    const n = pt.add(eposOffsets.nickname).readCString();
+                    const zr1 = pt.add(eposOffsets.zr1).readFloat();
+                    const zr2 = pt.add(eposOffsets.zr2).readFloat();
                     if(zr1 !== 0 || zr2 !== 0 || n === "") players.delete(player);
                 } catch (e){
                     players.delete(player)
@@ -479,18 +795,18 @@ Java.perform(async () => {
     let XigncodeClientSystem = Java.use("com.wellbia.xigncode.XigncodeClientSystem");
     XigncodeClientSystem["initialize"].implementation = function (activity:any, str:string, app:string, str3:string, callback:any) {
         var fakeCallback = FakeCallback.$new();
-        if(cookieMode) this["initialize"](activity, str, app, str3, fakeCallback)
+        if(!bypassMode) this["initialize"](activity, str, app, str3, fakeCallback)
         console.log("[*] XigncodeClientSystem.initialize", activity, str, app, str3);
         return 0;
     };
     XigncodeClientSystem["getCookie2"].implementation = function (str:string) {
         let result = this["getCookie2"](str);
         console.log("[*] XigncodeClientSystem.getCookie2", result);
-        return cookieMode ? result : (cookie || null);
+        return bypassMode ? (cookie || null) : result;
     }
     while(!modl){
-        await sleep(500)
+        await inj_sleep(500)
         modl = Module.getBaseAddress(libMyGame)
     }
-    await main().catch(e => console.log("[!]", e))
+    await inj_main().catch(e => console.log("[!]", e))
 })
