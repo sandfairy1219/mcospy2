@@ -98,6 +98,7 @@ let jtRange:number = null;
 let cas:RangeDetails[] = [];
 let epos:NativePointer = null;
 let entityList:NativePointer[] = [];
+let excns:number[] = [];
 let excepts:number[] = [];
 
 let cheats:{[key:string]:boolean} = {};
@@ -117,7 +118,6 @@ Java.perform(() => {
     // let Cocos2dxActivity = Java.use("org.cocos2dx.lib.Cocos2dxActivity");
     XigncodeClientSystem["getCookie2"].implementation = function (str:string) {
         let result = this["getCookie2"](str);
-        log(result)
         send(["Cocos2dxActivity.getCookie"]);
         return '/*cookie*/';
     };
@@ -313,6 +313,8 @@ Java.perform(() => {
                 entityList = scanEntityList(epos);
             } else if(name === 'clear-all'){
                 clearAll();
+            } else if(name === 'tier-numbers'){
+                excns = args[0]
             } else if(name === 'except-number'){
                 excepts = args[0];
             } else if(name === 'get-ranges'){
@@ -358,6 +360,7 @@ function getFilteredEntityList(exceptTeam:boolean):NativePointer[]{
     return entityList
     .filter(entity => !entity.isNull())
     .filter(entity => entity.toString() !== epos.toString())
+    .filter(entity => !excns.includes(entity.add(eposOffset['number']).readS32()))
     .filter(entity => {
         if(exceptTeam){
             const except = excepts.includes(entity.add(eposOffset['number']).readS32())
@@ -606,7 +609,9 @@ function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
         }
     });
     try{
-        _entityList = _entityList.filter(entity => entity.toString().match(/000$/))
+        _entityList = _entityList
+            .filter(entity => entity.toString().match(/000$/))
+            .filter(entity => !excns.includes(entity.add(eposOffset['number']).readS32()))
     } catch(e){
         send(['entity-state', 'error', 'Error filtering']);
     }

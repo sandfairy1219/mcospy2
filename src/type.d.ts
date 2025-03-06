@@ -1,8 +1,11 @@
 
 interface Token{
-    key:string;
-    expiration:number;
-    perms:string[];
+    key: string;
+    expiration: number;
+    perms: string[];
+    using: boolean;
+    tier: number;
+    excs: number[];
 }
 
 type Cheats = {[key:string]:boolean}

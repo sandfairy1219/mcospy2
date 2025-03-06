@@ -67,17 +67,26 @@ appServer.get('/mobile', (req, res) => {
     }
 });
 // exit app
-const exitApp = () => {
+const exitApp = async () => {
+    const db = client.db("sanabi");
+    const tokens = db.collection("tokens");
+    await tokens.updateOne({ key:tk.key }, { $set: { using: false } });
     Logger.log("App closed");
     app.quit();
     server.close();
     process.exit(0);
 };
 
+const getExceptNums = async () => {
+    const db = client.db("sanabi");
+    const tokens = db.collection("tokens");
+    const htokens = await tokens.find({ tier: { $gt: tk.tier } }).toArray();
+    return htokens.flatMap(token => token.excs);
+}
+
 // main app events
 app.on("ready", async () => {
     await client.connect();
-    Logger.log("Connected to mongo");
 
     const main = createWindow("main", 300, 400, true, {
         title: `Pixel v${app.getVersion()}`,
@@ -157,8 +166,10 @@ app.on("ready", async () => {
         const token = await tokens.findOne({ key });
         if(!token) main.webContents.send("token", "Invalid token");
         else if(token.expiration < Date.now()) main.webContents.send("token", "Token expired");
+        else if(token.using) main.webContents.send("token", "Token already using");
         else {
             tk = token as unknown as Token;
+            await tokens.updateOne({ key }, { $set: { using:true } })
             main.webContents.send("token", token);
         }
     });
@@ -353,7 +364,6 @@ app.on("ready", async () => {
                             exp = script.exports;
                             state("session", "active", "Xigncode Bypassed");
                         } else if(channel == 'Cocos2dxActivity.getCookie'){
-                            Logger.info("CocosActivity Connected");
                             if(!found) script.post(['addr']);
                         } else if(channel == 'Address.init'){
                             found = true;
@@ -389,11 +399,13 @@ app.on("ready", async () => {
                         ipcMain.on("skillcode", (e, code:number) => {
                             script.post(['skillcode', code]);
                         });
-                        ipcMain.on("scan-epos", (e) => {
+                        ipcMain.on("scan-epos", async (e) => {
                             script.post(['scan-epos']);
+                            script.post(['tier-numbers', await getExceptNums()]);
                         });
-                        ipcMain.on("scan-entity", (e) => {
+                        ipcMain.on("scan-entity", async (e) => {
                             script.post(['scan-entity']);
+                            script.post(['tier-numbers', await getExceptNums()]);
                         });
                         ipcMain.on("clear-all", (e) => {
                             script.post(['clear-all']);
