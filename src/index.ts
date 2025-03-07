@@ -30,8 +30,8 @@ const agentScript = readFileSync(agentPath, 'utf8').toString().split('"cut";')[1
 // load env
 const envPath = path.join(__dirname, '/../', '/.env');
 dotenv.config({ path: envPath });
-// connect to mongo
-const client = new MongoClient(process.env.MONGO_URI || "mongodb+srv://realtime:EhcTmV54vQFH0AXq@cluster0.qo3ekyu.mongodb.net/")
+// connect to mongodb
+const client = new MongoClient(process.env.MONGO_URI || "mongodb+srv://admini:pX019poxeiDOON@cluster0.o1lbs.mongodb.net/");
 // register logger
 Logger.initialize();
 // create event emitter
@@ -70,7 +70,7 @@ appServer.get('/mobile', (req, res) => {
 const exitApp = async () => {
     const db = client.db("sanabi");
     const tokens = db.collection("tokens");
-    await tokens.updateOne({ key:tk.key }, { $set: { using: false } });
+    if(tk) await tokens.updateOne({ code:tk.code }, { $set: { using: false } });
     Logger.log("App closed");
     app.quit();
     server.close();
@@ -124,17 +124,14 @@ app.on("ready", async () => {
     });
 
     autoUpdater.on("checking-for-update", () => {
-        Logger.log("Checking for updates");
     });
 
     autoUpdater.on("update-available", () => {
-        Logger.log("Update available");
         main.webContents.send("update");
         autoUpdater.downloadUpdate();
     });
 
     autoUpdater.on("download-progress", (progress) => {
-        Logger.log("Download progress", progress.percent);
         main.webContents.send("download", progress.percent);
     });
 
@@ -150,12 +147,10 @@ app.on("ready", async () => {
     });
 
     autoUpdater.on("update-cancelled", () => {
-        Logger.log("Update cancelled");
         main.webContents.send("login");
     });
 
     autoUpdater.on("update-not-available", () => {
-        Logger.log("Update not available");
         main.webContents.send("login");
     });
 
@@ -163,13 +158,13 @@ app.on("ready", async () => {
     ipcMain.on("login", async (e, key) => {
         const db = client.db("sanabi");
         const tokens = db.collection("tokens");
-        const token = await tokens.findOne({ key });
+        const token = await tokens.findOne({ code: key });
         if(!token) main.webContents.send("token", "Invalid token");
         else if(token.expiration < Date.now()) main.webContents.send("token", "Token expired");
         else if(token.using) main.webContents.send("token", "Token already using");
         else {
             tk = token as unknown as Token;
-            await tokens.updateOne({ key }, { $set: { using:true } })
+            await tokens.updateOne({ code: key }, { $set: { using:true } })
             main.webContents.send("token", token);
         }
     });

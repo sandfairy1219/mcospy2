@@ -979,8 +979,8 @@ ipcRenderer.on('token', (e, token:Token|string) => {
     if(typeof token === 'string'){
         $_('logerr').textContent = token;
     } else {
-        localStorage.setItem('token', JSON.stringify(token.key));
-        if(token.perms.includes('dev')) $_('selector-dev-mode').classList.remove('hide');
+        localStorage.setItem('token', JSON.stringify(token.code));
+        if(token.perms.includes('admin')) $_('selector-dev-mode').classList.remove('hide');
         $_('login').classList.add('hide');
         $_('app').classList.remove('hide');
     }
