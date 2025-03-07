@@ -31,7 +31,7 @@ const agentScript = readFileSync(agentPath, 'utf8').toString().split('"cut";')[1
 const envPath = path.join(__dirname, '/../', '/.env');
 dotenv.config({ path: envPath });
 // connect to mongodb
-const client = new MongoClient(process.env.MONGO_URI || "mongodb+srv://admini:pX019poxeiDOON@cluster0.o1lbs.mongodb.net/");
+const client = new MongoClient(process.env.MONGO_URI || "mongodb://localhost:27017");
 // register logger
 Logger.initialize();
 // create event emitter
