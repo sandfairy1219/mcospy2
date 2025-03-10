@@ -788,6 +788,7 @@ function keyOf(str: string): IGlobalKey {
 const $ = (selector: string) => document.querySelector(selector);
 const $$ = (selector: string) => document.querySelectorAll(selector);
 const $_ = (selector: string) => document.getElementById(selector);
+const $c = (selector: string) => document.querySelector(`details[data-cheat="${selector}"]`);
 const $i = (selector: string):HTMLInputElement => document.getElementById(selector) as HTMLInputElement;
 const $$_ = (selector: string) => Array.from($$(selector));
 const log = (...args: any[]) => ipcRenderer.send("log", args);
@@ -980,7 +981,30 @@ ipcRenderer.on('token', (e, token:Token|string) => {
         $_('logerr').textContent = token;
     } else {
         localStorage.setItem('token', JSON.stringify(token.code));
-        if(token.perms.includes('admin')) $_('selector-dev-mode').classList.remove('hide');
+        if(token.perms.includes('dev')) $_('selector-dev-mode').classList.remove('hide');
+        document.querySelectorAll('details[data-cheat]').forEach((el:HTMLElement) => el.classList.add('hide'));
+        if(token.perms.includes('aimbot')) $c('aimbot').classList.remove('hide');
+        if(token.perms.includes('aim-assist')) $c('aim-assist').classList.remove('hide');
+        if(token.perms.includes('esp')) $c('esp').classList.remove('hide');
+        if(token.perms.includes('blackhole')) $c('blackhole').classList.remove('hide');
+        if(token.perms.includes('shoot-speed')) $c('shoot-speed').classList.remove('hide');
+        if(token.perms.includes('no-recoil')) $c('no-recoil').classList.remove('hide');
+        if(token.perms.includes('no-spread')) $c('no-spread').classList.remove('hide');
+        if(token.perms.includes('no-reload')) $c('no-reload').classList.remove('hide');
+        if(token.perms.includes('skill-cooltime')) $c('skill-cooltime').classList.remove('hide');
+        if(token.perms.includes('instant-respawn')) $c('instant-respawn').classList.remove('hide');
+        if(token.perms.includes('no-clip')) $c('no-clip').classList.remove('hide');
+        if(token.perms.includes('move-speed')) $c('move-speed').classList.remove('hide');
+        if(token.perms.includes('fly')) $c('fly').classList.remove('hide');
+        if(token.perms.includes('infinite-jump')) $c('infinite-jump').classList.remove('hide');
+        if(token.perms.includes('one-kill')) $c('one-kill').classList.remove('hide');
+        if(token.perms.includes('skill-damage')) $c('skill-damage').classList.remove('hide');
+        if(token.perms.includes('upskill')) $c('upskill').classList.remove('hide');
+        if(token.perms.includes('grenade')) $c('grenade').classList.remove('hide');
+        if(token.perms.includes('hide-me')) $c('hide-me').classList.remove('hide');
+        if(token.perms.includes('cooker-buff')) $c('cooker-buff').classList.remove('hide');
+        if(token.perms.includes('changer')) $c('changer').classList.remove('hide');
+        if(token.perms.includes('ctm')) $c('ctm').classList.remove('hide');
         $_('login').classList.add('hide');
         $_('app').classList.remove('hide');
     }
