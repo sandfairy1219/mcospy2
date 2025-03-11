@@ -991,7 +991,7 @@ ipcRenderer.on('token', (e, token:Token|string) => {
         if(token.perms.includes('no-recoil')) $c('no-recoil').classList.remove('hide');
         if(token.perms.includes('no-spread')) $c('no-spread').classList.remove('hide');
         if(token.perms.includes('no-reload')) $c('no-reload').classList.remove('hide');
-        if(token.perms.includes('skill-cooltime')) $c('skill-cooltime').classList.remove('hide');
+        if(token.perms.includes('skill-cooldown')) $c('skill-cooldown').classList.remove('hide');
         if(token.perms.includes('instant-respawn')) $c('instant-respawn').classList.remove('hide');
         if(token.perms.includes('no-clip')) $c('no-clip').classList.remove('hide');
         if(token.perms.includes('move-speed')) $c('move-speed').classList.remove('hide');
