@@ -1,5 +1,5 @@
 const bypassMode = false;
-const cookie = "4867c29830_fcc5e3411fcd34c6ed1e67db20b481c7_ff69ca77c51dc4663ea95f3281620200";
+const cookie = "";
 
 let mynum:number = 0;
 let excs:number[] = [];
@@ -11,6 +11,11 @@ const inj_defaultConfig = {
     nr: true,
     mv: false,
     skc: true,
+    // static
+    clip: true,
+    onek: true,
+    onesk: true,
+    resp: true,
 }
 
 const libMyGame = "libMyGame.so";
@@ -304,6 +309,11 @@ const inGameOffsets: Record<string, OffsetInfo> = {
     createChooChoo: {
         name: "createChooChoo",
         str: "_ZN16SystemPacketSend18CreateChooChooBuffERK9UserInfor",
+        args: ["pointer"],
+    },
+    getRespawnTime: {
+        name: "getRespawnTime",
+        str: "_ZNK9GameScene14GetRespawnTimeEv",
         args: ["pointer"],
     },
 }
@@ -618,8 +628,16 @@ class Ch{
     _clip:boolean = true;
     _onek:boolean = false;
     _onesk:boolean = false;
+    _resp:boolean = false;
 
     me:string = "";
+
+    constructor(clip: boolean, onek: boolean, onesk: boolean, resp: boolean){
+        this.clip = clip;
+        this.onek = onek;
+        this.onesk = onesk;
+        this.resp = resp;
+    }
 
     sk(n: number){
         if(this.me && ptr(this.me) && !ptr(this.me).isNull()){
@@ -647,14 +665,21 @@ class Ch{
     }
     set onesk(b:boolean){
         this._onesk = b;
-        const pt = Module.findExportByName(libMyGame, charRefOffsets.getSkillDamage.str).add(0x18);
+        const pt = Module.findExportByName(libMyGame, charRefOffsets.getSkillDamage.str).add(0x60);
         Memory.protect(pt, Process.pageSize, 'rwx');
-        pt.writeS32(b ? 1_384_382_464 : 704_775_136);
+        pt.writeS32(b ? 1_384_184_322 : -1_203_335_166);
+        Memory.protect(pt, Process.pageSize, 'r-x');
+    }
+    set resp(b:boolean){
+        this._resp = b;
+        const pt = Module.findExportByName(libMyGame, inGameOffsets.getRespawnTime.str).add(0x18);
+        Memory.protect(pt, Process.pageSize, 'rwx');
+        pt.writeS32(b ? 505_415_680 : 505_415_712);
         Memory.protect(pt, Process.pageSize, 'r-x');
     }
 }
 
-let ch = new Ch()
+let ch = new Ch(inj_defaultConfig.clip, inj_defaultConfig.onek, inj_defaultConfig.onesk, inj_defaultConfig.resp)
 let players:Set<string> = new Set();
 let dia: any, gold: any, league: any, medal: any, point: any, skill: any, clan: any,
     eq: any, item: any, char: any, unlock: any,
@@ -666,7 +691,7 @@ const inj_main = async () => {
     if(!Process.arch.includes("arm")) return console.log("[!] Only ARM architect can execute this script.");
     if(modl.isNull()) return console.log("[!] No Module Found.");
 
-    console.log("[*] Initialized - Pixel Injection CLI v1.3");
+    console.log("[*] Initialized - Pixel Injection CLI v1.4");
     dia = (amount:number) => func(cheatOffsets.setMoney)(amount, 0);
     gold = (amount:number) => func(cheatOffsets.setGold)(amount, 0);
     league = func(cheatOffsets.setStarLeagueCoin);
