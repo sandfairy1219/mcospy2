@@ -42,9 +42,9 @@ const charHealth = [
 // 10 = shoot air stop
 // 11 = shoot air walk
 // 128 = grenade stop
-// 127 = grenade walk
-// 126 = grenade air stop
-// 125 = grenade air walk
+// 129 = grenade walk
+// 130 = grenade air stop
+// 131 = grenade air walk
 // 64 = reload
 // 65 = reload walk
 // 66 = reload air stop
@@ -52,6 +52,10 @@ const charHealth = [
 // 32 = jump
 // 33 = jump walk
 // 16 = death
+// 256 = skill stop
+// 257 = skill walk
+// 258 = skill air stop
+// 259 = skill air walk
 
 const camFov = [92, 52];
 const upSize = 9;
@@ -398,6 +402,8 @@ function loop(){
             send(['pos', [x, y, z]])
             const sk = eposPointer.add(eposOffset['sk']).readS8();
             send(['skillcode', sk])
+            const state = eposPointer.add(eposOffset['state']).readS32();
+            // send(['state', state])
             if(cheats['aimbot']){
                 if(!keybinds['aimbot'] || keymap[keybinds['aimbot']]){
                     aimbot(eposPointer, delta);
@@ -467,8 +473,15 @@ function loop(){
                     eposPointer.add(eposOffset['w2c']).writeFloat(0);
                 }
             }
-            if(cheats['no-reload']){
-                eposPointer.add(eposOffset['timer']).writeFloat(9999);
+            if(cheats['no-timer']){
+                const reloadTimer: boolean = config['no-timer-reload'] || false;
+                const grenadeTimer: boolean = config['no-timer-grenade'] || false;
+                if(reloadTimer &&
+                    (state === 64 || state === 65 || state === 66 || state === 67)
+                ) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                if(grenadeTimer &&
+                    (state === 128 || state === 129 || state === 130 || state === 131)
+                ) eposPointer.add(eposOffset['timer']).writeFloat(9999);
             }
             if(cheats['move-speed']){
                 if((!keybinds['move-speed'] || keymap[keybinds['move-speed']])){
@@ -529,11 +542,119 @@ function loop(){
                 }
             }
             if(cheats['upskill'] && (!keybinds['upskill'] || keymap[keybinds['upskill']])){
-                const hp = eposPointer.add(eposOffset['hp']).readS16();
-                eposPointer.add(eposOffset['hp']).writeS16(hp + 1);
-                const exceptTimer = config['upskill-except-timer'] || false;
-                eposPointer.add(eposOffset['sc']).writeFloat(+config['upskill-value'] || 0);
-                if(!exceptTimer) eposPointer.add(eposOffset['timer']).writeFloat(+config['upskill-value'] || 0);
+                const onlyonce = config['upskill-only-once'] || false;
+                const timer = eposPointer.add(eposOffset['timer']).readFloat();
+                switch(sk){
+                    case 1: if(isSkill(eposPointer)) {
+                        if(onlyonce) {
+                            if(timer < 0.37) eposPointer.add(eposOffset['timer']).writeFloat(0.37);
+                            else if(timer > 0.37) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                        } else {
+                            eposPointer.add(eposOffset['timer']).writeFloat(0.37);
+                        }
+                    }; break;
+                    case 2: if(isSkill(eposPointer)) eposPointer.add(eposOffset['timer']).writeFloat(9999); break;
+                    case 3: if(isSkill(eposPointer)) {
+                        if(onlyonce) {
+                            if(timer < 0.31) eposPointer.add(eposOffset['timer']).writeFloat(0.31);
+                            else if(timer > 0.31) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                        } else {
+                            eposPointer.add(eposOffset['timer']).writeFloat(0.31);
+                        }
+                    }; break;
+                    case 4: eposPointer.add(eposOffset['sc']).writeFloat(9999); break;
+                    case 5: if(isSkill(eposPointer)) {
+                        if(onlyonce) {
+                            if(timer < 0.85) eposPointer.add(eposOffset['timer']).writeFloat(0.85);
+                            else if(timer > 0.85) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                        } else {
+                            eposPointer.add(eposOffset['timer']).writeFloat(0.85);
+                        }
+                    }; break;
+                    case 7: if(isSkill(eposPointer)) {
+                        if(onlyonce) {
+                            if(timer < 2.3) eposPointer.add(eposOffset['timer']).writeFloat(2.3);
+                            else if(timer > 2.3) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                        } else {
+                            eposPointer.add(eposOffset['timer']).writeFloat(2.3);
+                        }
+                    }; break;
+                    case 8: if(isSkill(eposPointer)) {
+                        if(onlyonce) {
+                            if(timer < 0.99) eposPointer.add(eposOffset['timer']).writeFloat(0.99);
+                            else if(timer > 0.99) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                        } else {
+                            eposPointer.add(eposOffset['timer']).writeFloat(0.99);
+                        }
+                    }; break;
+                    case 9: if(isSkill(eposPointer)) eposPointer.add(eposOffset['timer']).writeFloat(9999); break;
+                    case 10:
+                    if(isSkill(eposPointer)) {
+                        if(onlyonce) {
+                            if(timer < 1.14) eposPointer.add(eposOffset['timer']).writeFloat(1.14);
+                            else if(timer > 1.14) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                        } else {
+                            eposPointer.add(eposOffset['timer']).writeFloat(1.14);
+                        }
+                    }; break;
+                    case 12: if(isSkill(eposPointer)) {
+                        if(onlyonce) {
+                            if(timer < 0.44) eposPointer.add(eposOffset['timer']).writeFloat(0.44);
+                            else if(timer > 0.44) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                        } else {
+                            eposPointer.add(eposOffset['timer']).writeFloat(0.44);
+                        }
+                    }; break;
+                    case 13: if(isSkill(eposPointer)) {
+                        if(onlyonce) {
+                            if(timer < 0.09) eposPointer.add(eposOffset['timer']).writeFloat(0.09);
+                            else if(timer > 0.09) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                        } else {
+                            eposPointer.add(eposOffset['timer']).writeFloat(0.09);
+                        }
+                    }; break;
+                    case 15: if(isSkill(eposPointer)) {
+                        if(onlyonce) {
+                            if(timer < 0.09) eposPointer.add(eposOffset['timer']).writeFloat(0.09);
+                            else if(timer > 0.09) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                        } else {
+                            eposPointer.add(eposOffset['timer']).writeFloat(0.09);
+                        }
+                    }; break;
+                    case 17: if(isSkill(eposPointer)) eposPointer.add(eposOffset['timer']).writeFloat(9999); break;
+                    case 20: if(isSkill(eposPointer)) {
+                        if(onlyonce) {
+                            if(timer < 0.09) eposPointer.add(eposOffset['timer']).writeFloat(0.09);
+                            else if(timer > 0.09) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                        } else {
+                            eposPointer.add(eposOffset['timer']).writeFloat(0.09);
+                        }
+                    }; break;
+                    case 21: if(isSkill(eposPointer)) {
+                        if(onlyonce) {
+                            if(timer < 0.99) eposPointer.add(eposOffset['timer']).writeFloat(0.99);
+                            else if(timer > 0.99) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                        } else {
+                            eposPointer.add(eposOffset['timer']).writeFloat(0.99);
+                        }
+                    }; break;
+                    case 24: if(isSkill(eposPointer)) {
+                        if(onlyonce) {
+                            if(timer < 0.49) eposPointer.add(eposOffset['timer']).writeFloat(0.49);
+                            else if(timer > 0.49) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                        } else {
+                            eposPointer.add(eposOffset['timer']).writeFloat(0.49);
+                        }
+                    }; break;
+                    case 25: if(isSkill(eposPointer)) {
+                        if(onlyonce) {
+                            if(timer < 0.99) eposPointer.add(eposOffset['timer']).writeFloat(0.99);
+                            else if(timer > 0.99) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                        } else {
+                            eposPointer.add(eposOffset['timer']).writeFloat(0.99);
+                        }
+                    }; break;
+                }
             }
             if(cheats['grenade'] && (!keybinds['grenade'] || keymap[keybinds['grenade']])){
                 an.add(anOffset['grenade-base']).writeS8(1);
@@ -857,11 +978,19 @@ function isWalking(eposPointer:NativePointer):boolean{
     return state % 2 === 1;
 }
 
+function isSkill(eposPointer:NativePointer):boolean{
+    if(!eposPointer) return false;
+    if(eposPointer.isNull()) return false;
+    const state = eposPointer.add(eposOffset['state']).readS32();
+    return state === 256 || state === 257 || state === 258 || state === 259;
+}
+
 function isDead(eposPointer:NativePointer):boolean{
     if(!eposPointer) return false;
     if(eposPointer.isNull()) return false;
     return eposPointer.add(eposOffset['hp']).readS16() <= 0 || eposPointer.add(eposOffset['state']).readS32() === 16;
 }
+
 
 function gyro(data:{
     alpha:number;

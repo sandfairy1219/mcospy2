@@ -394,6 +394,9 @@ app.on("ready", async () => {
                         ipcMain.on("skillcode", (e, code:number) => {
                             script.post(['skillcode', code]);
                         });
+                        if(isDev) ipcMain.on("state", (e, code:number) => {
+                            script.post(['state', code]);
+                        });
                         ipcMain.on("scan-epos", async (e) => {
                             script.post(['scan-epos']);
                             script.post(['tier-numbers', await getExceptNums()]);
@@ -446,6 +449,7 @@ app.on("ready", async () => {
                     ipcMain.removeAllListeners("reverse");
                     ipcMain.removeAllListeners("pos");
                     ipcMain.removeAllListeners("skillcode");
+                    if(isDev) ipcMain.removeAllListeners("state");
                     ipcMain.removeAllListeners("scan-epos");
                     ipcMain.removeAllListeners("scan-entity");
                     ipcMain.removeAllListeners("clear-all");
@@ -473,6 +477,9 @@ app.on("ready", async () => {
     });
     emitter.on("skillcode", (code:number) => {
         main.webContents.send("skillcode", code);
+    });
+    if(isDev) emitter.on("state", (code:number) => {
+        main.webContents.send("state", code);
     });
     emitter.on("epos-state", (_state:string, msg:string) => {
         state("epos", _state, msg);

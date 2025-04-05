@@ -498,6 +498,24 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'リロードなし',
         'zh':'无需重新加载',
     },
+    'no-timer':{
+        'en':'No Timer',
+        'ko':'타이머 제거',
+        'ja':'タイマーなし',
+        'zh':'无计时器',
+    },
+    'no-timer-reload':{
+        'en':'No Timer Reload',
+        'ko':'재장전 타이머 제거',
+        'ja':'リロードタイマーなし',
+        'zh':'无重新加载计时器',
+    },
+    'no-timer-grenade':{
+        'en':'No Timer Grenade',
+        'ko':'수류탄 타이머 제거',
+        'ja':'グレネードタイマーなし',
+        'zh':'无手榴弹计时器',
+    },
     'skill-cooldown':{
         'en':'Skill Cooldown',
         'ko':'스킬 쿨타임',
@@ -582,17 +600,11 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'アップスキル',
         'zh':'技能升级',
     },
-    'upskill-value':{
-        'en':'Upskill Value',
-        'ko':'업스킬 값',
-        'ja':'アップスキル値',
-        'zh':'技能升级值',
-    },
-    'upskill-except-timer':{
-        'en':'Upskill Except Timer',
-        'ko':'업스킬 타이머 제외',
-        'ja':'アップスキルタイマー除外',
-        'zh':'技能升级除计时器',
+    'upskill-only-once':{
+        'en':'Upskill Only Once',
+        'ko':'업스킬 일회성',
+        'ja':'アップスキル一回',
+        'zh':'技能升级一次',
     },
     'grenade':{
         'en':'Grenade',
@@ -991,6 +1003,7 @@ ipcRenderer.on('token', (e, token:Token|string) => {
         if(token.perms.includes('no-recoil')) $c('no-recoil').classList.remove('hide');
         if(token.perms.includes('no-spread')) $c('no-spread').classList.remove('hide');
         if(token.perms.includes('no-reload')) $c('no-reload').classList.remove('hide');
+        if(token.perms.includes('no-timer')) $c('no-timer').classList.remove('hide');
         if(token.perms.includes('skill-cooldown')) $c('skill-cooldown').classList.remove('hide');
         if(token.perms.includes('instant-respawn')) $c('instant-respawn').classList.remove('hide');
         if(token.perms.includes('no-clip')) $c('no-clip').classList.remove('hide');
@@ -1062,6 +1075,7 @@ const xel = $i('pos-x');
 const yel = $i('pos-y');
 const zel = $i('pos-z');
 const sel = $i('skillcode');
+// const tel = $i('state-act');
 
 $_('pos-reverse').addEventListener('click', () => {
     ipcRenderer.send('reverse');
@@ -1077,6 +1091,9 @@ ipcRenderer.on('pos', (e, pos:number[]) => {
 ipcRenderer.on('skillcode', (e, code:number) => {
     sel.value = code.toString();
 })
+// ipcRenderer.on('state', (e, state:number) => {
+//     tel.value = state.toString();
+// })
 
 $_('change-ads-reward').addEventListener('click', () => {ipcRenderer.send('change-ads-reward');});
 
@@ -1087,14 +1104,12 @@ xel.addEventListener('input', changePosition);
 yel.addEventListener('input', changePosition);
 zel.addEventListener('input', changePosition);
 sel.addEventListener('input', () => {ipcRenderer.send('skillcode', parseInt(sel.value || "0"));});
+// tel.addEventListener('input', () => {ipcRenderer.send('state', parseInt(tel.value || "0"));});
 xel.addEventListener('change', blurCurrent);
 yel.addEventListener('change', blurCurrent);
 zel.addEventListener('change', blurCurrent);
 sel.addEventListener('change', blurCurrent);
-
-ipcRenderer.on('skillcode', (e, code:string) => {
-    $i('skillcode').value = code;
-})
+// tel.addEventListener('change', blurCurrent);
 
 $_('ctm-default-milk').addEventListener('click', () => {ipcRenderer.send('ctm-default-milk');});
 $_('ctm-default-choco').addEventListener('click', () => {ipcRenderer.send('ctm-default-choco');});

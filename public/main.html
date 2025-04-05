@@ -297,6 +297,17 @@
             <details data-cheat="no-reload">
                 <summary class="no" id="no-reload" data-lang="no-reload"></summary>
             </details>
+            <details data-cheat="no-timer">
+                <summary id="no-timer" data-lang="no-timer"></summary>
+                <main>
+                    <div data-lang="no-timer-reload"></div>
+                    <input class="config" type="checkbox" id="no-timer-reload">
+                </main>
+                <main>
+                    <div data-lang="no-timer-grenade"></div>
+                    <input class="config" type="checkbox" id="no-timer-grenade">
+                </main>
+            </details>
             <details data-cheat="skill-cooldown">
                 <summary class="no" id="skill-cooldown" data-lang="skill-cooldown"></summary>
             </details>
@@ -363,13 +374,13 @@
                     <input type="text" id="key-upskill" class="keybind" data-lang-ph="keybind">
                 </main>
                 <main>
+                    <div data-lang="upskill-only-once"></div>
+                    <input class="config" type="checkbox" id="upskill-only-once">
+                </main>
+                <!-- <main>
                     <div data-lang="upskill-value"></div>
-                    <input class="config" type="number" id="upskill-value" min="0" max="9999" value="0">
-                </main>
-                <main>
-                    <div data-lang="upskill-except-timer"></div>
-                    <input class="config" type="checkbox" id="upskill-except-timer">
-                </main>
+                    <input class="config" type="number" id="upskill-value" min="0" max="9999" value="9999">
+                </main> -->
             </details>
             <details data-cheat="grenade">
                 <summary id="grenade" data-lang="grenade"></summary>
@@ -399,6 +410,9 @@
                 <main>
                     <input class="w-full text-center" type="text" id="skillcode" data-lang-ph="skillcode">
                 </main>
+                <!-- <main>
+                    <input class="w-full text-center" type="text" id="state-act" data-lang-ph="state-act">
+                </main> -->
                 <button class="w-full" id="change-ads-reward" data-lang="change-ads-reward"></button>
             </details>
             <details data-cheat="ctm">
