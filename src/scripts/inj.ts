@@ -1,7 +1,7 @@
 const bypassMode = false;
 const cookie = "";
 
-let mynum:number = 0;
+let mynum:number = 34130903;
 let excs:number[] = [];
 const inj_defaultConfig = {
     elec: false,
@@ -12,7 +12,7 @@ const inj_defaultConfig = {
     mv: false,
     skc: true,
     // static
-    clip: true,
+    clip: false,
     onek: true,
     onesk: true,
     resp: true,
@@ -316,6 +316,11 @@ const inGameOffsets: Record<string, OffsetInfo> = {
         str: "_ZNK9GameScene14GetRespawnTimeEv",
         args: ["pointer"],
     },
+    wheellegSpeedUpBuffApplyBuff: {
+        name: "wheellegSpeedUpBuffApplyBuff",
+        str: "_ZN20CWheellegSpeedUpBuff9ApplyBuffEP9UserInfor",
+        args: ["pointer"],
+    },
 }
 
 const charStatusOffsets: Record<string, OffsetInfo> = {
@@ -448,6 +453,21 @@ const cloudOffsets: Record<string, OffsetInfo> = {
         str: "_ZN5Cloud8GameData24SetSendContribPacketTimeEf",
         args: ["float"],
     },
+    getIsVisibleSnail: {
+        name: "getIsVisibleSnail",
+        str: "_ZN5Cloud8GameData17GetIsVisibleSnailEv",
+        args: ["void"],
+    },
+    setIsVisibleSnail: {
+        name: "setIsVisibleSnail",
+        str: "_ZN5Cloud8GameData17SetIsVisibleSnailEb",
+        args: ["bool"],
+    },
+    getAbusingDetector: {
+        name: "getAbusingDetector",
+        str: "_ZN5Cloud7NetData18GetAbusingDetectorEv",
+        args: ["void"],
+    },
 }
 
 const globalOffsets: Record<string, OffsetInfo> = {
@@ -484,6 +504,21 @@ const globalOffsets: Record<string, OffsetInfo> = {
     resetPacketReceive: {
         name: "resetPacketReceive",
         str: "_ZN16SystemPacketSend22ResetPacketReceiveTimeEv",
+        args: ["void"],
+    },
+    sendPacket: {
+        name: "sendPacket",
+        str: "_ZN16SystemPacketSend10SendPacketEv",
+        args: ["void"],
+    },
+    addPacketData: {
+        name: "addPacketData",
+        str: "_ZN16SystemPacketSend13AddPacketDataIhEEvRKT_",
+        args: ["pointer"],
+    },
+    getTCPSocketManager: {
+        name: "getTCPSocketManager",
+        str: "_ZN5Cloud7NetData19GetTCPSocketManagerEv",
         args: ["void"],
     },
 }
@@ -552,10 +587,10 @@ function changeArgs(args:NativeFunctionArgumentType[], target:InvocationArgument
                 val = tar.toUInt32();
                 break;
             case "float":
-                val = tar.toString();
+                val = tar.readFloat();
                 break;
             case "double":
-                val = tar.toString();
+                val = tar.readDouble();
                 break;
             case "void":
                 val = tar;
@@ -682,7 +717,7 @@ class Ch{
 let ch = new Ch(inj_defaultConfig.clip, inj_defaultConfig.onek, inj_defaultConfig.onesk, inj_defaultConfig.resp)
 let players:Set<string> = new Set();
 let dia: any, gold: any, league: any, medal: any, point: any, skill: any, clan: any,
-    eq: any, item: any, char: any, unlock: any,
+    eq: any, item: any, char: any, unlock: any, win: any,
     ex: any, unlockAll: any;
 const inj_all = (callback:(pt: NativePointer) => void) => {
     if(mynum) Array.from(players).forEach(str => callback(ptr(str)))
@@ -691,7 +726,7 @@ const inj_main = async () => {
     if(!Process.arch.includes("arm")) return console.log("[!] Only ARM architect can execute this script.");
     if(modl.isNull()) return console.log("[!] No Module Found.");
 
-    console.log("[*] Initialized - Pixel Injection CLI v1.4");
+    console.log("[*] Initialized - Pixel Injection CLI v1.5", `(LibMyGame: ${modl}), PID: ${Process.getCurrentThreadId()}, Arch: ${Process.arch}`);
     dia = (amount:number) => func(cheatOffsets.setMoney)(amount, 0);
     gold = (amount:number) => func(cheatOffsets.setGold)(amount, 0);
     league = func(cheatOffsets.setStarLeagueCoin);
@@ -711,6 +746,7 @@ const inj_main = async () => {
         for(let i = 1; i <= 127; i++){item(ch, 6, i, 1)}
         for(let i = 1; i <= 127; i++){item(ch, 7, i, 1)}
     }
+    win = (team:number) => func(cheatOffsets.forceEndGame)(ptr(team));
     ex = () => {
         dia(15_9999_9999)
         gold(15_9999_9999)
@@ -726,10 +762,11 @@ const inj_main = async () => {
     }
 
     // Debug Zone
-    attach(buyOffsets.equip)
     // ==========
-    
-    attach(cloudOffsets.getSendContribPacketTime)
+
+    // attach(cloudOffsets.getAbusingDetector)
+    // attach(globalOffsets.resetPacketReceive)
+    // attach(cloudOffsets.getSendContribPacketTime)
     intercept(inGameOffsets.getMaxSkill, {onLeave: retval => {if(ch.skc) retval.replace(12 as any)}})
     intercept(inGameOffsets.getCurSkill, {onLeave: retval => {if(ch.skc) retval.replace(12 as any)}})
     intercept(inGameOffsets.isSkillManyTimes, {onLeave: retval => {if(ch.skc) retval.replace(1 as any)}})
@@ -826,7 +863,7 @@ Java.perform(async () => {
     };
     XigncodeClientSystem["getCookie2"].implementation = function (str:string) {
         let result = this["getCookie2"](str);
-        console.log("[*] XigncodeClientSystem.getCookie2", result);
+        // console.log("[*] XigncodeClientSystem.getCookie2", result);
         return bypassMode ? (cookie || null) : result;
     }
     while(!modl){
