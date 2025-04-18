@@ -33,7 +33,11 @@ ipcRenderer.on("draw", (event, data:DrawRect[]) => {
     ctx.textBaseline = "bottom";
     ctx.font = `${fontSize}px sans-serif`;
     for (const rect of data) {
-        const value = (rect.isDead ? configg['esp-dead-color'] : rect.isMark ? configg['esp-mark-color'] : rect.isTeam ? configg['esp-team-color'] : configg['esp-color']) || 'red';
+        const value = (
+            rect.isDead ? configg['esp-dead-color'] :
+            rect.isMark ? configg['esp-mark-color'] :
+            rect.isTeam ? configg['esp-team-color'] :
+            configg['esp-color']) || 'red';
         ctx.fillStyle = value;
         ctx.strokeStyle = value;
         const upside = rect.upside.map(point => ({ x: halfWidth + point.x * halfWidth, y: halfHeight + point.y * halfHeight }));
