@@ -455,11 +455,11 @@ function loop(){
                             {x: x - sideSize, y: y + downSize, z: z - sideSize},
                             {x: x + sideSize, y: y + downSize, z: z - sideSize},
                         ].map(vec3 => calcESP(vec3, {x: camX, y: camY, z: camZ}, yaw, pitch, camFov)).filter(point => point);
-                        const isMarked = excepts.includes(number);
+                        const isMark = excepts.includes(number);
                         const _isTeam = isTeam(eposPointer, entity);
                         const _isDead = isDead(entity);
                         return {
-                            upside, downside, number, nickname, isMarked, isTeam: _isTeam, isDead: _isDead,
+                            upside, downside, number, nickname, isMark, isTeam: _isTeam, isDead: _isDead,
                             hp, barrier, total
                         };
                     }).filter(rect => rect.upside.length > 3 && rect.downside.length > 3);

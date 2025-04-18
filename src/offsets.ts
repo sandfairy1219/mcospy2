@@ -78,5 +78,5 @@ export const _eposOffset = {
     'ox':0x1AC, // float
     'oy':0x1B0, // float
     'oz':0x1B4, // float
-    'pointer':0xED8, // pointer
+    'pointer':0xF00, // pointer
 };

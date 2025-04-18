@@ -26,4 +26,5 @@ interface DrawRect{
     nickname:string;
     isTeam:boolean;
     isDead:boolean;
+    isMark:boolean;
 }
