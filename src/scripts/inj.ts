@@ -12,6 +12,7 @@ const inj_defaultConfig = {
     mv: false,
     skc: true,
     ld: false,
+    win: false,
     // static
     clip: false,
     onek: true,
@@ -664,6 +665,7 @@ class Ch{
     mv:boolean = inj_defaultConfig.mv;
     skc:boolean = inj_defaultConfig.skc;
     ld:boolean = inj_defaultConfig.ld;
+    win:boolean = inj_defaultConfig.win;
     _clip:boolean = true;
     _onek:boolean = false;
     _onesk:boolean = false;
@@ -730,7 +732,7 @@ const inj_main = async () => {
     if(!Process.arch.includes("arm")) return console.log("[!] Only ARM architect can execute this script.");
     if(modl.isNull()) return console.log("[!] No Module Found.");
 
-    console.log("[*] Initialized - Pixel Injection CLI v1.6", `(LibMyGame: ${modl}), PID: ${Process.getCurrentThreadId()}, Arch: ${Process.arch}`);
+    console.log("[*] Initialized - Pixel Injection CLI v1.7", `(LibMyGame: ${modl}), PID: ${Process.getCurrentThreadId()}, Arch: ${Process.arch}`);
     dia = (amount:number) => func(cheatOffsets.setMoney)(amount, 0);
     gold = (amount:number) => func(cheatOffsets.setGold)(amount, 0);
     league = func(cheatOffsets.setStarLeagueCoin);
@@ -836,7 +838,10 @@ const inj_main = async () => {
             players.forEach(player => {
                 try{
                     const pt = ptr(player);
-                    if(pt.add(0x0).readUInt() == mynum) ch.me = player;
+                    if(pt.add(0x0).readUInt() == mynum) {
+                        ch.me = player;
+                        if(ch.win) win(pt.add(eposOffsets.slot).readU8() % 2);
+                    }
                     const n = pt.add(eposOffsets.nickname).readCString();
                     const zr1 = pt.add(eposOffsets.zr1).readFloat();
                     const zr2 = pt.add(eposOffsets.zr2).readFloat();
