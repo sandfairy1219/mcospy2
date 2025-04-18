@@ -271,6 +271,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'zh':'自瞄仅限主武器',
     },
     'aimbot-ignore':{
+        'en':'Ignore Marked',
+        'ko':'마킹 무시',
+        'ja':'マークを無視',
+        'zh':'忽略标记',
+    },
+    'aimbot-ignore-team':{
         'en':'Ignore Team',
         'ko':'팀 무시',
         'ja':'チームを無視',
@@ -313,6 +319,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'zh':'瞄准辅助衰减',
     },
     'aim-assist-ignore':{
+        'en':'Ignore Marked',
+        'ko':'마킹 무시',
+        'ja':'マークを無視',
+        'zh':'忽略标记',
+    },
+    'aim-assist-ignore-team':{
         'en':'Ignore Team',
         'ko':'팀 무시',
         'ja':'チームを無視',
@@ -396,6 +408,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'ESPマーク色',
         'zh':'ESP标记颜色',
     },
+    'esp-team-color':{
+        'en':'ESP Team Color',
+        'ko':'ESP 팀 색상',
+        'ja':'ESPチーム色',
+        'zh':'ESP团队颜色',
+    },
     'esp-dead-color':{
         'en':'ESP Dead Color',
         'ko':'ESP 사망 색상',
@@ -451,6 +469,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'zh':'黑洞位置',
     },
     'blackhole-ignore':{
+        'en':'Ignore Marked',
+        'ko':'마킹 무시',
+        'ja':'マークを無視',
+        'zh':'忽略标记',
+    },
+    'blackhole-ignore-team':{
         'en':'Ignore Team',
         'ko':'팀 무시',
         'ja':'チームを無視',
@@ -465,8 +489,8 @@ const lan:{[key:string]:{[key:string]:string}} = {
     'blackhole-prevent-lagger':{
         'en':'Prevent Lagger',
         'ko': '고의지연 방지',
-        'ja': '',
-        'zh': '',
+        'ja': '意図的な遅延防止',
+        'zh': '防止故意延迟',
     },
     'blackhole-force-drop':{
         'en':'Force Drop',
@@ -515,6 +539,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ko':'수류탄 타이머 제거',
         'ja':'グレネードタイマーなし',
         'zh':'无手榴弹计时器',
+    },
+    'no-timer-respawn':{
+        'en':'No Timer Respawn',
+        'ko':'부활 타이머 제거',
+        'ja':'リスポーンタイマーなし',
+        'zh':'无重生计时器',
     },
     'skill-cooldown':{
         'en':'Skill Cooldown',
@@ -647,6 +677,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ko':'스킬 코드',
         'ja':'スキルコード',
         'zh':'技能代码',
+    },
+    'change-NaN':{
+        'en':'Change NaN',
+        'ko':'NaN 변경',
+        'ja':'NaN変更',
+        'zh':'更改NaN',
     },
     'change-ads-reward':{
         'en':'Change Ads Reward',
@@ -1095,6 +1131,7 @@ ipcRenderer.on('skillcode', (e, code:number) => {
 //     tel.value = state.toString();
 // })
 
+$_('change-NaN').addEventListener('click', () => {ipcRenderer.send('change-NaN');});
 $_('change-ads-reward').addEventListener('click', () => {ipcRenderer.send('change-ads-reward');});
 
 const blurCurrent = () => {(document.activeElement as HTMLInputElement).blur();}

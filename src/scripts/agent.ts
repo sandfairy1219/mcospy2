@@ -5,31 +5,32 @@ const cdOffset = /*cdOffset*/;
 const eposOffset = /*eposOffset*/;
 
 const charHealth = [
-    {hp: 208, barrier: 27},
-    {hp: 249, barrier: 45},
-    {hp: 240, barrier: 31},
+    {hp: 230, barrier: 30},
+    {hp: 230, barrier: 30},
+    {hp: 240, barrier: 40},
     {hp: 269, barrier: 30},
-    {hp: 240, barrier: 59},
+    {hp: 220, barrier: 40},
     {hp: 263, barrier: 55},
     {hp: 244, barrier: 19},
-    {hp: 191, barrier: 18},
+    {hp: 210, barrier: 25},
     {hp: 265, barrier: 24},
     {hp: 255, barrier: 16},
-    {hp: 271, barrier: 10},
+    {hp: 265, barrier: 20},
     {hp: 288, barrier: 73},
     {hp: 236, barrier: 13},
-    {hp: 256, barrier: 23},
+    {hp: 240, barrier: 20},
     {hp: 222, barrier: 18},
     {hp: 254, barrier: 22},
     {hp: 224, barrier: 21},
     {hp: 220, barrier: 15},
-    {hp: 274, barrier: 27},
+    {hp: 280, barrier: 35},
     {hp: 247, barrier: 32},
     {hp: 220, barrier: 25},
-    {hp: 253, barrier: 16},
+    {hp: 260, barrier: 20},
     {hp: 240, barrier: 0},
     {hp: 245, barrier: 20},
     {hp: 200, barrier: 70},
+    {hp: 225, barrier: 35},
     {hp: 225, barrier: 35},
 ]
 
@@ -301,6 +302,8 @@ Java.perform(() => {
                 if(an.isNull()) return recv(api);
                 const cashBase = an.add(anOffset['cash-base']);
                 cashBase.add(0x58).writeS32(19);
+            } else if(name === 'change-NaN'){
+                beNaN();
             } else if(name === 'ctm-default-milk'){ ctmDefaultMilk();
             } else if(name === 'ctm-default-choco'){ ctmDefaultChoco();
             } else if(name === 'ctm-desert-milk'){ ctmDesertMilk();
@@ -355,7 +358,7 @@ Java.perform(() => {
     recv(api)
 });
 
-function getFilteredEntityList(exceptTeam:boolean):NativePointer[]{
+function getFilteredEntityList(exceptMark:boolean):NativePointer[]{
     if(!epos) return [];
     if(epos.isNull()) return [];
     if(!entityList) return [];
@@ -366,7 +369,7 @@ function getFilteredEntityList(exceptTeam:boolean):NativePointer[]{
     .filter(entity => entity.toString() !== epos.toString())
     .filter(entity => !excns.includes(entity.add(eposOffset['number']).readS32()))
     .filter(entity => {
-        if(exceptTeam){
+        if(exceptMark){
             const except = excepts.includes(entity.add(eposOffset['number']).readS32())
             return reversed ? except : !except;
         } else {
@@ -452,10 +455,11 @@ function loop(){
                             {x: x - sideSize, y: y + downSize, z: z - sideSize},
                             {x: x + sideSize, y: y + downSize, z: z - sideSize},
                         ].map(vec3 => calcESP(vec3, {x: camX, y: camY, z: camZ}, yaw, pitch, camFov)).filter(point => point);
-                        const isTeam = excepts.includes(number);
+                        const isMarked = excepts.includes(number);
+                        const _isTeam = isTeam(eposPointer, entity);
                         const _isDead = isDead(entity);
                         return {
-                            upside, downside, number, nickname, isTeam, isDead: _isDead,
+                            upside, downside, number, nickname, isMarked, isTeam: _isTeam, isDead: _isDead,
                             hp, barrier, total
                         };
                     }).filter(rect => rect.upside.length > 3 && rect.downside.length > 3);
@@ -476,12 +480,17 @@ function loop(){
             if(cheats['no-timer']){
                 const reloadTimer: boolean = config['no-timer-reload'] || false;
                 const grenadeTimer: boolean = config['no-timer-grenade'] || false;
+                const respawnTimer: boolean = config['no-timer-respawn'] || false;
                 if(reloadTimer &&
                     (state === 64 || state === 65 || state === 66 || state === 67)
                 ) eposPointer.add(eposOffset['timer']).writeFloat(9999);
                 if(grenadeTimer &&
                     (state === 128 || state === 129 || state === 130 || state === 131)
                 ) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                if(respawnTimer && state === 16){
+                    const dc = Math.round(eposPointer.add(eposOffset['dc']).readFloat());
+                    if(dc != 1 && dc != 0) eposPointer.add(eposOffset['dc']).writeFloat(1);
+                }
             }
             if(cheats['move-speed']){
                 if((!keybinds['move-speed'] || keymap[keybinds['move-speed']])){
@@ -783,6 +792,15 @@ function skillcode(num:number){
     eposPointer.add(eposOffset['sk']).writeS8(num);
 }
 
+function beNaN(){
+    const eposPointer = epos;
+    if(!eposPointer) return;
+    if(eposPointer.isNull()) return;
+    eposPointer.add(eposOffset['x']).writeFloat(NaN);
+    eposPointer.add(eposOffset['y']).writeFloat(NaN);
+    eposPointer.add(eposOffset['z']).writeFloat(NaN);
+}
+
 function aimbot(eposPointer:NativePointer, delta:number){
     if(!an) return;
     if(!eposPointer) return;
@@ -792,7 +810,8 @@ function aimbot(eposPointer:NativePointer, delta:number){
     const mode = config['aimbot-mode'] || 'normal';
     const speed = (config['aimbot-speed'] || 20) * (delta/10);
     const angle = config['aimbot-angle'] || 10;
-    const ignoreTeam = config['aimbot-ignore'] || false;
+    const ignoreExcept = config['aimbot-ignore'] || false;
+    const ignoreTeam = config['aimbot-ignore-team'] || false;
     const ignoreDead = config['aimbot-ignore-death'] || false;
     const pitchOffset = +config['aimbot-pitch-offset'] || 0;
     const rad = angle/180*Math.PI;
@@ -801,7 +820,8 @@ function aimbot(eposPointer:NativePointer, delta:number){
     const camZ = cambase.add(0x14).readFloat();
     const yaw = cambase.add(0x4).readFloat();
     const pitch = cambase.readFloat() + pitchOffset;
-    const targets = getFilteredEntityList(ignoreTeam)
+    const targets = getFilteredEntityList(ignoreExcept)
+    .filter(entity => ignoreTeam ? !isTeam(eposPointer, entity) : true)
     .filter(entity => ignoreDead ? !isDead(entity) : true)
     .map((entity:NativePointer) => {
         let dx = entity.add(eposOffset["x"]).readFloat() - camX;
@@ -852,7 +872,8 @@ function aimassist(eposPointer:NativePointer, delta:number){
     if(eposPointer.isNull()) return;
     const cambase = an.add(anOffset['camera-base']);
     const angle = config['aim-assist-angle'] || 10;
-    const ignoreTeam = config['aim-assist-ignore'] || false;
+    const ignoreExcept = config['aim-assist-ignore'] || false;
+    const ignoreTeam = config['aim-assist-ignore-team'] || false;
     const ignoreDead = config['aim-assist-ignore-death'] || false;
     const pitchOffset = +config['aim-assist-pitch-offset'] || 0;
     const rad = angle/180*Math.PI;
@@ -861,7 +882,8 @@ function aimassist(eposPointer:NativePointer, delta:number){
     const camZ = cambase.add(0x14).readFloat();
     const yaw = cambase.add(0x4).readFloat();
     const pitch = cambase.readFloat() + pitchOffset;
-    const targets = getFilteredEntityList(ignoreTeam)
+    const targets = getFilteredEntityList(ignoreExcept)
+    .filter(entity => ignoreTeam ? !isTeam(eposPointer, entity) : true)
     .filter(entity => ignoreDead ? !isDead(entity) : true)
     .map((entity:NativePointer) => {
         const dx = entity.add(eposOffset["x"]).readFloat() - camX;
@@ -914,7 +936,8 @@ function calcESP(vec3:{x:number; y:number; z:number;}, cam3:{x:number; y:number;
 function blackhole(eposPointer:NativePointer){
     if(!an) return;
     if(eposPointer.isNull()) return;
-    const ignoreTeam = config['blackhole-ignore'] || false;
+    const ignoreExcept = config['blackhole-ignore'] || false;
+    const ignoreTeam = config['blackhole-ignore-team'] || false;
     const ignoreDead = config['blackhole-ignore-dead'] || false;
     const preventLagger = config['blackhole-prevent-lagger'] || false;
     const forceDrop = config['blackhole-force-drop'] || false;
@@ -937,7 +960,8 @@ function blackhole(eposPointer:NativePointer){
         resY = +config['blackhole-y'] || 0;
         resZ = +config['blackhole-z'] || 0;
     }
-    getFilteredEntityList(ignoreTeam)
+    getFilteredEntityList(ignoreExcept)
+    .filter(entity => ignoreTeam ? !isTeam(eposPointer, entity) : true)
     .filter(entity => ignoreDead ? !isDead(entity) : true)
     .filter(entity => preventLagger ? entity.add(eposOffset['y']).readFloat() < -64 : true)
     .forEach((entity:NativePointer) => {
@@ -991,6 +1015,13 @@ function isDead(eposPointer:NativePointer):boolean{
     return eposPointer.add(eposOffset['hp']).readS16() <= 0 || eposPointer.add(eposOffset['state']).readS32() === 16;
 }
 
+function isTeam(my:NativePointer, eposPointer:NativePointer):boolean{
+    if(!eposPointer) return false;
+    if(eposPointer.isNull()) return false;
+    const myslot = my.add(eposOffset['slot']).readU8();
+    const tarslot = eposPointer.add(eposOffset['slot']).readU8();
+    return myslot % 2 === tarslot % 2;
+}
 
 function gyro(data:{
     alpha:number;

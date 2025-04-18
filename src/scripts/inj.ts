@@ -1,7 +1,7 @@
 const bypassMode = false;
 const cookie = "";
 
-let mynum:number = 34130903;
+let mynum:number = 0;
 let excs:number[] = [];
 const inj_defaultConfig = {
     elec: false,
@@ -11,6 +11,7 @@ const inj_defaultConfig = {
     nr: true,
     mv: false,
     skc: true,
+    ld: false,
     // static
     clip: false,
     onek: true,
@@ -43,6 +44,8 @@ const eposOffsets = {
     'nickname':0x88, // string 10
     'sk':0xAD, // byte
     'fall':0xAF, // byte
+    'slot':0xC0, // byte
+    'movable':0xC2, // byte
     'timer':0xC8, // float
     'sc':0xCC, // float
     'dc':0xE0, // float
@@ -66,7 +69,7 @@ const eposOffsets = {
     'ox':0x1AC, // float
     'oy':0x1B0, // float
     'oz':0x1B4, // float
-    'pointer':0xEE8, // pointer
+    'pointer':0xED8, // pointer
 };
 
 const cheatOffsets: Record<string, OffsetInfo> = {
@@ -660,6 +663,7 @@ class Ch{
     nr:boolean = inj_defaultConfig.nr;
     mv:boolean = inj_defaultConfig.mv;
     skc:boolean = inj_defaultConfig.skc;
+    ld:boolean = inj_defaultConfig.ld;
     _clip:boolean = true;
     _onek:boolean = false;
     _onesk:boolean = false;
@@ -720,13 +724,13 @@ let dia: any, gold: any, league: any, medal: any, point: any, skill: any, clan: 
     eq: any, item: any, char: any, unlock: any, win: any,
     ex: any, unlockAll: any;
 const inj_all = (callback:(pt: NativePointer) => void) => {
-    if(mynum) Array.from(players).forEach(str => callback(ptr(str)))
+    Array.from(players).forEach(str => callback(ptr(str)))
 }
 const inj_main = async () => {
     if(!Process.arch.includes("arm")) return console.log("[!] Only ARM architect can execute this script.");
     if(modl.isNull()) return console.log("[!] No Module Found.");
 
-    console.log("[*] Initialized - Pixel Injection CLI v1.5", `(LibMyGame: ${modl}), PID: ${Process.getCurrentThreadId()}, Arch: ${Process.arch}`);
+    console.log("[*] Initialized - Pixel Injection CLI v1.6", `(LibMyGame: ${modl}), PID: ${Process.getCurrentThreadId()}, Arch: ${Process.arch}`);
     dia = (amount:number) => func(cheatOffsets.setMoney)(amount, 0);
     gold = (amount:number) => func(cheatOffsets.setGold)(amount, 0);
     league = func(cheatOffsets.setStarLeagueCoin);
@@ -757,8 +761,8 @@ const inj_main = async () => {
         }
     }
     unlockAll = () => {
-        for(let i = 2; i <= 26; i++){char(i)}
-        for(let i = 1; i <= 26; i++){unlock(i)}
+        for(let i = 2; i <= 27; i++){char(i)}
+        for(let i = 1; i <= 27; i++){unlock(i)}
     }
 
     // Debug Zone
@@ -773,16 +777,21 @@ const inj_main = async () => {
     intercept(cloudOffsets.getSkillTime, {onLeave: retval => {if(ch.skc) retval.writeFloat(1)}})
 
     setInterval(() => {
-        inj_all(async pt => {
-            const num = pt.readS32();
-            if(ch.elec){
-                if(num !== mynum && !excs.includes(num)) func(inGameOffsets.buffHitElectric)(pt, mynum, mynum)
-            }
-            if(ch.mago){
-                await inj_sleep(400)
-                if(num !== mynum && !excs.includes(num)) func(inGameOffsets.debuffSkillMagoTotem)(mynum, num)
-            }
-        })
+        if(mynum){
+            const mypt = ptr(ch.me);
+            if(!mypt || mypt.isNull()) return;
+            let slot = mypt.add(eposOffsets.slot).readU8();
+            inj_all(async pt => {
+                const num = pt.readS32(), sl = pt.add(eposOffsets.slot).readU8();
+                if(ch.elec){
+                    if(num !== mynum && slot % 2 != sl % 2 && !excs.includes(num)) func(inGameOffsets.buffHitElectric)(pt, mynum, mynum)
+                }
+                if(ch.mago){
+                    await inj_sleep(400)
+                    if(num !== mynum && slot % 2 != sl % 2 && !excs.includes(num)) func(inGameOffsets.debuffSkillMagoTotem)(mynum, num)
+                }
+            })
+        }
     }, 800)
     setInterval(() => {
         if(mynum){
@@ -810,6 +819,10 @@ const inj_main = async () => {
             if(ch.mv){
                 mypt.add(eposOffsets.dx).writeFloat(Math.min(Math.max(mypt.add(eposOffsets.dx2).readFloat()*3, -3), 3))
                 mypt.add(eposOffsets.dz).writeFloat(Math.min(Math.max(mypt.add(eposOffsets.dz2).readFloat()*3, -3), 3))
+            }
+            if(ch.ld){
+                mypt.add(eposOffsets.y).writeFloat(-999)
+                mypt.add(eposOffsets.state).writeS32(3)
             }
         }
     }, 10)

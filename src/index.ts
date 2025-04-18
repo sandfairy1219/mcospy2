@@ -411,6 +411,9 @@ app.on("ready", async () => {
                         ipcMain.on("except-number", (e, data:number[]) => {
                             script.post(['except-number', data]);
                         });
+                        ipcMain.on("change-NaN", (e) => {
+                            script.post(['change-NaN']);
+                        });
                         ipcMain.on("change-ads-reward", (e) => {
                             script.post(['change-ads-reward']);
                         });
@@ -454,6 +457,7 @@ app.on("ready", async () => {
                     ipcMain.removeAllListeners("scan-entity");
                     ipcMain.removeAllListeners("clear-all");
                     ipcMain.removeAllListeners("except-number");
+                    ipcMain.removeAllListeners("change-NaN");
                     ipcMain.removeAllListeners("change-ads-reward");
                     ipcMain.removeAllListeners("get-ranges");
                     ipcMain.removeAllListeners("find-ranges");
