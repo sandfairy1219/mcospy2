@@ -821,8 +821,10 @@ const inj_main = async () => {
                 mypt.add(eposOffsets.dz).writeFloat(Math.min(Math.max(mypt.add(eposOffsets.dz2).readFloat()*3, -3), 3))
             }
             if(ch.ld){
-                mypt.add(eposOffsets.y).writeFloat(-999)
-                mypt.add(eposOffsets.state).writeS32(3)
+                if(mypt.add(eposOffsets.state).readS32() != 16 && mypt.add(eposOffsets.hp).readS16() > 0){
+                    mypt.add(eposOffsets.y).writeFloat(-999)
+                    mypt.add(eposOffsets.state).writeS32(3)
+                }
             }
         }
     }, 10)
