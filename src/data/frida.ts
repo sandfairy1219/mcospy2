@@ -41,13 +41,19 @@ export const startFrida = async (id:string, filename:string, onCrashed:() => voi
 }
 
 export const conenctFrida = async (serial:string, onCrashed:() => void, onConnected:(d:frida.Device) => void) => {
+    const devc = await frida.getDevice(serial);
+    if(devc) {
+        devc.processCrashed.connect(onCrashed);
+        onConnected(devc)
+        return;
+    }
     const deviceManager = frida.getDeviceManager();
     const ds = await deviceManager.enumerateDevices()
     if(ds.find(d => d.id === serial)) {
         const fridaDevice = await frida.getUsbDevice();
         fridaDevice.processCrashed.connect(onCrashed);
         onConnected(fridaDevice)
-        return
+        return;
     }
     const tar = await deviceManager.addRemoteDevice(serial)
     if (!tar) {
@@ -62,7 +68,10 @@ export const conenctFrida = async (serial:string, onCrashed:() => void, onConnec
 }
 
 export const connectAdbDevice = async (serial:string):Promise<string> => {
-    const result = await adb.connect(serial)
+    try{
+        await adb.disconnect(serial);
+    } catch (_) {};
+    const result = await adb.connect(serial);
     if (!result) {
         Logger.error('[*] Failed to connect to adb server')
         return ''
@@ -93,10 +102,10 @@ export const checkFridaPerm = async (id:string, filename:string):Promise<boolean
     const permissions = await adb.shell(id, `ls -l /data/local/tmp/${filename}`)
     if (!permissions.includes('rwxrwxrwx')) {
         try{
-            const chmod = await adb.shell(id, `su -c chmod 777 /data/local/tmp/${filename}`)
+            const chmod = await adb.shell(id, `su -c "chmod 777 /data/local/tmp/${filename}"`)
             return true
         } catch (err) {
-            Logger.error(`[*] Failed to change permissions`)
+            Logger.error(`[*] Failed to change permissions: ${err}`)
             return false
         }
     } else {
