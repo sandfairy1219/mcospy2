@@ -13,6 +13,7 @@ const inj_defaultConfig = {
     skc: true,
     ld: false,
     win: false,
+    ccl: 0,
     // static
     clip: false,
     onek: true,
@@ -325,6 +326,11 @@ const inGameOffsets: Record<string, OffsetInfo> = {
         str: "_ZN20CWheellegSpeedUpBuff9ApplyBuffEP9UserInfor",
         args: ["pointer"],
     },
+    checkRemainedBullet: {
+        name: "checkRemainedBullet",
+        str: "_ZN10UtilWeapon19CheckRemainedBulletERK9UserInfor",
+        args: ["pointer"],
+    }
 }
 
 const charStatusOffsets: Record<string, OffsetInfo> = {
@@ -525,6 +531,21 @@ const globalOffsets: Record<string, OffsetInfo> = {
         str: "_ZN5Cloud7NetData19GetTCPSocketManagerEv",
         args: ["void"],
     },
+    clanBreakup: {
+        name: "clanBreakup",
+        str: "_ZN16SystemPacketSend11ClanBreakupEv",
+        args: ["void"],
+    },
+    clanCreate: {
+        name: "clanCreate",
+        str: "_ZN16SystemPacketSend10ClanCreateERKSsS1_hh",
+        args: ["pointer", "pointer", "uchar", "uchar"], // name, desc, mark(0), flag(151=korea)
+    },
+    changeNickname: {
+        name: "changeNickname",
+        str: "_ZN16SystemPacketSend14ChangeNicknameEhPKch",
+        args: ["uchar", "pointer", "uchar"],
+    },
 }
 
 const cameraOffsets: Record<string, OffsetInfo> = {
@@ -563,6 +584,11 @@ const cameraOffsets: Record<string, OffsetInfo> = {
         str: "_ZN20UIPopupOptionSetting30OnClickedToggle_EventAimAssistEPN7cocos2d3RefE",
         args: ["pointer"],
     },
+    rotateObserverCam: {
+        name: "rotateObserverCam",
+        str: "_ZN14ObserverCamera17RotateObserverCamERKN7cocos2d4Vec2",
+        args: ["pointer"],
+    },
 }
 
 async function inj_sleep(ms: number) {
@@ -597,10 +623,14 @@ function changeArgs(args:NativeFunctionArgumentType[], target:InvocationArgument
                 val = tar.readDouble();
                 break;
             case "void":
-                val = tar;
+                val = tar.toString();
                 break;
             case "pointer":
                 val = tar.toString();
+                break;
+            case "size_t":
+                const v = tar.readPointer();
+                val = v.readUtf8String()
                 break;
             default:
                 val = tar;
@@ -656,6 +686,16 @@ function isValidAddress(ptrAddr:NativePointer) {
     }
 }
 
+function genRandom(length: number = 9): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      const randIndex = Math.floor(Math.random() * chars.length);
+      result += chars[randIndex];
+    }
+    return result;
+}
+
 class Ch{
     elec:boolean = inj_defaultConfig.elec;
     mago:boolean = inj_defaultConfig.mago;
@@ -666,6 +706,7 @@ class Ch{
     skc:boolean = inj_defaultConfig.skc;
     ld:boolean = inj_defaultConfig.ld;
     win:boolean = inj_defaultConfig.win;
+    ccl:number = inj_defaultConfig.ccl;
     _clip:boolean = true;
     _onek:boolean = false;
     _onesk:boolean = false;
@@ -722,9 +763,10 @@ class Ch{
 
 let ch = new Ch(inj_defaultConfig.clip, inj_defaultConfig.onek, inj_defaultConfig.onesk, inj_defaultConfig.resp)
 let players:Set<string> = new Set();
-let dia: any, gold: any, league: any, medal: any, point: any, skill: any, clan: any,
-    eq: any, item: any, char: any, unlock: any, win: any,
-    ex: any, unlockAll: any;
+let dia: any, gold: any, league: any, medal: any, lp: any, point: any, skill: any, clan: any,
+    eq: any, item: any, char: any, unlock: any, win: any, clancr: any, clandel: any,
+    chat: any, nick: any,
+    ex: any, unlockAll: any, ts: any;
 const inj_all = (callback:(pt: NativePointer) => void) => {
     Array.from(players).forEach(str => callback(ptr(str)))
 }
@@ -732,11 +774,12 @@ const inj_main = async () => {
     if(!Process.arch.includes("arm")) return console.log("[!] Only ARM architect can execute this script.");
     if(modl.isNull()) return console.log("[!] No Module Found.");
 
-    console.log("[*] Initialized - Pixel Injection CLI v1.7", `(LibMyGame: ${modl}), PID: ${Process.getCurrentThreadId()}, Arch: ${Process.arch}`);
+    console.log("[*] Initialized - Pixel Injection CLI v1.8", `(LibMyGame: ${modl}), PID: ${Process.getCurrentThreadId()}, Arch: ${Process.arch}`);
     dia = (amount:number) => func(cheatOffsets.setMoney)(amount, 0);
     gold = (amount:number) => func(cheatOffsets.setGold)(amount, 0);
     league = func(cheatOffsets.setStarLeagueCoin);
     medal = func(cheatOffsets.getStarLeagueMedal);
+    lp = func(cheatOffsets.setStarLeaguePoint);
     point = (amount:number) => func(cheatOffsets.setPoint)(amount, 0);
     skill = func(cheatOffsets.setAllSkillCoolTimeOneSecond);
     clan = func(cheatOffsets.setClanExp);
@@ -753,6 +796,26 @@ const inj_main = async () => {
         for(let i = 1; i <= 127; i++){item(ch, 7, i, 1)}
     }
     win = (team:number) => func(cheatOffsets.forceEndGame)(ptr(team));
+    clancr = (name:string = genRandom(), desc:string = "blablabla", mark:number = 0, flag:number = 1) => {
+        const npt = Memory.allocUtf8String(name);
+        const dpt = Memory.allocUtf8String(desc);
+        const nobj = Memory.alloc(Process.pageSize);
+        const dobj = Memory.alloc(Process.pageSize);
+        nobj.writePointer(npt);
+        dobj.writePointer(dpt);
+        func(globalOffsets.clanCreate)(nobj, dobj, mark, flag);
+    };
+    clandel = () => func(globalOffsets.clanBreakup)(ptr(0x0));
+    chat = (msg:string) => {
+        const pt = Memory.allocUtf8String(msg);
+        const obj = Memory.alloc(Process.pageSize);
+        obj.writePointer(pt);
+        func(globalOffsets.chatting)(0, obj);
+    }
+    nick = (name:string) => {
+        const sp = Memory.allocUtf8String(name);
+        func(globalOffsets.changeNickname)(1, sp, 0);
+    }
     ex = () => {
         dia(15_9999_9999)
         gold(15_9999_9999)
@@ -769,20 +832,34 @@ const inj_main = async () => {
 
     // Debug Zone
     // ==========
-
+    
+    intercept(globalOffsets.chatting, {
+        onEnter(args) {
+            const msg = args[1].readPointer();
+            const str = msg.readUtf8String();
+            if(str.startsWith('/')){
+                const cmd = str.split(' ')[0].substring(1).toLowerCase();
+                const args = str.split(' ').slice(1);
+            }
+        }
+    })
     // attach(cloudOffsets.getAbusingDetector)
-    // attach(globalOffsets.resetPacketReceive)
+    attach(globalOffsets.resetPacketReceive)
     // attach(cloudOffsets.getSendContribPacketTime)
     intercept(inGameOffsets.getMaxSkill, {onLeave: retval => {if(ch.skc) retval.replace(12 as any)}})
     intercept(inGameOffsets.getCurSkill, {onLeave: retval => {if(ch.skc) retval.replace(12 as any)}})
     intercept(inGameOffsets.isSkillManyTimes, {onLeave: retval => {if(ch.skc) retval.replace(1 as any)}})
     intercept(cloudOffsets.getSkillTime, {onLeave: retval => {if(ch.skc) retval.writeFloat(1)}})
 
+    intercept(globalOffsets.clanCreate, {onLeave(retval) {if(ch.ccl){setTimeout(clandel, 400);}}})
+    intercept(globalOffsets.clanBreakup, {onLeave(retval) {if(ch.ccl){ch.ccl--;setTimeout(clancr, 100);}}})
+
     setInterval(() => {
         if(mynum){
             const mypt = ptr(ch.me);
             if(!mypt || mypt.isNull()) return;
             let slot = mypt.add(eposOffsets.slot).readU8();
+            func(globalOffsets.resetPacketReceive)(ptr(0x1));
             inj_all(async pt => {
                 const num = pt.readS32(), sl = pt.add(eposOffsets.slot).readU8();
                 if(ch.elec){
