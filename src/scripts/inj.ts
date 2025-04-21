@@ -844,7 +844,7 @@ const inj_main = async () => {
         }
     })
     // attach(cloudOffsets.getAbusingDetector)
-    attach(globalOffsets.resetPacketReceive)
+    // attach(globalOffsets.resetPacketReceive)
     // attach(cloudOffsets.getSendContribPacketTime)
     intercept(inGameOffsets.getMaxSkill, {onLeave: retval => {if(ch.skc) retval.replace(12 as any)}})
     intercept(inGameOffsets.getCurSkill, {onLeave: retval => {if(ch.skc) retval.replace(12 as any)}})
@@ -859,7 +859,8 @@ const inj_main = async () => {
             const mypt = ptr(ch.me);
             if(!mypt || mypt.isNull()) return;
             let slot = mypt.add(eposOffsets.slot).readU8();
-            func(globalOffsets.resetPacketReceive)(ptr(0x1));
+            // func(globalOffsets.resetPacketReceive)(ptr(0x1));
+            func(cheatOffsets.setLatency)(0);
             inj_all(async pt => {
                 const num = pt.readS32(), sl = pt.add(eposOffsets.slot).readU8();
                 if(ch.elec){
