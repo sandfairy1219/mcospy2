@@ -1,22 +1,28 @@
 const bypassMode = false;
 const cookie = "";
 
-let mynum:number = 0;
 let excs:number[] = [];
 const inj_defaultConfig = {
     elec: false,
     mago: false,
     bh: false,
-    ws: true,
+    ab: true,
+    ab_speed: 25,
+    ab_radius: 10,
+    ab_shoot: true,
+    ab_main: true,
+    esp: false,
+    ws: false,
     nr: true,
     mv: false,
     skc: true,
     ld: false,
     win: false,
+    kick: false,
     ccl: 0,
     // static
     clip: false,
-    onek: true,
+    onek: false,
     onesk: true,
     resp: true,
 }
@@ -435,6 +441,41 @@ const clanOffsets: Record<string, OffsetInfo> = {
         str: "_ZN16SystemPacketSend30ClanRequestInformationEndMatchEj",
         args: ["uint"],
     },
+    clanBreakup: {
+        name: "clanBreakup",
+        str: "_ZN16SystemPacketSend11ClanBreakupEv",
+        args: ["void"],
+    },
+    clanCreate: {
+        name: "clanCreate",
+        str: "_ZN16SystemPacketSend10ClanCreateERKSsS1_hh",
+        args: ["pointer", "pointer", "uchar", "uchar"], // name, desc, mark(0), flag(151=korea)
+    },
+    clanLeave: {
+        name: "clanLeave",
+        str: "_ZN16SystemPacketSend9ClanLeaveEv",
+        args: ["void"], // 1
+    },
+    clanAccept: {
+        name: "clanAccept",
+        str: "_ZN16SystemPacketSend27ClanAcceptWaitingUserToJoinEjj",
+        args: ["uint", "uint"], // clanid, userid
+    },
+    clanInvite: {
+        name: "clanInvite",
+        str: "_ZN16SystemPacketSend14ClanInviteUserEj",
+        args: ["uint"], // userid
+    },
+    clanChangeMemberGrade: {
+        name: "clanChangeMemberGrade",
+        str: "_ZN16SystemPacketSend21ClanChangeMemberGradeEjh",
+        args: ["uint", "uchar"], // userid, grade (0=member, 1=vice, 2=master)
+    },
+    clanChangeIntroduceMessage: {
+        name: "clanChangeIntroduceMessage",
+        str: "_ZN16SystemPacketSend26ClanChangeIntroduceMessageEjPKc",
+        args: ["uint", "pointer"], // clanid,. message
+    },
 }
 
 const cloudOffsets: Record<string, OffsetInfo> = {
@@ -478,6 +519,16 @@ const cloudOffsets: Record<string, OffsetInfo> = {
         str: "_ZN5Cloud7NetData18GetAbusingDetectorEv",
         args: ["void"],
     },
+    getIsTest: {
+        name: "getIsTest",
+        str: "_ZN5Cloud8GameData9GetIsTestEv",
+        args: ["void"],
+    },
+    getIsTutorial: {
+        name: "getIsTutorial",
+        str: "_ZN5Cloud8GameData13GetIsTutorialEv",
+        args: ["void"],
+    },
 }
 
 const globalOffsets: Record<string, OffsetInfo> = {
@@ -489,7 +540,7 @@ const globalOffsets: Record<string, OffsetInfo> = {
     requestLogin: {
         name: "requestLogin",
         str: "_ZN16SystemPacketSend12RequestLoginEiRKSsS1_",
-        args: ["int", "pointer", "pointer"],
+        args: ["int", "ssize_t", "ssize_t"],
     },
     testDeleteAccount: {
         name: "testDeleteAccount",
@@ -531,63 +582,166 @@ const globalOffsets: Record<string, OffsetInfo> = {
         str: "_ZN5Cloud7NetData19GetTCPSocketManagerEv",
         args: ["void"],
     },
-    clanBreakup: {
-        name: "clanBreakup",
-        str: "_ZN16SystemPacketSend11ClanBreakupEv",
-        args: ["void"],
-    },
-    clanCreate: {
-        name: "clanCreate",
-        str: "_ZN16SystemPacketSend10ClanCreateERKSsS1_hh",
-        args: ["pointer", "pointer", "uchar", "uchar"], // name, desc, mark(0), flag(151=korea)
-    },
     changeNickname: {
         name: "changeNickname",
         str: "_ZN16SystemPacketSend14ChangeNicknameEhPKch",
         args: ["uchar", "pointer", "uchar"],
     },
+    connectToGameServer: {
+        name: "connectToGameServer",
+        str: "_ZN19SystemPacketReceive19ConnectToGameServerEv",
+        args: ["void"],
+    },
+    setPSAuthCode: {
+        name: "setPSAuthCode",
+        str: "_ZN19SystemPacketReceive13SetPSAuthCodeEv",
+        args: ["void"],
+    },
+    toggleAbuseDetector: {
+        name: "toggleAbuseDetector",
+        str: "_ZN9GameScene21ToggleAbusingDetectorEb",
+        args: ["bool"],
+    },
+    abuseDetectorOnSkill: {
+        name: "abuseDetectorOnSkill",
+        str: "_ZN15AbusingDetector10OnUseSkillERK14InGameNotiInfo",
+        args: ["pointer"],
+    },
+    sendPurchasePass: {
+        name: "sendPurchasePass",
+        str: "_ZN16SystemPacketSend16SendPurchasePassEjh",
+        args: ["uint", "uchar"], // userid, tier
+    },
+    sendPurchasePassTier: {
+        name: "sendPurchasePassTier",
+        str: "_ZN16SystemPacketSend20SendPurchasePassTierEjh",
+        args: ["uint", "uchar"], // userid, tier
+    },
+    purchaseHeroPackage: {
+        name: "purchaseHeroPackage",
+        str: "_ZN12UtilPurchase19PurchaseHeroPackageEih",
+        args: ["int", "uchar"], // userid, tier
+    },
+    receiveReward: {
+        name: "receiveReward",
+        str: "_ZN12UIMilChoPass13ReceiveRewardEh",
+        args: ["uchar"],
+    },
+    sendReqPassReward: {
+        name: "sendReqPassReward",
+        str: "_ZN16SystemPacketSend17SendReqPassRewardEjjhhh",
+        args: ["uint", "uint", "uchar", "uchar", "uchar"], // userid, season, pass tier, ?, slot
+    },
+    sendKnockBack: {
+        name: "sendKnockBack",
+        str: "_ZN16SystemPacketSend13SendKnockBackEjN7cocos2d4Vec3E",
+        args: ["uint", "pointer"], // userid, vec3
+    },
 }
 
 const cameraOffsets: Record<string, OffsetInfo> = {
-    update: {
-        name: "update",
-        str: "_ZN10GameCamera6UpdateEf",
-        args: ["float"],
-    },
-    setCameraPos: {
-        name: "setCameraPos",
-        str: "_ZN10GameCamera12SetCameraPosER9GameSceneb",
-        args: ["pointer", "bool"],
-    },
-    updateAimAssist: {
-        name: "updateAimAssist",
-        str: "_ZN9GameScene15UpdateAimAssistEf",
-        args: ["float"],
-    },
-    isAimAssist: {
-        name: "isAimAssist",
-        str: "_ZNK9GameScene11IsAimAssistEv",
+    getCamera: {
+        name: "getCamera",
+        str: "_ZN5Cloud10CameraData9GetCameraEv",
         args: ["void"],
     },
-    sendAimAssist: {
-        name: "sendAimAssist",
-        str: "_ZN16SystemPacketSend19SendAimAssistOptionEb",
-        args: ["bool"],
+    getCameraAngleX: {
+        name: "getCameraAngleX",
+        str: "_ZN5Cloud10CameraData15GetCameraAngleXEv",
+        args: ["void"], // float
     },
-    canTrackAimAssist: {
-        name: "canTrackAimAssist",
-        str: "_ZN9GameScene26CanTrackTargetForAimAssistEP9UserInforS1_",
-        args: ["pointer", "pointer"],
+    setCameraAngleX: {
+        name: "setCameraAngleX",
+        str: "_ZN5Cloud10CameraData15SetCameraAngleXEf",
+        args: ["float"],
     },
-    onClickedAimAssist: {
-        name: "onClickedAimAssist",
-        str: "_ZN20UIPopupOptionSetting30OnClickedToggle_EventAimAssistEPN7cocos2d3RefE",
-        args: ["pointer"],
+    getCameraAngleY: {
+        name: "getCameraAngleY",
+        str: "_ZN5Cloud10CameraData15GetCameraAngleYEv",
+        args: ["void"], // float
     },
-    rotateObserverCam: {
-        name: "rotateObserverCam",
-        str: "_ZN14ObserverCamera17RotateObserverCamERKN7cocos2d4Vec2",
-        args: ["pointer"],
+    setCameraAngleY: {
+        name: "setCameraAngleY",
+        str: "_ZN5Cloud10CameraData15SetCameraAngleYEf",
+        args: ["float"],
+    },
+    getCameraZoom: {
+        name: "getCameraZoom",
+        str: "_ZN5Cloud10CameraData13GetCameraZoomEv",
+        args: ["void"], // float
+    },
+    setCameraZoom: {
+        name: "setCameraZoom",
+        str: "_ZN5Cloud10CameraData13SetCameraZoomEf",
+        args: ["float"],
+    },
+    getCameraDistanceZ: {
+        name: "getCameraDistanceZ",
+        str: "_ZN5Cloud10CameraData18GetCameraDistanceZEv",
+        args: ["void"], // float
+    },
+    getCameraDistanceY: {
+        name: "getCameraDistanceY",
+        str: "_ZN5Cloud10CameraData18GetCameraDistanceYEv",
+        args: ["void"], // 9.0 float
+    },
+    getCameraRay: {
+        name: "getCameraRay",
+        str: "_ZN5Cloud10CameraData12GetCameraRayEv",
+        args: ["void"], // cocos2d::Vec3 const&
+    },
+    setCameraRayOrigin: {
+        name: "setCameraRayOrigin",
+        str: "_ZN5Cloud10CameraData18SetCameraRayOriginERKN7cocos2d4Vec3E",
+        args: ["pointer"], // cocos2d::Vec3 const&
+    },
+    getCameraUser: {
+        name: "getCameraUser",
+        str: "_ZN5Cloud10CameraData24GetCameraUserInformationEv",
+        args: ["pointer"], // UserInfor*
+    },
+}
+
+const callOffsets: Record<string, OffsetInfo> = {
+    changeGun: {
+        name: "changeGun",
+        str: "_ZN9GameScene13CallChangeGunEh",
+        args: ["uchar"]
+    },
+    throw: {
+        name: "throw",
+        str: "_ZN9GameScene9CallThrowEv",
+        args: ["void"]
+    },
+    jump: {
+        name: "jump",
+        str: "_ZN9GameScene8CallJumpEv",
+        args: ["void"]
+    },
+    skill: {
+        name: "skill",
+        str: "_ZN9GameScene9CallSkillEv",
+        args: ["void"]
+    },
+    zoom: {
+        name: "zoom",
+        str: "_ZN9GameScene8CallZoomEb",
+        args: ["bool"]
+    },
+    reload: {
+        name: "reload",
+        str: "_ZN9GameScene10CallReloadEv",
+        args: ["void"]
+    },
+    shootStart: {
+        name: "shootStart",
+        str: "_ZN9GameScene14CallShootStartEv",
+        args: ["void"]
+    },
+    shootEnd: {
+        name: "shootEnd",
+        str: "_ZN9GameScene12CallShootEndEv",
+        args: ["void"]
     },
 }
 
@@ -629,6 +783,9 @@ function changeArgs(args:NativeFunctionArgumentType[], target:InvocationArgument
                 val = tar.toString();
                 break;
             case "size_t":
+                val = tar.readUtf8String();
+                break;
+            case "ssize_t":
                 const v = tar.readPointer();
                 val = v.readUtf8String()
                 break;
@@ -700,12 +857,15 @@ class Ch{
     elec:boolean = inj_defaultConfig.elec;
     mago:boolean = inj_defaultConfig.mago;
     bh:boolean = inj_defaultConfig.bh;
+    ab:boolean = inj_defaultConfig.ab;
+    esp:boolean = inj_defaultConfig.esp;
     ws:boolean = inj_defaultConfig.ws;
     nr:boolean = inj_defaultConfig.nr;
     mv:boolean = inj_defaultConfig.mv;
     skc:boolean = inj_defaultConfig.skc;
     ld:boolean = inj_defaultConfig.ld;
     win:boolean = inj_defaultConfig.win;
+    kick:boolean = inj_defaultConfig.kick;
     ccl:number = inj_defaultConfig.ccl;
     _clip:boolean = true;
     _onek:boolean = false;
@@ -713,6 +873,9 @@ class Ch{
     _resp:boolean = false;
 
     me:string = "";
+    yaw:number = 0;
+    pitch:number = 0;
+    campos: number[] = [0, 0, 0];
 
     constructor(clip: boolean, onek: boolean, onesk: boolean, resp: boolean){
         this.clip = clip;
@@ -763,10 +926,20 @@ class Ch{
 
 let ch = new Ch(inj_defaultConfig.clip, inj_defaultConfig.onek, inj_defaultConfig.onesk, inj_defaultConfig.resp)
 let players:Set<string> = new Set();
-let dia: any, gold: any, league: any, medal: any, lp: any, point: any, skill: any, clan: any,
-    eq: any, item: any, char: any, unlock: any, win: any, clancr: any, clandel: any,
+let dia: any, gold: any, xp: any, league: any, medal: any, lp: any, point: any, skill: any, clan: any,
+    eq: any, item: any, char: any, unlock: any, win: any,
+    clancr: any, clandel: any, clanlv: any, clandesc: any, clanacc: any, claninv: any, clangrade: any,
     chat: any, nick: any,
+    purp: any, purt: any, kb: any, kick: any,
     ex: any, unlockAll: any, ts: any;
+const ls = () => {
+    Array.from(players).forEach(str => {
+        const pt = ptr(str);
+        const uid = pt.add(eposOffsets.number).readS32();
+        const name = pt.add(eposOffsets.nickname).readUtf8String();
+        console.log(`[+] ${name} (${uid})`)
+    })
+}
 const inj_all = (callback:(pt: NativePointer) => void) => {
     Array.from(players).forEach(str => callback(ptr(str)))
 }
@@ -774,13 +947,14 @@ const inj_main = async () => {
     if(!Process.arch.includes("arm")) return console.log("[!] Only ARM architect can execute this script.");
     if(modl.isNull()) return console.log("[!] No Module Found.");
 
-    console.log("[*] Initialized - Pixel Injection CLI v1.8", `(LibMyGame: ${modl}), PID: ${Process.getCurrentThreadId()}, Arch: ${Process.arch}`);
+    console.log("[*] Initialized - Pixel Injection CLI v2.0", `(LibMyGame: ${modl}), PID: ${Process.getCurrentThreadId()}, Arch: ${Process.arch}`);
     dia = (amount:number) => func(cheatOffsets.setMoney)(amount, 0);
     gold = (amount:number) => func(cheatOffsets.setGold)(amount, 0);
+    xp = (amount: number) => func(cheatOffsets.setGradeAndPoint)(1, amount);
     league = func(cheatOffsets.setStarLeagueCoin);
     medal = func(cheatOffsets.getStarLeagueMedal);
     lp = func(cheatOffsets.setStarLeaguePoint);
-    point = (amount:number) => func(cheatOffsets.setPoint)(amount, 0);
+    point = (char:number, amount:number) => func(cheatOffsets.setPoint)(char, amount);
     skill = func(cheatOffsets.setAllSkillCoolTimeOneSecond);
     clan = func(cheatOffsets.setClanExp);
     eq = func(buyOffsets.equip);
@@ -803,9 +977,17 @@ const inj_main = async () => {
         const dobj = Memory.alloc(Process.pageSize);
         nobj.writePointer(npt);
         dobj.writePointer(dpt);
-        func(globalOffsets.clanCreate)(nobj, dobj, mark, flag);
+        func(clanOffsets.clanCreate)(nobj, dobj, mark, flag);
     };
-    clandel = () => func(globalOffsets.clanBreakup)(ptr(0x0));
+    clandel = () => func(clanOffsets.clanBreakup)(ptr(0x0));
+    clanlv = () => func(clanOffsets.clanLeave)(ptr(0x1));
+    clandesc = (id:number, msg:string) => {
+        const msgpt = Memory.allocUtf8String(msg);
+        func(clanOffsets.clanChangeIntroduceMessage)(id, msgpt);
+    };
+    clanacc = (id:number, uid:number) => func(clanOffsets.clanAccept)(id, uid);
+    claninv = (uid:number) => func(clanOffsets.clanInvite)(uid);
+    clangrade = (id:number, uid:number, grade:number) => func(clanOffsets.clanChangeMemberGrade)(id, uid, grade);
     chat = (msg:string) => {
         const pt = Memory.allocUtf8String(msg);
         const obj = Memory.alloc(Process.pageSize);
@@ -816,11 +998,20 @@ const inj_main = async () => {
         const sp = Memory.allocUtf8String(name);
         func(globalOffsets.changeNickname)(1, sp, 0);
     }
+    purp = func(globalOffsets.sendPurchasePass);
+    purt = func(globalOffsets.sendPurchasePassTier);
+    kick = (id:number) => purt(id, 0);
+    kb = (id:number, x:number, y:number, z:number) => {
+        const pt = Memory.alloc(Process.pageSize*3);
+        pt.writeFloat(x);
+        pt.add(0x4).writeFloat(y);
+        pt.add(0x8).writeFloat(z);
+        func(globalOffsets.sendKnockBack)(id, pt);
+    }
     ex = () => {
         dia(15_9999_9999)
         gold(15_9999_9999)
         league(15_9999_9999)
-        point(15_9999_9999)
         for(let i = 1; i <= 12; i++){
             medal(i, 4)
         }
@@ -831,6 +1022,7 @@ const inj_main = async () => {
     }
 
     // Debug Zone
+    attach(inGameOffsets.completeGameData)
     // ==========
     
     intercept(globalOffsets.chatting, {
@@ -844,80 +1036,149 @@ const inj_main = async () => {
         }
     })
     // attach(cloudOffsets.getAbusingDetector)
-    attach(globalOffsets.resetPacketReceive)
+    // attach(globalOffsets.resetPacketReceive)
     // attach(cloudOffsets.getSendContribPacketTime)
     intercept(inGameOffsets.getMaxSkill, {onLeave: retval => {if(ch.skc) retval.replace(12 as any)}})
     intercept(inGameOffsets.getCurSkill, {onLeave: retval => {if(ch.skc) retval.replace(12 as any)}})
     intercept(inGameOffsets.isSkillManyTimes, {onLeave: retval => {if(ch.skc) retval.replace(1 as any)}})
     intercept(cloudOffsets.getSkillTime, {onLeave: retval => {if(ch.skc) retval.writeFloat(1)}})
 
-    intercept(globalOffsets.clanCreate, {onLeave(retval) {if(ch.ccl){setTimeout(clandel, 400);}}})
-    intercept(globalOffsets.clanBreakup, {onLeave(retval) {if(ch.ccl){ch.ccl--;setTimeout(clancr, 100);}}})
+    intercept(clanOffsets.clanCreate, {onLeave(retval) {if(ch.ccl){setTimeout(clandel, 400);}}})
+    intercept(clanOffsets.clanBreakup, {onLeave(retval) {if(ch.ccl){ch.ccl--;setTimeout(clancr, 100);}}})
+
+    intercept(cameraOffsets.getCameraAngleX, {
+        onLeave(retval) {
+            if(!retval.isNull()) {
+                ch.yaw = retval.readFloat();
+            } else ch.yaw = 0;
+        }
+    })
+    intercept(cameraOffsets.getCameraAngleY, {
+        onLeave(retval) {
+            if(!retval.isNull()) {
+                ch.pitch = retval.readFloat();
+                ch.campos = [
+                    retval.add(0xC).readFloat(),
+                    retval.add(0x10).readFloat(),
+                    retval.add(0x14).readFloat()
+                ];
+            } else {
+                ch.pitch = 0;
+                ch.campos = [0, 0, 0];
+            };
+        }
+    })
+    
+    intercept(cameraOffsets.getCameraUser, {
+        onLeave(retval) {
+            ch.me = retval.toString();
+            if(!retval || retval.isNull()) ch.me = "";
+        },
+    })
 
     setInterval(() => {
-        if(mynum){
-            const mypt = ptr(ch.me);
-            if(!mypt || mypt.isNull()) return;
-            let slot = mypt.add(eposOffsets.slot).readU8();
-            func(globalOffsets.resetPacketReceive)(ptr(0x1));
-            inj_all(async pt => {
-                const num = pt.readS32(), sl = pt.add(eposOffsets.slot).readU8();
-                if(ch.elec){
-                    if(num !== mynum && slot % 2 != sl % 2 && !excs.includes(num)) func(inGameOffsets.buffHitElectric)(pt, mynum, mynum)
-                }
-                if(ch.mago){
-                    await inj_sleep(400)
-                    if(num !== mynum && slot % 2 != sl % 2 && !excs.includes(num)) func(inGameOffsets.debuffSkillMagoTotem)(mynum, num)
+        const mypt = ptr(ch.me);
+        if(!mypt || mypt.isNull()) return;
+        let mynum = mypt.readS32();
+        let slot = mypt.add(eposOffsets.slot).readU8();
+        // func(globalOffsets.resetPacketReceive)(ptr(0x1))
+        func(globalOffsets.toggleAbuseDetector)(0);
+        inj_all(async pt => {
+            const num = pt.readS32(), sl = pt.add(eposOffsets.slot).readU8();
+            if(ch.elec){
+                if(pt.toString() !== ch.me && slot % 2 != sl % 2 && !excs.includes(num)) func(inGameOffsets.buffHitElectric)(pt, mynum, mynum)
+            }
+            if(ch.mago){
+                inj_sleep(150)
+                if(pt.toString() !== ch.me && slot % 2 != sl % 2 && !excs.includes(num)) func(inGameOffsets.debuffSkillMagoTotem)(mynum, num)
+            }
+        })
+    }, 300)
+    setInterval(() => {
+        const mypt = ptr(ch.me);
+        if(!mypt || mypt.isNull()) return;
+        let mynum = mypt.readS32();
+        let x = mypt.add(eposOffsets.x).readFloat(), y = mypt.add(eposOffsets.y).readFloat(), z = mypt.add(eposOffsets.z).readFloat();
+        let st = mypt.add(eposOffsets.state).readS32();
+        if(ch.bh){
+            inj_all(pt => {
+                const num = pt.readS32();
+                if(num !== mynum && !excs.includes(num)){
+                    pt.add(eposOffsets.x).writeFloat(x);
+                    pt.add(eposOffsets.y).writeFloat(y);
+                    pt.add(eposOffsets.z).writeFloat(z + 10);
                 }
             })
         }
-    }, 800)
-    setInterval(() => {
-        if(mynum){
-            const mypt = ptr(ch.me);
-            if(!mypt || mypt.isNull()) return;
-            let x = mypt.add(eposOffsets.x).readFloat(), y = mypt.add(eposOffsets.y).readFloat(), z = mypt.add(eposOffsets.z).readFloat();
-            let st = mypt.add(eposOffsets.state).readS32();
-            if(ch.bh){
-                inj_all(pt => {
-                    const num = pt.readS32();
-                    if(num !== mynum && !excs.includes(num)){
-                        pt.add(eposOffsets.x).writeFloat(x);
-                        pt.add(eposOffsets.y).writeFloat(y);
-                        pt.add(eposOffsets.z).writeFloat(z + 10);
-                    }
-                })
+        if(ch.ws){
+            mypt.add(eposOffsets.w1c).writeFloat(0);
+            mypt.add(eposOffsets.w2c).writeFloat(0);
+        }
+        if(ch.nr){
+            if(st >= 64 && st <= 67) mypt.add(eposOffsets.timer).writeFloat(9999);
+        }
+        if(ch.mv){
+            mypt.add(eposOffsets.dx).writeFloat(Math.min(Math.max(mypt.add(eposOffsets.dx2).readFloat()*3, -3), 3))
+            mypt.add(eposOffsets.dz).writeFloat(Math.min(Math.max(mypt.add(eposOffsets.dz2).readFloat()*3, -3), 3))
+        }
+        if(ch.ld){
+            if(mypt.add(eposOffsets.state).readS32() != 16 && mypt.add(eposOffsets.hp).readS16() > 0){
+                mypt.add(eposOffsets.y).writeFloat(-999)
+                mypt.add(eposOffsets.state).writeS32(3)
             }
-            if(ch.ws){
-                mypt.add(eposOffsets.w1c).writeFloat(0);
-                mypt.add(eposOffsets.w2c).writeFloat(0);
-            }
-            if(ch.nr){
-                if(st >= 64 && st <= 67) mypt.add(eposOffsets.timer).writeFloat(9999);
-            }
-            if(ch.mv){
-                mypt.add(eposOffsets.dx).writeFloat(Math.min(Math.max(mypt.add(eposOffsets.dx2).readFloat()*3, -3), 3))
-                mypt.add(eposOffsets.dz).writeFloat(Math.min(Math.max(mypt.add(eposOffsets.dz2).readFloat()*3, -3), 3))
-            }
-            if(ch.ld){
-                if(mypt.add(eposOffsets.state).readS32() != 16 && mypt.add(eposOffsets.hp).readS16() > 0){
-                    mypt.add(eposOffsets.y).writeFloat(-999)
-                    mypt.add(eposOffsets.state).writeS32(3)
+        }
+        if(ch.ab){
+            if(inj_defaultConfig.ab_main && mypt.add(eposOffsets.weapon).readU8() != 0) return;
+            if(inj_defaultConfig.ab_shoot && (st < 8 || st > 11)) return;
+            const rad = inj_defaultConfig.ab_radius / 180 * Math.PI;
+            inj_all(pt => {
+                const num = pt.readS32();
+                if(
+                    num !== mynum && !excs.includes(num) &&
+                    mypt.add(eposOffsets.slot).readU8() % 2 != pt.add(eposOffsets.slot).readU8() % 2 &&
+                    pt.add(eposOffsets.state).readS32() != 16 && pt.add(eposOffsets.hp).readS16() > 0
+                ){
+                    let dx = pt.add(eposOffsets.x).readFloat() - ch.campos[0];
+                    let dy = pt.add(eposOffsets.y).readFloat() + 4.8 - ch.campos[1];
+                    let dz = pt.add(eposOffsets.z).readFloat() - ch.campos[2];
+                    const yo = Math.atan2(dx, dz);
+                    let ya = yo - ch.yaw;
+                    while(ya > Math.PI) ya -= Math.PI * 2;
+                    while(ya < -Math.PI) ya += Math.PI * 2;
+                    const po = Math.atan2(dy, Math.sqrt(dx*dx + dz*dz));
+                    let pa = po - ch.pitch;
+                    const from = Math.sqrt(ya*ya + pa*pa);
+                    if(from >= rad) return;
+                    func(cameraOffsets.setCameraAngleX)(yo);
+                    func(cameraOffsets.setCameraAngleY)(po);
+                    // const radyaw = -ya > 0 ? rad : -rad;
+                    // const radpitch = -pa > 0 ? rad : -rad;
+                    // const getStep = (val: number, radVal: number) =>
+                    //     val > 0 ? Math.max(radVal, val) : Math.min(radVal, val);
+                    // const ry = getStep(-ya, getStep(-ya, radyaw) + ya);
+                    // const rp = getStep(-pa, getStep(-pa, radpitch) + pa);
+                    // func(cameraOffsets.setCameraAngleX)(ch.yaw - ry * inj_defaultConfig.ab_speed/100);
+                    // func(cameraOffsets.setCameraAngleY)(ch.pitch - rp * inj_defaultConfig.ab_speed/100);
                 }
-            }
+            })
         }
     }, 10)
 
     intercept(globalOffsets.getUserByUserSeq, {
         onLeave: retval => {
             players.add(retval.toString());
-            ch.me = "";
             players.forEach(player => {
                 try{
                     const pt = ptr(player);
-                    if(pt.add(0x0).readUInt() == mynum) {
-                        ch.me = player;
+                    const myslot = ptr(ch.me).add(eposOffsets.slot).readU8() % 2
+                    if(player == ch.me) {
                         if(ch.win) win(pt.add(eposOffsets.slot).readU8() % 2);
+                    } else if(ch.kick) {
+                        let n = pt.readS32()
+                        let slot = pt.add(eposOffsets.slot).readU8() % 2
+                        if(n > 0 && myslot != slot && !excs.includes(n)){
+                            kick(n);
+                        }
                     }
                     const n = pt.add(eposOffsets.nickname).readCString();
                     const zr1 = pt.add(eposOffsets.zr1).readFloat();
