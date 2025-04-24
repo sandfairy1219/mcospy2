@@ -1077,24 +1077,24 @@ const inj_main = async () => {
     })
 
     setInterval(() => {
-        if(mynum){
-            const mypt = ptr(ch.me);
-            if(!mypt || mypt.isNull()) return;
-            let slot = mypt.add(eposOffsets.slot).readU8();
-            // func(globalOffsets.resetPacketReceive)(ptr(0x1));
-            func(cheatOffsets.setLatency)(0);
-            inj_all(async pt => {
-                const num = pt.readS32(), sl = pt.add(eposOffsets.slot).readU8();
-                if(ch.elec){
-                    if(num !== mynum && slot % 2 != sl % 2 && !excs.includes(num)) func(inGameOffsets.buffHitElectric)(pt, mynum, mynum)
-                }
-                if(ch.mago){
-                    await inj_sleep(400)
-                    if(num !== mynum && slot % 2 != sl % 2 && !excs.includes(num)) func(inGameOffsets.debuffSkillMagoTotem)(mynum, num)
-                }
-            })
-        }
-    }, 800)
+        const mypt = ptr(ch.me);
+        if(!mypt || mypt.isNull()) return;
+        let mynum = mypt.readS32();
+        let slot = mypt.add(eposOffsets.slot).readU8();
+        // func(globalOffsets.resetPacketReceive)(ptr(0x1));
+        func(cheatOffsets.setLatency)(0);
+        func(cheatOffsets.toggleAbuseDetector)(0);
+        inj_all(async pt => {
+            const num = pt.readS32(), sl = pt.add(eposOffsets.slot).readU8();
+            if(ch.elec){
+                if(num !== mynum && slot % 2 != sl % 2 && !excs.includes(num)) func(inGameOffsets.buffHitElectric)(pt, mynum, mynum)
+            }
+            if(ch.mago){
+                await inj_sleep(250)
+                if(num !== mynum && slot % 2 != sl % 2 && !excs.includes(num)) func(inGameOffsets.debuffSkillMagoTotem)(mynum, num)
+            }
+        })
+    }, 500)
     setInterval(() => {
         const mypt = ptr(ch.me);
         if(!mypt || mypt.isNull()) return;
