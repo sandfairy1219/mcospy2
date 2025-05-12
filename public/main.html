@@ -196,6 +196,41 @@
                     <input class="config" type="checkbox" id="aim-assist-ignore-death">
                 </main>
             </details>
+            <details data-cheat="autoswap">
+                <summary id="autoswap" data-lang="autoswap"></summary>
+                <main>
+                    <div data-lang="autoswap-use-zoom"></div>
+                    <input class="config" type="checkbox" id="autoswap-use-zoom">
+                </main>
+                <main>
+                    <div data-lang="autoswap-main-keybind"></div>
+                    <input type="text" id="key-autoswap-main" class="keybind" data-lang-ph="keybind">
+                </main>
+                <main>
+                    <div data-lang="autoswap-sub-keybind"></div>
+                    <input type="text" id="key-autoswap-sub" class="keybind" data-lang-ph="keybind">
+                </main>
+                <main>
+                    <div data-lang="autoswap-zoom-keybind"></div>
+                    <input type="text" id="key-autoswap-zoom" class="keybind" data-lang-ph="keybind">
+                </main>
+                <!-- <main>
+                    <div data-lang="autoswap-subweapon"></div>
+                </main>
+                <main>
+                    <input class="config" type="number" min="0" max="9999" value="0" id="autoswap-subweapon-x" placeholder="X">
+                    <input class="config" type="number" min="0" max="9999" value="0" id="autoswap-subweapon-y" placeholder="Y">
+                    <button id="listen-sub" data-lang="autoswap-subweapon-listen" class="attached" disabled></button>
+                </main>
+                <main>
+                    <div data-lang="autoswap-mainweapon"></div>
+                </main>
+                <main>
+                    <input class="config" type="number" min="0" max="9999" value="0" id="autoswap-mainweapon-x" placeholder="X">
+                    <input class="config" type="number" min="0" max="9999" value="0" id="autoswap-mainweapon-y" placeholder="Y">
+                    <button id="listen-main" data-lang="autoswap-mainweapon-listen" class="attached" disabled></button>
+                </main> -->
+            </details>
             <details data-cheat="esp">
                 <summary id="esp" data-lang="esp"></summary>
                 <main>
@@ -545,6 +580,15 @@
             </details>
         </section>
         <section id="dev-mode" class="hide">
+            <details>
+                <summary data-lang="cmd"></summary>
+                <div>
+                    <input class="w-full" type="text" id="cmd" data-lang-ph="cmd">
+                </div>
+                <div>
+                    <button class="w-full" id="execute-cmd" data-lang="execute"></button>
+                </div>
+            </details>
             <details>
                 <summary data-lang="ranges"></summary>
                 <div>

@@ -13,9 +13,14 @@ import { existsSync, readFileSync } from "fs";
 import { adb, checkFridaPerm, conenctFrida, connectAdbDevice, executeProcess, fileExist, fileName, getArch, getUrl, startFrida } from "./data/frida";
 import { exec } from "child_process";
 import express from "express";
-import { createServer } from "http";
+import http from "http";
+import https from "https";
 import { Server } from "socket.io";
 import { _anOffset, _cdOffset, _eposOffset, _xaOffset } from "./offsets";
+import { Key, keyboard } from "@nut-tree-fork/nut-js";
+import { nutKeymap } from "./keymaps";
+
+keyboard.config.autoDelayMs = 0;
 
 const process_name = 'com.gameparadiso.milkchoco';
 const frida_version = '16.4.10';
@@ -54,8 +59,13 @@ let config:Config = {};
 let keybinds:Keybinds = {};
 
 // express server
+// const copt = {
+//     cert: readFileSync(path.join(__dirname, './../public/cert', 'cert.pem')),
+//     key: readFileSync(path.join(__dirname, './../public/cert', 'key.pem')),
+// }
 const appServer = express();
-const server = createServer(appServer);
+const server = http.createServer(appServer);
+// const server = https.createServer(copt, appServer);
 const io = new Server(server);
 appServer.use(express.static(path.join(__dirname, './../public')));
 appServer.get('/', (req, res) => {res.sendFile(path.join(__dirname, './../public/routes/main.html'))});
@@ -385,6 +395,12 @@ app.on("ready", async () => {
                         emitter.on("gk", (event:IGlobalKeyEvent, down) => {
                             script.post(['keyevent', event.name, event.state, down]);
                         });
+                        ipcMain.on("listen-sub", (e, val:boolean) => {
+                            script.post(['listen-sub', val]);
+                        });
+                        ipcMain.on("listen-main", (e, val:boolean) => {
+                            script.post(['listen-main', val]);
+                        });
                         ipcMain.on("reverse", (e) => {
                             script.post(['reverse']);
                         });
@@ -434,6 +450,7 @@ app.on("ready", async () => {
                         ipcMain.on("search-pattern", (e, data:string) => {
                             script.post(['search-pattern', data]);
                         });
+                        ipcMain.on("execute-cmd", (e, data:string) => script.post(['execute-cmd', data]));
                         emitter.on("gyro", (data) => {
                             script.post(['gyro', data]);
                         });
@@ -449,6 +466,8 @@ app.on("ready", async () => {
                     emitter.removeAllListeners("keybind");
                     emitter.removeAllListeners("cheats");
                     emitter.removeAllListeners("gk");
+                    ipcMain.removeAllListeners("listen-sub");
+                    ipcMain.removeAllListeners("listen-main");
                     ipcMain.removeAllListeners("reverse");
                     ipcMain.removeAllListeners("pos");
                     ipcMain.removeAllListeners("skillcode");
@@ -461,6 +480,7 @@ app.on("ready", async () => {
                     ipcMain.removeAllListeners("change-ads-reward");
                     ipcMain.removeAllListeners("get-ranges");
                     ipcMain.removeAllListeners("find-ranges");
+                    ipcMain.removeAllListeners("execute-cmd");
                     emitter.removeAllListeners("gyro");
                     emitter.removeAllListeners("execute-macro");
                     exp = null;
@@ -476,6 +496,12 @@ app.on("ready", async () => {
     });
 
     // cheat
+    emitter.on("listen-sub", (v:[number, number]) => {
+        main.webContents.send("listen-sub", v);
+    })
+    emitter.on("listen-main", (v:[number, number]) => {
+        main.webContents.send("listen-main", v);
+    });
     emitter.on("pos", (pos:number[]) => {
         main.webContents.send("pos", pos);
     });
@@ -535,6 +561,19 @@ app.on("ready", async () => {
             console.log("Keydown", key);
         });
     });
+
+    // click
+    emitter.on("touch", (x:number, y:number) => {
+        adb.shell(adbId, `input tap ${x} ${y}`);
+    })
+    // keyboard
+    keyboard.config.autoDelayMs = 0;
+    emitter.on("sendkey", async (keyName: string) => {
+        if(nutKeymap[keyName]){
+            keyboard.pressKey(nutKeymap[keyName]);
+            keyboard.releaseKey(nutKeymap[keyName]);
+        }
+    })
 });
 
 emitter.on("log", (...args:any[]) => {

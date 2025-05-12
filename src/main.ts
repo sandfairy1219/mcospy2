@@ -432,6 +432,60 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'ESPマークキーバインド',
         'zh':'ESP标记键绑定',
     },
+    'autoswap':{
+        'en':'Auto Swap',
+        'ko':'오토 스왑',
+        'ja':'オートスワップ',
+        'zh':'自动交换',
+    },
+    'autoswap-subweapon':{
+        'en':'Sub Weapon',
+        'ko':'보조 무기',
+        'ja':'サブ武器',
+        'zh':'副武器',
+    },
+    'autoswap-mainweapon':{
+        'en':'Main Weapon',
+        'ko':'주 무기',
+        'ja':'メイン武器',
+        'zh':'主武器',
+    },
+    'autoswap-subweapon-listen':{
+        'en':'Listen',
+        'ko':'리스닝',
+        'ja':'リスニング',
+        'zh':'监听',
+    },
+    'autoswap-mainweapon-listen':{
+        'en':'Listen',
+        'ko':'리스닝',
+        'ja':'リスニング',
+        'zh':'监听',
+    },
+    'autoswap-main-keybind':{
+        'en':'Main Weapon Keybind',
+        'ko':'주 무기 단축키',
+        'ja':'メイン武器キーバインド',
+        'zh':'主武器键绑定',
+    },
+    'autoswap-sub-keybind':{
+        'en':'Sub Weapon Keybind',
+        'ko':'보조 무기 단축키',
+        'ja':'サブ武器キーバインド',
+        'zh':'副武器键绑定',
+    },
+    'autoswap-zoom-keybind':{
+        'en':'Zoom Keybind',
+        'ko':'줌 단축키',
+        'ja':'ズームキーバインド',
+        'zh':'缩放键绑定',
+    },
+    'autoswap-use-zoom':{
+        'en':'Use Zoom',
+        'ko':'줌 사용',
+        'ja':'ズーム使用',
+        'zh':'使用缩放',
+    },
     'blackhole':{
         'en':'Blackhole',
         'ko':'블랙홀',
@@ -1029,31 +1083,12 @@ ipcRenderer.on('token', (e, token:Token|string) => {
         $_('logerr').textContent = token;
     } else {
         localStorage.setItem('token', JSON.stringify(token.code));
-        if(token.perms.includes('dev')) $_('selector-dev-mode').classList.remove('hide');
+        if(token.perms.includes('admin')) $_('selector-dev-mode').classList.remove('hide');
         document.querySelectorAll('details[data-cheat]').forEach((el:HTMLElement) => el.classList.add('hide'));
-        if(token.perms.includes('aimbot')) $c('aimbot').classList.remove('hide');
-        if(token.perms.includes('aim-assist')) $c('aim-assist').classList.remove('hide');
-        if(token.perms.includes('esp')) $c('esp').classList.remove('hide');
-        if(token.perms.includes('blackhole')) $c('blackhole').classList.remove('hide');
-        if(token.perms.includes('shoot-speed')) $c('shoot-speed').classList.remove('hide');
-        if(token.perms.includes('no-recoil')) $c('no-recoil').classList.remove('hide');
-        if(token.perms.includes('no-spread')) $c('no-spread').classList.remove('hide');
-        if(token.perms.includes('no-reload')) $c('no-reload').classList.remove('hide');
-        if(token.perms.includes('no-timer')) $c('no-timer').classList.remove('hide');
-        if(token.perms.includes('skill-cooldown')) $c('skill-cooldown').classList.remove('hide');
-        if(token.perms.includes('instant-respawn')) $c('instant-respawn').classList.remove('hide');
-        if(token.perms.includes('no-clip')) $c('no-clip').classList.remove('hide');
-        if(token.perms.includes('move-speed')) $c('move-speed').classList.remove('hide');
-        if(token.perms.includes('fly')) $c('fly').classList.remove('hide');
-        if(token.perms.includes('infinite-jump')) $c('infinite-jump').classList.remove('hide');
-        if(token.perms.includes('one-kill')) $c('one-kill').classList.remove('hide');
-        if(token.perms.includes('skill-damage')) $c('skill-damage').classList.remove('hide');
-        if(token.perms.includes('upskill')) $c('upskill').classList.remove('hide');
-        if(token.perms.includes('grenade')) $c('grenade').classList.remove('hide');
-        if(token.perms.includes('hide-me')) $c('hide-me').classList.remove('hide');
-        if(token.perms.includes('cooker-buff')) $c('cooker-buff').classList.remove('hide');
-        if(token.perms.includes('changer')) $c('changer').classList.remove('hide');
-        if(token.perms.includes('ctm')) $c('ctm').classList.remove('hide');
+        token.perms.forEach((perm:string) => {
+            const _el = $c(perm);
+            if(_el) _el.classList.remove('hide');
+        })
         $_('login').classList.add('hide');
         $_('app').classList.remove('hide');
     }
@@ -1104,6 +1139,9 @@ ipcRenderer.on('init', (e, _b:boolean) => {
         if(!_b){
             el.checked = _b;
         }
+    });
+    $$_('.attached').forEach((el:HTMLButtonElement) => {
+        el.disabled = !attached;
     });
 })
 
@@ -1184,9 +1222,33 @@ ipcRenderer.on('resize-layout', (e, bounds:Electron.Rectangle) => {
     localStorage.setItem('layout', JSON.stringify(bounds));
 });
 
+$_('listen-sub').addEventListener('click', () => {
+    $_('listen-sub').classList.toggle('listening');
+    ipcRenderer.send('listen-sub', $_('listen-sub').classList.contains('listening'));
+});
+$_('listen-main').addEventListener('click', () => {
+    $_('listen-main').classList.toggle('listening');
+    ipcRenderer.send('listen-main', $_('listen-main').classList.contains('listening'));
+});
+ipcRenderer.on('listen-sub', (e, [x, y]: [number, number]) => {
+    $_('listen-sub').classList.toggle('listening', false);
+    $i('autoswap-subweapon-x').value = x.toString();
+    $i('autoswap-subweapon-x').dispatchEvent(new Event('change'));
+    $i('autoswap-subweapon-y').value = y.toString();
+    $i('autoswap-subweapon-y').dispatchEvent(new Event('change'));
+});
+ipcRenderer.on('listen-main', (e, [x, y]: [number, number]) => {
+    $_('listen-main').classList.toggle('listening', false);
+    $i('autoswap-mainweapon-x').value = x.toString();
+    $i('autoswap-mainweapon-x').dispatchEvent(new Event('change'));
+    $i('autoswap-mainweapon-y').value = y.toString();
+    $i('autoswap-mainweapon-y').dispatchEvent(new Event('change'));
+});
+
 $_('get-ranges').addEventListener('click', () => {ipcRenderer.send('get-ranges', $i('base').value);});
 $_('find-ranges').addEventListener('click', () => {ipcRenderer.send('find-ranges', $i('base').value);});
 $_('search-pattern').addEventListener('click', () => {ipcRenderer.send('search-pattern', $i('pattern').value);});
+$_('execute-cmd').addEventListener('click', () => {ipcRenderer.send('execute-cmd', $i('cmd').value);});
 
 $_('server-start').addEventListener('click', () => {ipcRenderer.send('server-start', +$i('server-port').value || 3000);});
 $_('server-stop').addEventListener('click', () => {ipcRenderer.send('server-stop');});
