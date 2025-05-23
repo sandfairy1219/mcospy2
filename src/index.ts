@@ -353,10 +353,10 @@ app.on("ready", async () => {
         if(!fridaDevice) return state("session", "error", "Frida not connected");
         state("session", "pending", "Starting agent");
         let found:boolean = false;
+        const scr = cookie.trim() ? agentScript.replace("/*cookie*/", cookie) : agentScript;
         try{
             const [dispose, script] = await executeProcess(process_name, fridaDevice,
-                agentScript
-                .replace("/*cookie*/", cookie)
+                scr
                 .replace("/*xaOffset*/", JSON.stringify(_xaOffset))
                 .replace("/*anOffset*/", JSON.stringify(_anOffset))
                 .replace("/*cdOffset*/", JSON.stringify(_cdOffset))

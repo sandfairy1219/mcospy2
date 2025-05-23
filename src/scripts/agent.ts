@@ -119,21 +119,29 @@ let activeTouches: Record<string, any> = {}
 let InputManager:any = null;
 
 const log = (...args:any[]) => send(['log', ...args]);
-
+const ck = '/*cookie*/';
 Java.perform(() => {
     Java.scheduleOnMainThread(() => {
         loop();
         let XigncodeClientSystem = Java.use("com.wellbia.xigncode.XigncodeClientSystem");
-        XigncodeClientSystem["initialize"].implementation = function (activity:any,str:string,str2:string,str3:string,callback:() => void) {
-            send(["XigncodeClientSystem.initialize", activity, str, str2, str3]);
-            return 0;
-        };
-        // let Cocos2dxActivity = Java.use("org.cocos2dx.lib.Cocos2dxActivity");
-        XigncodeClientSystem["getCookie2"].implementation = function (str:string) {
-            let result = this["getCookie2"](str);
-            send(["Cocos2dxActivity.getCookie"]);
-            return '/*cookie*/';
-        };
+        if(ck != '/*cookie*/') {
+            XigncodeClientSystem["initialize"].implementation = function (activity:any,str:string,str2:string,str3:string,callback:() => void) {
+                send(["XigncodeClientSystem.initialize", activity, str, str2, str3]);
+                return 0;
+            };
+            XigncodeClientSystem["getCookie2"].implementation = function (str:string) {
+                let result = this["getCookie2"](str);
+                send(["Cocos2dxActivity.getCookie"]);
+                return ck;
+            };
+            // let Cocos2dxActivity = Java.use("org.cocos2dx.lib.Cocos2dxActivity");
+        } else {
+            XigncodeClientSystem["getCookie2"].implementation = function (str:string) {
+                let result = this["getCookie2"](str);
+                send(["Cocos2dxActivity.getCookie"]);
+                return result;
+            };
+        }
         let Activity = Java.use("android.app.Activity");
         let MotionEvent = Java.use("android.view.MotionEvent");
         Activity.dispatchTouchEvent.overload('android.view.MotionEvent').implementation = function(event: Java.Wrapper) {
