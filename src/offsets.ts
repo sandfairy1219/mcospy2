@@ -45,7 +45,7 @@ export const _eposOffset = {
     'totalkill': 0x8, // int32
     'totaldeath': 0xC, // int32
     'totalassist': 0x10, // int32
-    'kda': 0x14, // float
+    'charkda': 0x14, // float
     'kill': 0x18, // int32
     'death': 0x1C, // int32
     'assist': 0x20, // int32
@@ -53,22 +53,32 @@ export const _eposOffset = {
     'weapon':0x2E, // int16
     'barrier':0x30, // int16
     'nickname':0x88, // string 10
-    'sk':0xAD, // byte
+    'char':0xAD, // byte
     'fall':0xAF, // byte
     'slot':0xC0, // byte
     'movable':0xC2, // byte
     'timer':0xC8, // float
-    'sc':0xCC, // float
+    'skillcool':0xCC, // float
     'dc':0xE0, // float
     'w1c':0xE8, // float
     'w2c':0xEC, // float
     'dz':0xFC, // float
     'dx':0x100, // float
-    'state':0x12C, // int32
+    'state':0x12C, // byte
+    'skill':0x12D, // byte
     'dy':0x134, // float
     'gx':0x13C, // float
     'gy':0x140, // float
     'gz':0x144, // float
+    'hookx':0x160, // float
+    'hooky':0x164, // float
+    'hookz':0x168, // float
+    'hookdx':0x16C, // float
+    'hookdy':0x170, // float
+    'hookdz':0x174, // float
+    'kbdx':0x184, // float
+    'kbdy':0x188, // float
+    'kbdz':0x18C, // float
     'zr1':0x18C, // float
     'x': 0x190, // float
     'y': 0x194, // float
@@ -78,5 +88,16 @@ export const _eposOffset = {
     'ox':0x1AC, // float
     'oy':0x1B0, // float
     'oz':0x1B4, // float
+    'lastkilled':0xE54, // int32
+    'chainedhit':0xE58, // byte
+    'skilled':0xE64, // int32
+    'curkda':0xE98, // float
+    'maxhp':0xEEC, // int32
+    'maxbarrier':0xEF0, // int32
+    'w1code':0xEA9, // byte
+    'w2code':0xEAA, // byte
+    'gcode':0xEAB, // byte
+    'bulletusedw1':0xEBE, // byte
+    'bulletusedw2':0xEBF, // byte
     'pointer':0xF00, // pointer
 };

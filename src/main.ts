@@ -570,6 +570,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'スプレッドなし',
         'zh':'无散布',
     },
+    'infinite-ammo':{
+        'en':'Infinite Ammo',
+        'ko':'무한 총알',
+        'ja':'無限弾薬',
+        'zh':'无限弹药',
+    },
     'no-reload':{
         'en':'No Reload',
         'ko':'재장전 없음',
@@ -695,6 +701,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ko':'수류탄',
         'ja':'手榴弾',
         'zh':'手榴弹',
+    },
+    'anti-hook':{
+        'en':'Anti Hook',
+        'ko':'안티 후크',
+        'ja':'アンチフック',
+        'zh':'反钩',
     },
     'hide-me':{
         'en':'Hide Player',
@@ -1222,14 +1234,14 @@ ipcRenderer.on('resize-layout', (e, bounds:Electron.Rectangle) => {
     localStorage.setItem('layout', JSON.stringify(bounds));
 });
 
-$_('listen-sub').addEventListener('click', () => {
-    $_('listen-sub').classList.toggle('listening');
-    ipcRenderer.send('listen-sub', $_('listen-sub').classList.contains('listening'));
-});
-$_('listen-main').addEventListener('click', () => {
-    $_('listen-main').classList.toggle('listening');
-    ipcRenderer.send('listen-main', $_('listen-main').classList.contains('listening'));
-});
+// $_('listen-sub').addEventListener('click', () => {
+//     $_('listen-sub').classList.toggle('listening');
+//     ipcRenderer.send('listen-sub', $_('listen-sub').classList.contains('listening'));
+// });
+// $_('listen-main').addEventListener('click', () => {
+//     $_('listen-main').classList.toggle('listening');
+//     ipcRenderer.send('listen-main', $_('listen-main').classList.contains('listening'));
+// });
 ipcRenderer.on('listen-sub', (e, [x, y]: [number, number]) => {
     $_('listen-sub').classList.toggle('listening', false);
     $i('autoswap-subweapon-x').value = x.toString();

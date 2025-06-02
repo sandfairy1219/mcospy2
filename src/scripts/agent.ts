@@ -4,36 +4,6 @@ const anOffset = /*anOffset*/;
 const cdOffset = /*cdOffset*/;
 const eposOffset = /*eposOffset*/;
 
-const charHealth = [
-    {hp: 230, barrier: 30},
-    {hp: 230, barrier: 30},
-    {hp: 240, barrier: 40},
-    {hp: 269, barrier: 30},
-    {hp: 220, barrier: 40},
-    {hp: 263, barrier: 55},
-    {hp: 244, barrier: 19},
-    {hp: 210, barrier: 25},
-    {hp: 265, barrier: 24},
-    {hp: 255, barrier: 16},
-    {hp: 265, barrier: 20},
-    {hp: 288, barrier: 73},
-    {hp: 236, barrier: 13},
-    {hp: 240, barrier: 20},
-    {hp: 222, barrier: 18},
-    {hp: 254, barrier: 22},
-    {hp: 224, barrier: 21},
-    {hp: 220, barrier: 15},
-    {hp: 280, barrier: 35},
-    {hp: 247, barrier: 32},
-    {hp: 220, barrier: 25},
-    {hp: 260, barrier: 20},
-    {hp: 240, barrier: 0},
-    {hp: 245, barrier: 20},
-    {hp: 200, barrier: 70},
-    {hp: 225, barrier: 35},
-    {hp: 225, barrier: 35},
-]
-
 // 0 = ground stop
 // 1 = ground walk
 // 2 = air stop
@@ -474,8 +444,8 @@ function loop(){
             const y = eposPointer.add(eposOffset['y']).readFloat();
             const z = eposPointer.add(eposOffset['z']).readFloat();
             send(['pos', [x, y, z]])
-            const sk = eposPointer.add(eposOffset['sk']).readS8();
-            send(['skillcode', sk])
+            const char = eposPointer.add(eposOffset['char']).readS8();
+            send(['skillcode', char])
             const state = eposPointer.add(eposOffset['state']).readS32();
             // send(['state', state])
             if(isShooting(eposPointer) && !shooting){
@@ -535,8 +505,7 @@ function loop(){
                         const nickname = entity.add(eposOffset['nickname']).readUtf8String();
                         const hp = entity.add(eposOffset["hp"]).readS16();
                         const barrier = entity.add(eposOffset["barrier"]).readS16();
-                        const char:number = entity.add(eposOffset["sk"]).readU8();
-                        const health = charHealth[char-1] || {hp: 200, barrier:0};
+                        const health = {hp: +entity.add(eposOffset['maxhp']), barrier: +entity.add(eposOffset['maxbarrier'])};
                         const total = health.hp + health.barrier;
                         const upside = [
                             {x: x + sideSize, y: y + upSize, z: z + sideSize},
@@ -571,6 +540,10 @@ function loop(){
                     eposPointer.add(eposOffset['w1c']).writeFloat(0);
                     eposPointer.add(eposOffset['w2c']).writeFloat(0);
                 }
+            }
+            if(cheats['infinite-ammo']){
+                eposPointer.add(eposOffset['bulletusedw1']).readU8() > 0 && eposPointer.add(eposOffset['bulletusedw1']).writeU8(0);
+                eposPointer.add(eposOffset['bulletusedw2']).readU8() > 0 && eposPointer.add(eposOffset['bulletusedw2']).writeU8(0);
             }
             if(cheats['no-timer']){
                 const reloadTimer: boolean = config['no-timer-reload'] || false;
@@ -608,9 +581,9 @@ function loop(){
             if(cheats['fly']){
                 eposPointer.add(eposOffset['dy']).writeFloat(-.1);
                 eposPointer.add(eposOffset['fall']).writeS8(0);
-                const y = eposPointer.add(eposOffset['y']).readFloat();
-                if(keybinds['fly-up'] && keymap[keybinds['fly-up']]) eposPointer.add(eposOffset['y']).writeFloat(y + (config['fly-speed'] || 1));
-                if(keybinds['fly-down'] && keymap[keybinds['fly-down']]) eposPointer.add(eposOffset['y']).writeFloat(y - (config['fly-speed'] || 1));
+                const y = +eposPointer.add(eposOffset['y']).readFloat();
+                if(keybinds['fly-up'] && keymap[keybinds['fly-up']]) eposPointer.add(eposOffset['y']).writeFloat(y + (+config['fly-speed'] || 1));
+                if(keybinds['fly-down'] && keymap[keybinds['fly-down']]) eposPointer.add(eposOffset['y']).writeFloat(y - (+config['fly-speed'] || 1));
             }
             if(cheats['freecam']){
                 const camspeed = config["freecam-cam-speed"] || 0.05;
@@ -648,7 +621,7 @@ function loop(){
             if(cheats['upskill'] && (!keybinds['upskill'] || keymap[keybinds['upskill']])){
                 const onlyonce = config['upskill-only-once'] || false;
                 const timer = eposPointer.add(eposOffset['timer']).readFloat();
-                switch(sk){
+                switch(char){
                     case 1: if(isSkill(eposPointer)) {
                         if(onlyonce) {
                             if(timer < 0.37) eposPointer.add(eposOffset['timer']).writeFloat(0.37);
@@ -682,6 +655,8 @@ function loop(){
                         } else {
                             eposPointer.add(eposOffset['timer']).writeFloat(2.3);
                         }
+                    } else {
+                        eposPointer.add(eposOffset['skill']).writeU8(1);
                     }; break;
                     case 8: if(isSkill(eposPointer)) {
                         if(onlyonce) {
@@ -884,7 +859,7 @@ function skillcode(num:number){
     const eposPointer = epos;
     if(!eposPointer) return;
     if(eposPointer.isNull()) return;
-    eposPointer.add(eposOffset['sk']).writeS8(num);
+    eposPointer.add(eposOffset['char']).writeS8(num);
 }
 
 function beNaN(){
@@ -900,6 +875,7 @@ function aimbot(eposPointer:NativePointer, delta:number){
     if(!an) return;
     if(!eposPointer) return;
     if(eposPointer.isNull()) return;
+    if(isDead(eposPointer)) return;
     if(config['aimbot-main-weapon-only'] && eposPointer.add(eposOffset["weapon"]).readS16() == 1) return;
     const cambase = an.add(anOffset['camera-base']);
     const mode = config['aimbot-mode'] || 'normal';
