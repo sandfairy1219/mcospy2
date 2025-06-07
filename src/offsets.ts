@@ -1,14 +1,14 @@
 export const _xaOffset = {
-    'no-recoil': 0x33BEAE0, // -1124072416 => 505942016
-    'no-clip': 0x33B9BE8, // 0.01 => 100
-    'no-spread1': 0x35AFC8C, // -1119869952 => 505942016
-    'no-spread2': 0x35AFCA4, // -1119870976 => 505942016
-    'no-reload': 0x35AFC74, // -1136562176 => 505925632
+    'no-recoil': 0x33BFAF0, // -1124072416 => 505942016
+    'no-clip': 0x33BABF8, // 0.01 => 100
+    'no-spread1': 0x35ADC9C, // -1119869952 => 505942016
+    'no-spread2': 0x35ADCB4, // -1119870976 => 505942016
+    'no-reload': 0x35ADC84, // -1136562176 => 505925632
     'instant-respawn': 0x3161540, // 505415712 => 505415680
-    'body-one-kill': 0x35AFDF0, // 506335232 => 505925632
-    'head-one-kill': 0x35AFDE8, // -1136594944 => 505925632
-    'skill-damage': 0x33136B4, // -1203335166 => 1384184322
-    'cookerbuff': 0x35B065C, // 506335232 => 505925632
+    'body-one-kill': 0x35ADE00, // 506335232 => 505925632
+    'head-one-kill': 0x35ADDF8, // -1136594944 => 505925632
+    'skill-damage': 0x33136C4, // -1203335166 => 1384184322
+    'cookerbuff': 0x35AE66C, // 506335232 => 505925632
 }
 export const _anOffset = {
     "camera-base": 0x8B26DC,

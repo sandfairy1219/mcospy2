@@ -505,7 +505,10 @@ function loop(){
                         const nickname = entity.add(eposOffset['nickname']).readUtf8String();
                         const hp = entity.add(eposOffset["hp"]).readS16();
                         const barrier = entity.add(eposOffset["barrier"]).readS16();
-                        const health = {hp: +entity.add(eposOffset['maxhp']), barrier: +entity.add(eposOffset['maxbarrier'])};
+                        const health = {
+                            hp: +entity.add(eposOffset['maxhp']).readS32(),
+                            barrier: +entity.add(eposOffset['maxbarrier']).readS32()
+                        };
                         const total = health.hp + health.barrier;
                         const upside = [
                             {x: x + sideSize, y: y + upSize, z: z + sideSize},
