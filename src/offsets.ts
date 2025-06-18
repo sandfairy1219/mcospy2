@@ -11,13 +11,20 @@ export const _xaOffset = {
     'cookerbuff': 0x35AE66C, // 506335232 => 505925632
 }
 export const _anOffset = {
-    "camera-base": 0x8B26DC,
-    "yaw": 0x8B26DC + 0x4,
-    "pitch": 0x8B26DC + 0x0,
-    "camX": 0x8B26DC + 0xC,
-    "camY": 0x8B26DC + 0x10,
-    "camZ": 0x8B26DC + 0x14,
-    "cam-distance": 0x8B26DC + 0x24,
+    // "camera-base": 0x8B26DC,
+    // "yaw": 0x8B26DC + 0x4,
+    // "pitch": 0x8B26DC + 0x0,
+    // "camX": 0x8B26DC + 0xC,
+    // "camY": 0x8B26DC + 0x10,
+    // "camZ": 0x8B26DC + 0x14,
+    // "cam-distance": 0x8B26DC + 0x24,
+    "camera-base": 0x0,
+    "yaw": 0x0 + 0x4,
+    "pitch": 0x0 + 0x0,
+    "camX": 0x0 + 0xC,
+    "camY": 0x0 + 0x10,
+    "camZ": 0x0 + 0x14,
+    "cam-distance": 0x0 + 0x24,
 
     "position-base": 0x7ABE28,
     "x": 0x7ABE28 + 0x0,
@@ -35,9 +42,6 @@ export const _anOffset = {
 
     "skill-base": 0x8BF075,
     "grenade-base": 0x8BEFC9,
-}
-export const _cdOffset = {
-    "epos-pointer": [0x668, 0x58, 0x178, 0x130, 0x200, 0x158],
 }
 export const _eposOffset = {
     'number': 0x0, // int32

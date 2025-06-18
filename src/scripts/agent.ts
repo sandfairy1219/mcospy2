@@ -1,7 +1,6 @@
 "cut";
 const xaOffset = /*xaOffset*/;
 const anOffset = /*anOffset*/;
-const cdOffset = /*cdOffset*/;
 const eposOffset = /*eposOffset*/;
 
 // 0 = ground stop
@@ -65,14 +64,16 @@ interface MacroEvent{
 }
 
 let isArm = false
+let _libMyGame:Module | null = null;
 let xa:NativePointer = null;
 let an:NativePointer = null;
 let cd:NativePointer = null;
 let jit:NativePointer = null;
 let jtRange:number = null;
 let cas:RangeDetails[] = [];
+let cambase:NativePointer = null;
 let epos:NativePointer = null;
-let entityList:NativePointer[] = [];
+let entityList:Set<NativePointer> = new Set();
 let excns:number[] = [];
 let excepts:number[] = [];
 
@@ -90,6 +91,15 @@ let InputManager:any = null;
 
 const log = (...args:any[]) => send(['log', ...args]);
 const ck = '/*cookie*/';
+
+const loadModule = setInterval(() => {
+    if(Module.getBaseAddress('libMyGame.so')) {
+        _libMyGame = Process.findModuleByName('libMyGame.so');
+        send(['Address.init', _libMyGame ? _libMyGame.base.toString() : 'null']);
+        init();
+        clearInterval(loadModule);
+    }
+}, 500);
 Java.perform(() => {
     Java.scheduleOnMainThread(() => {
         loop();
@@ -169,51 +179,55 @@ Java.perform(() => {
                     config = args[2];
                     excepts = (config['except-number'] as string || "").split(',').filter(v => v).map(v => parseInt(v) || 0).filter(v => v) || [];
                 } else if(name === 'addr'){
-                    const r = Process.enumerateRanges('r--');
-                    const rw = Process.enumerateRanges('rw-');
-                    const rx = Process.enumerateRanges('r-x');
-                    const rwx = Process.enumerateRanges('rwx');
-                    const _xa = r.filter((range:RangeDetails) =>
-                        range.file &&
-                        range.file.path.includes('libMyGame.so')
-                    );
-                    if(_xa[0]) xa = _xa[0].base
-                    else {
-                        const __xa = rx.filter((range:RangeDetails) =>
-                            range.file &&
-                            range.file.path.includes('split_config.arm64_v8a.apk') &&
-                            range.size >= 0x442_8000
-                        );
-                        if(__xa[0]) {
-                            xa = __xa[0].base;
-                        }
-                    }
-                    isArm = Process.arch.includes('arm');
-                    const _an = rw.filter((range:RangeDetails) =>
-                        (!range.file) &&
-                        range.size >= (isArm ? 0x1000 : 0x14E_8000)
-                    );
-                    if(_an[0]) an = _an[0].base;
-                    if(isArm) rwx.filter((range:RangeDetails) =>
-                        range.size >= 0x1_0000
-                    ).forEach((range:RangeDetails) => {
-                        const dia = range.base.add(anOffset['cash-base']).readS32();
-                        if(dia === 17){
-                            log("AN Found:", range.base.toString())
-                        } else {
-                            log(range.base.toString(), dia)
-                        }
-                    });
-                    const _jt = rx.filter(range => range.file && range.file.path.includes("jit"));
-                    if(_jt[0]) {
-                        jit = _jt[0].base;
-                        jtRange = _jt[0].size;
-                    }
-                    if(!xa || !an) return recv(api);
-                    if(!isArm && !jit) return recv(api);
-                    send(['Address.init', xa.toString(), an.toString(), jit.toString()])
+                    // isArm = Process.arch.includes('arm');
+                    // const r = Process.enumerateRanges('r--');
+                    // const rw = Process.enumerateRanges('rw-');
+                    // const rx = Process.enumerateRanges('r-x');
+                    // const rwx = Process.enumerateRanges('rwx');
+                    // const _xa = r.filter((range:RangeDetails) =>
+                    //     range.file &&
+                    //     range.file.path.includes('libMyGame.so')
+                    // );
+                    // if(_xa[0]) xa = _xa[0].base
+                    // else {
+                    //     const __xa = rx.filter((range:RangeDetails) =>
+                    //         range.file &&
+                    //         range.file.path.includes('split_config.arm64_v8a.apk') &&
+                    //         range.size >= 0x442_8000
+                    //     );
+                    //     if(__xa[0]) {
+                    //         xa = __xa[0].base;
+                    //     }
+                    // }
+                    // const _an = rw.filter((range:RangeDetails) =>
+                    //     (!range.file) &&
+                    //     range.size >= (isArm ? 0x1000 : 0x14E_8000)
+                    // );
+                    // if(_an[0]) an = _an[0].base;
+                    // if(isArm) rwx.filter((range:RangeDetails) =>
+                    //     range.size >= 0x1_0000
+                    // ).forEach((range:RangeDetails) => {
+                    //     const dia = range.base.add(anOffset['cash-base']).readS32();
+                    //     if(dia === 17){
+                    //         log("AN Found:", range.base.toString())
+                    //     } else {
+                    //         log(range.base.toString(), dia)
+                    //     }
+                    // });
+                    // const _jt = rx.filter(range => range.file && range.file.path.includes("jit"));
+                    // if(_jt[0]) {
+                    //     jit = _jt[0].base;
+                    //     jtRange = _jt[0].size;
+                    // }
+                    // if(!xa || !an) return recv(api);
+                    // if(!isArm && !jit) return recv(api);
+                    // send(['Address.init', xa.toString(), an.toString(), jit.toString()])
+                    // _libMyGame = Process.findModuleByName('libMyGame.so');
+                    // send(['Address.init', _libMyGame ? _libMyGame.base.toString() : 'null']);
+                    return recv(api);
                 } else if(name === 'cheats'){
-                    if(!an || !xa) return recv(api);
+                    // if(!an || !xa) return recv(api);
+                    if(!_libMyGame) return recv(api);
                     cheats[args[0]] = args[1];
                     // Enable/Disable values
                     switch(args[0]){
@@ -221,37 +235,47 @@ Java.perform(() => {
                             if(!args[1]) send(['clear-esp']);
                         }
                         case 'no-recoil':{
-                            forceWriteS32(xa.add(xaOffset['no-recoil']), args[1] ? 505942016 : -1124072416);
+                            const _addr = Module.getExportByName('libMyGame.so', xaOffset['no-recoil'].name).add(xaOffset['no-recoil'].offset);
+                            forceWriteS32(_addr, args[1] ? 505942016 : -1124072416);
                             break;
                         }
                         case 'no-clip':{
-                            forceWriteFloat(xa.add(xaOffset['no-clip']), args[1] ? 100 : 0.01);
+                            const _addr = Module.getExportByName('libMyGame.so', xaOffset['no-clip'].name).add(xaOffset['no-clip'].offset);
+                            forceWriteFloat(_addr, args[1] ? 100 : 0.01);
                             break;
                         }
                         case 'no-spread':{
-                            forceWriteS32(xa.add(xaOffset['no-spread1']), args[1] ? 505942016 : -1119869952);
-                            forceWriteS32(xa.add(xaOffset['no-spread2']), args[1] ? 505942016 : -1119870976);
+                            const _addr1 = Module.getExportByName('libMyGame.so', xaOffset['no-spread1'].name).add(xaOffset['no-spread1'].offset);
+                            forceWriteS32(_addr1, args[1] ? 505942016 : -1119869952);
+                            const _addr2 = Module.getExportByName('libMyGame.so', xaOffset['no-spread2'].name).add(xaOffset['no-spread2'].offset);
+                            forceWriteS32(_addr2, args[1] ? 505942016 : -1119870976);
                             break;
                         }
                         case 'no-reload':{
-                            forceWriteS32(xa.add(xaOffset['no-reload']), args[1] ? 505925632 : -1136562176);
+                            const _addr = Module.getExportByName('libMyGame.so', xaOffset['no-reload'].name).add(xaOffset['no-reload'].offset);
+                            forceWriteS32(_addr, args[1] ? 505925632 : -1136562176);
                             break;
                         }
                         case 'instant-respawn':{
-                            forceWriteS32(xa.add(xaOffset['instant-respawn']), args[1] ? 505415680 : 505415712);
+                            const _addr = Module.getExportByName('libMyGame.so', xaOffset['instant-respawn'].name).add(xaOffset['instant-respawn'].offset);
+                            forceWriteS32(_addr, args[1] ? 505415680 : 505415712);
                             break;
                         }
                         case 'one-kill':{
-                            forceWriteS32(xa.add(xaOffset['body-one-kill']), args[1] ? 505925632 : 506335232);
-                            forceWriteS32(xa.add(xaOffset['head-one-kill']), args[1] ? 505925632 : -1136594944);
+                            const _addr1 = Module.getExportByName('libMyGame.so', xaOffset['body-one-kill'].name).add(xaOffset['body-one-kill'].offset);
+                            forceWriteS32(_addr1, args[1] ? 505925632 : 506335232);
+                            const _addr2 = Module.getExportByName('libMyGame.so', xaOffset['head-one-kill'].name).add(xaOffset['head-one-kill'].offset);
+                            forceWriteS32(_addr2, args[1] ? 505925632 : -1136594944);
                             break;
                         }
                         case 'skill-damage':{
-                            forceWriteS32(xa.add(xaOffset['skill-damage']), args[1] ? 1384184322 : -1203335166);
+                            const _addr = Module.getExportByName('libMyGame.so', xaOffset['skill-damage'].name).add(xaOffset['skill-damage'].offset);
+                            forceWriteS32(_addr, args[1] ? 1384184322 : -1203335166);
                             break;
                         }
                         case 'cooker-buff':{
-                            forceWriteS32(xa.add(xaOffset['cookerbuff']), args[1] ? 505925632 : 506335232);
+                            const _addr = Module.getExportByName('libMyGame.so', xaOffset['cooker-buff'].name).add(xaOffset['cooker-buff'].offset);
+                            forceWriteS32(_addr, args[1] ? 505925632 : 506335232);
                             break;
                         }
                     }
@@ -264,17 +288,18 @@ Java.perform(() => {
                     const action = args[1];
                     keymap = args[2];
                     if(key === keybinds['reverse'] && action === 'DOWN') reverse();
-                    if(key === keybinds['scan-epos'] && action === 'DOWN') {
-                        epos = scanEpos();
+                    // if(key === keybinds['scan-epos'] && action === 'DOWN') {
+                    //     epos = scanEpos();
+                    // }
+                    // if(key === keybinds['scan-entity'] && action === 'DOWN') {
+                    //     entityList = scanEntityList(epos);
+                    // }
+                    // if(key === keybinds['clear-all'] && action === 'DOWN') clearAll();
+                    if(key === keybinds['kick-player'] && action === 'DOWN'){
                     }
-                    if(key === keybinds['scan-entity'] && action === 'DOWN') {
-                        entityList = scanEntityList(epos);
-                    }
-                    if(key === keybinds['clear-all'] && action === 'DOWN') clearAll();
                     if(key === keybinds['esp-mark'] && action === 'DOWN'){
-                        if(!an) return recv(api);
-                        if(an.isNull()) return recv(api);
-                        const cambase = an.add(anOffset['camera-base']);
+                        if(!cambase) return recv(api);
+                        if(cambase.isNull()) return recv(api);
                         const camX = cambase.add(0xc).readFloat();
                         const camY = cambase.add(0x10).readFloat();
                         const camZ = cambase.add(0x14).readFloat();
@@ -402,9 +427,9 @@ function getFilteredEntityList(exceptMark:boolean):NativePointer[]{
     if(!epos) return [];
     if(epos.isNull()) return [];
     if(!entityList) return [];
-    if(entityList.length === 0) return [];
+    if(entityList.size === 0) return [];
     const reversed = config['except-reverse'] || false;
-    return entityList
+    return [...entityList]
     .filter(entity => !entity.isNull())
     .filter(entity => entity.toString() !== epos.toString())
     .filter(entity => !excns.includes(entity.add(eposOffset['number']).readS32()))
@@ -427,6 +452,46 @@ let lastEpos = false;
 let assistSpeed = 0;
 let lastTime = Date.now();
 let shooting = false;
+
+function init(){
+    Interceptor.attach(Module.getExportByName('libMyGame.so', '_ZN5Cloud10CameraData24GetCameraUserInformationEv'), {
+        onLeave(retval) {
+            if(config['epos-number'] && config['epos-number'] !== '0'){
+                if(retval && !retval.isNull()){
+                    if(retval.readS32() === +config['epos-number']){
+                        epos = retval;
+                    } else epos = null;
+                } else epos = null;
+            }
+        },
+    });
+    Interceptor.attach(Module.getExportByName('libMyGame.so', '_ZN15UserInfoManager16GetUserByUserSeqEj'), {
+        onLeave(retval) {
+            entityList.add(retval as NativePointer);
+            entityList.forEach(pt => {
+                try{
+                    const p = pt.toString();
+                    const myslot = epos.add(eposOffsets.slot).readU8() % 2
+                    if(p == epos.toString()){
+                        if(cheats['win']) win(pt.add(eposOffsets.slot).readU8() % 2);
+                    } else if(cheats['kick-all']) {
+                        let n = pt.readS32()
+                        let slot = pt.add(eposOffsets.slot).readU8() % 2
+                        if(n > 0 && myslot != slot && !excs.includes(n)){
+                            kick(n);
+                        }
+                    }
+                    const n = pt.add(eposOffsets.nickname).readCString();
+                    const zr1 = pt.add(eposOffsets.zr1).readFloat();
+                    const zr2 = pt.add(eposOffsets.zr2).readFloat();
+                    if(zr1 !== 0 || zr2 !== 0 || n === "") entityList.delete(pt);
+                } catch (e){
+                    entityList.delete(pt)
+                }
+            })
+        },
+    });
+}
 
 function loop(){
     const delta = Date.now() - lastTime;
@@ -488,10 +553,9 @@ function loop(){
                 aimassist(eposPointer, delta);
             }
             if(cheats['esp']){
-                if(an && !an.isNull() && entityList.length > 0){
+                if(cambase && !cambase.isNull() && entityList.size > 0){
                     const entities = getFilteredEntityList(false);
                     const pitchOffset = +config['esp-pitch-offset'] || 0;
-                    const cambase = an.add(anOffset['camera-base']);
                     const camX = cambase.add(0xc).readFloat();
                     const camY = cambase.add(0x10).readFloat();
                     const camZ = cambase.add(0x14).readFloat();
@@ -591,8 +655,8 @@ function loop(){
             if(cheats['freecam']){
                 const camspeed = config["freecam-cam-speed"] || 0.05;
                 const mvspeed = config["freecam-move-speed"] || 2;
-                const pc = an.add(anOffset["pitch"])
-                const yw = an.add(anOffset["yaw"])
+                const pc = cambase.add(anOffset["pitch"])
+                const yw = cambase.add(anOffset["yaw"])
                 const x = eposPointer.add(eposOffset["x"])
                 const y = eposPointer.add(eposOffset["x"])
                 const z = eposPointer.add(eposOffset["x"])
@@ -794,43 +858,43 @@ function scanEpos():NativePointer{
     return null;
 }
 
-function scanEntityList(_eposPointer:NativePointer):NativePointer[]{
-    if(!_eposPointer) return [];
-    if(_eposPointer.isNull()) return [];
-    if(_eposPointer.add(eposOffset['pointer']).isNull()) return [];
-    let _entityList:NativePointer[] = [];
+function scanEntityList(_eposPointer:NativePointer):Set<NativePointer>{
+    if(!_eposPointer) return new Set();
+    if(_eposPointer.isNull()) return new Set();
+    if(_eposPointer.add(eposOffset['pointer']).isNull()) return new Set();
+    let _entityList:Set<NativePointer> = new Set();
     const _pattern = bufferToHex(_eposPointer.add(eposOffset['pointer']).readByteArray(0x8));
     send(['entity-state', 'pending', 'Scanning']);
     cas.forEach(range => {
         try{
             const entities = Memory.scanSync(range.base, range.size, _pattern)
             .filter(entity => !entity.address.isNull())
-            _entityList = [..._entityList, ...entities.map(entity => entity.address.add(-eposOffset['pointer']))];
+            entities.forEach(entity => _entityList.add(entity.address.add(-eposOffset['pointer'])));
         } catch(e){
             log(e);
         }
     });
     try{
-        _entityList = _entityList
+        _entityList = new Set([..._entityList]
             .filter(entity => entity.toString().match(/000$/))
-            .filter(entity => !excns.includes(entity.add(eposOffset['number']).readS32()))
+            .filter(entity => !excns.includes(entity.add(eposOffset['number']).readS32())));
     } catch(e){
         send(['entity-state', 'error', 'Error filtering']);
     }
     try{
-        log("Entity Found:", _entityList.length, '\n',
-            _entityList.map(entity => `${entity.toString()} [${entity.add(eposOffset['number']).readS32()}] ${entity.add(eposOffset['nickname']).readUtf8String()}`).join('\n')
+        log("Entity Found:", _entityList.size, '\n',
+            [..._entityList].map(entity => `${entity.toString()} [${entity.add(eposOffset['number']).readS32()}] ${entity.add(eposOffset['nickname']).readUtf8String()}`).join('\n')
         );
     } catch(e){
         send(['entity-state', 'error', 'Error logging']);
     }
-    send(['entity-state', 'succeed', `Found: ${_entityList.length}`]);
-    return _entityList || [];
+    send(['entity-state', 'succeed', `Found: ${_entityList.size}`]);
+    return _entityList || new Set();
 }
 
 function clearAll(){
     epos = null;
-    entityList = [];
+    entityList = new Set();
     send(['clear-all']);
     assistSpeed = 0;
     shooting = false;
@@ -875,12 +939,11 @@ function beNaN(){
 }
 
 function aimbot(eposPointer:NativePointer, delta:number){
-    if(!an) return;
+    if(!cambase) return;
     if(!eposPointer) return;
     if(eposPointer.isNull()) return;
     if(isDead(eposPointer)) return;
     if(config['aimbot-main-weapon-only'] && eposPointer.add(eposOffset["weapon"]).readS16() == 1) return;
-    const cambase = an.add(anOffset['camera-base']);
     const mode = config['aimbot-mode'] || 'normal';
     const speed = (config['aimbot-speed'] || 20) * (delta/10);
     const angle = config['aimbot-angle'] || 10;
@@ -941,10 +1004,9 @@ function aimbot(eposPointer:NativePointer, delta:number){
 }
 
 function aimassist(eposPointer:NativePointer, delta:number){
-    if(!an) return;
+    if(!cambase) return;
     if(!eposPointer) return;
     if(eposPointer.isNull()) return;
-    const cambase = an.add(anOffset['camera-base']);
     const angle = config['aim-assist-angle'] || 10;
     const ignoreExcept = config['aim-assist-ignore'] || false;
     const ignoreTeam = config['aim-assist-ignore-team'] || false;
@@ -1008,7 +1070,7 @@ function calcESP(vec3:{x:number; y:number; z:number;}, cam3:{x:number; y:number;
 }
 
 function blackhole(eposPointer:NativePointer){
-    if(!an) return;
+    if(!cambase) return;
     if(eposPointer.isNull()) return;
     const ignoreExcept = config['blackhole-ignore'] || false;
     const ignoreTeam = config['blackhole-ignore-team'] || false;
@@ -1018,7 +1080,6 @@ function blackhole(eposPointer:NativePointer){
     const target = config['blackhole-target'] || 'crosshair';
     let resX:number, resY:number, resZ:number;
     if(target === 'crosshair'){
-    const cambase = an.add(anOffset['camera-base']);
     const camX = cambase.add(0xc).readFloat();
     const camY = cambase.add(0x10).readFloat();
     const camZ = cambase.add(0x14).readFloat();
@@ -1243,9 +1304,8 @@ function gyro(data:{
     beta:number;
     gamma:number;
 }){
-    if(!an) return;
-    if(an.isNull()) return;
-    const cambase = an.add(anOffset['camera-base']);
+    if(!cambase) return;
+    if(cambase.isNull()) return;
     const yaw = cambase.add(0x4).readFloat();
     const pitch = cambase.readFloat();
     const sensitivity = (config['gyro-scope-sensitivity'] || 10) / 180 * Math.PI;

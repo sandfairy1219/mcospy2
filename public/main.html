@@ -87,6 +87,9 @@
         </section>
         <section id="cheats" class="hide">
             <div>
+                <input class="config w-full" type="text" id="epos-number" data-lang-ph="epos-number">
+            </div>
+            <div>
                 <div id="state-epos" class="state"></div>
                 <div data-lang="epos"></div>
                 <div id="state-epos-log" class="log"></div>
@@ -108,7 +111,7 @@
                 <div data-lang="lock-layout"></div>
                 <input type="checkbox" id="lock-layout">
             </div>
-            <div>
+            <!-- <div>
                 <button id="scan-epos" data-lang="scan-epos"></button>
                 <button id="scan-entity" data-lang="scan-entity"></button>
                 <button id="clear-all" data-lang="clear-all"></button>
@@ -117,7 +120,7 @@
                 <input type="text" id="key-scan-epos" class="min w-full keybind" data-lang-ph="keybind">
                 <input type="text" id="key-scan-entity" class="min w-full keybind" data-lang-ph="keybind">
                 <input type="text" id="key-clear-all" class="min w-full keybind" data-lang-ph="keybind">
-            </div>
+            </div> -->
             <details data-cheat="aimbot">
                 <summary id="aimbot" data-lang="aimbot"></summary>
                 <main>
@@ -433,6 +436,9 @@
             <details data-cheat="anti-hook">
                 <summary class="no" id="anti-hook" data-lang="anti-hook"></summary>
             </details>
+            <details data-cheat="kick-all">
+                <summary class="no" id="kick-all" data-lang="kick-all"></summary>
+            </details>
             <!-- <details>
                 <summary id="freecam" data-lang="freecam"></summary>
                 <main>
@@ -475,9 +481,18 @@
                     <input class="w-full text-center" type="text" id="state-act" data-lang-ph="state-act">
                 </main> -->
                 <button class="w-full" id="change-NaN" data-lang="change-NaN"></button>
-                <button class="w-full" id="change-ads-reward" data-lang="change-ads-reward"></button>
+                <!-- <button class="w-full" id="change-ads-reward" data-lang="change-ads-reward"></button> -->
             </details>
-            <details data-cheat="ctm">
+            <details data-cheat="match-maker">
+                <summary data-lang="match-maker"></summary>
+                <div class="w-full" data-lang="match-end"></div>
+                <main>
+                    <button class="w-full" id="match-win" data-lang="win"></button>
+                    <button class="w-full" id="match-lose" data-lang="lose"></button>
+                    <button class="w-full" id="match-draw" data-lang="draw"></button>
+                </main>
+            </details>
+            <!-- <details data-cheat="ctm">
                 <summary data-lang="ctm"></summary>
                 <div class="w-full" data-lang="ctm-default"></div>
                 <main>
@@ -499,7 +514,7 @@
                     <button class="w-full" id="ctm-mountain-milk" data-lang="milk"></button>
                     <button class="w-full" id="ctm-mountain-choco" data-lang="choco"></button>
                 </main>
-            </details>
+            </details> -->
             <details>
                 <summary data-lang="macro"></summary>
                 <div id="macro-list"></div>

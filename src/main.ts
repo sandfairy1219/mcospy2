@@ -162,6 +162,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'キーバインド',
         'zh':'键绑定',
     },
+    'epos-number':{
+        'en':'EPOS Number',
+        'ko':'EPOS 번호',
+        'ja':'EPOS番号',
+        'zh':'EPOS号码',
+    },
     'epos':{
         'en':'EPOS',
         'ko':'EPOS',
@@ -708,6 +714,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'アンチフック',
         'zh':'反钩',
     },
+    'kick-all':{
+        'en':'Kick All',
+        'ko':'올 킥',
+        'ja':'全員キック',
+        'zh':'踢出所有人',
+    },
     'hide-me':{
         'en':'Hide Player',
         'ko':'플레이어 숨기기',
@@ -755,6 +767,36 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ko':'광고 보상 변경',
         'ja':'広告報酬変更',
         'zh':'更改广告奖励',
+    },
+    'match-maker':{
+        'en':'Match Maker',
+        'ko':'매치 메이커',
+        'ja':'マッチメイカー',
+        'zh':'匹配器'
+    },
+    'match-end':{
+        'en':'Match End',
+        'ko':'매치 종료',
+        'ja':'マッチ終了',
+        'zh':'比赛结束'
+    },
+    'win':{
+        'en':'Win',
+        'ko':'승리',
+        'ja':'勝利',
+        'zh':'胜利'
+    },
+    'lose':{
+        'en':'Lose',
+        'ko':'패배',
+        'ja':'敗北',
+        'zh':'失败'
+    },
+    'draw':{
+        'en':'Draw',
+        'ko':'무승부',
+        'ja':'引き分け',
+        'zh':'平局'
     },
     'ctm':{
         'en':'Capture The Milk',
@@ -1198,18 +1240,18 @@ zel.addEventListener('change', blurCurrent);
 sel.addEventListener('change', blurCurrent);
 // tel.addEventListener('change', blurCurrent);
 
-$_('ctm-default-milk').addEventListener('click', () => {ipcRenderer.send('ctm-default-milk');});
-$_('ctm-default-choco').addEventListener('click', () => {ipcRenderer.send('ctm-default-choco');});
-$_('ctm-desert-milk').addEventListener('click', () => {ipcRenderer.send('ctm-desert-milk');});
-$_('ctm-desert-choco').addEventListener('click', () => {ipcRenderer.send('ctm-desert-choco');});
-$_('ctm-castle-milk').addEventListener('click', () => {ipcRenderer.send('ctm-castle-milk');});
-$_('ctm-castle-choco').addEventListener('click', () => {ipcRenderer.send('ctm-castle-choco');});
-$_('ctm-mountain-milk').addEventListener('click', () => {ipcRenderer.send('ctm-mountain-milk');});
-$_('ctm-mountain-choco').addEventListener('click', () => {ipcRenderer.send('ctm-mountain-choco');});
+// $_('ctm-default-milk').addEventListener('click', () => {ipcRenderer.send('ctm-default-milk');});
+// $_('ctm-default-choco').addEventListener('click', () => {ipcRenderer.send('ctm-default-choco');});
+// $_('ctm-desert-milk').addEventListener('click', () => {ipcRenderer.send('ctm-desert-milk');});
+// $_('ctm-desert-choco').addEventListener('click', () => {ipcRenderer.send('ctm-desert-choco');});
+// $_('ctm-castle-milk').addEventListener('click', () => {ipcRenderer.send('ctm-castle-milk');});
+// $_('ctm-castle-choco').addEventListener('click', () => {ipcRenderer.send('ctm-castle-choco');});
+// $_('ctm-mountain-milk').addEventListener('click', () => {ipcRenderer.send('ctm-mountain-milk');});
+// $_('ctm-mountain-choco').addEventListener('click', () => {ipcRenderer.send('ctm-mountain-choco');});
 
-$_('scan-epos').addEventListener('click', () => {ipcRenderer.send('scan-epos');});
-$_('scan-entity').addEventListener('click', () => {ipcRenderer.send('scan-entity');});
-$_('clear-all').addEventListener('click', () => {ipcRenderer.send('clear-all');});
+// $_('scan-epos').addEventListener('click', () => {ipcRenderer.send('scan-epos');});
+// $_('scan-entity').addEventListener('click', () => {ipcRenderer.send('scan-entity');});
+// $_('clear-all').addEventListener('click', () => {ipcRenderer.send('clear-all');});
 
 updateExceptNumber();
 $_('except-number').addEventListener('change', updateExceptNumber);

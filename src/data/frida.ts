@@ -125,7 +125,7 @@ export const executeProcess = async (
     frida.Script
 ]> => {
     const pid = await device.spawn([process])
-    const session = await device.attach(pid)
+    const session = await device.attach(pid, { realm: frida.Realm.Emulated })
     Logger.info(`[*] Process attached`)
     const script = await session.createScript(_script)
     await script.load()

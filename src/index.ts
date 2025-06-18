@@ -16,7 +16,7 @@ import express from "express";
 import http from "http";
 import https from "https";
 import { Server } from "socket.io";
-import { _anOffset, _cdOffset, _eposOffset, _xaOffset } from "./offsets";
+import { _anOffset, _eposOffset, _xaOffset } from "./offsets";
 import { Key, keyboard } from "@nut-tree-fork/nut-js";
 import { nutKeymap } from "./keymaps";
 
@@ -357,9 +357,9 @@ app.on("ready", async () => {
         try{
             const [dispose, script] = await executeProcess(process_name, fridaDevice,
                 scr
-                .replace("/*xaOffset*/", JSON.stringify(_xaOffset))
+                // .replace("/*xaOffset*/", JSON.stringify(_xaOffset))
                 .replace("/*anOffset*/", JSON.stringify(_anOffset))
-                .replace("/*cdOffset*/", JSON.stringify(_cdOffset))
+                // .replace("/*cdOffset*/", JSON.stringify(_cdOffset))
                 .replace("/*eposOffset*/", JSON.stringify(_eposOffset))
                 ,
                 (message:frida.Message, data:Buffer) => {
