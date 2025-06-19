@@ -720,6 +720,30 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'全員キック',
         'zh':'踢出所有人',
     },
+    'debuff': {
+        'en':'Debuff',
+        'ko':'디버프',
+        'ja':'デバフ',
+        'zh':'减益效果',
+    },
+    'debuff-ignore': {
+        'en':'Ignore Marked',
+        'ko':'마크 무시',
+        'ja':'マーク無視',
+        'zh':'忽略标记',
+    },
+    'debuff-electric': {
+        'en':'Electric Debuff',
+        'ko':'일렉 디버프',
+        'ja':'電気デバフ',
+        'zh':'电击减益',
+    },
+    'debuff-mago': {
+        'en':'Mago Debuff',
+        'ko':'마고 디버프',
+        'ja':'マゴデバフ',
+        'zh':'马戈减益',
+    },
     'hide-me':{
         'en':'Hide Player',
         'ko':'플레이어 숨기기',
@@ -797,6 +821,102 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ko':'무승부',
         'ja':'引き分け',
         'zh':'平局'
+    },
+    'resource-hack':{
+        'en':'Resource Hack',
+        'ko':'자원 핵',
+        'ja':'リソースハック',
+        'zh':'资源黑客',
+    },
+    'dia': {
+        'en':'Diamond',
+        'ko':'다이아',
+        'ja':'ダイヤ',
+        'zh':'钻石',
+    },
+    'gold': {
+        'en':'Gold',
+        'ko':'골드',
+        'ja':'ゴールド',
+        'zh':'金币',
+    },
+    'xp': {
+        'en':'XP',
+        'ko':'경험치',
+        'ja':'経験値',
+        'zh':'经验值',
+    },
+    'clan-xp': {
+        'en':'Clan XP',
+        'ko':'클랜 경험치',
+        'ja':'クラン経験値',
+        'zh':'公会经验值',
+    },
+    'sl-coin': {
+        'en':'SL Coin',
+        'ko':'슽리 코인',
+        'ja':'SLコイン',
+        'zh':'SL币',
+    },
+    'sl-point': {
+        'en':'SL Point',
+        'ko':'슽리 포인트',
+        'ja':'SLポイント',
+        'zh':'SL点',
+    },
+    'unlock-sl-medal': {
+        'en':'Unlock SL Medal',
+        'ko':'슽리 메달 잠금 해제',
+        'ja':'SLメダルロック解除',
+        'zh':'解锁SL勋章',
+    },
+    'char-id': {
+        'en':'Character ID',
+        'ko':'캐릭터 ID',
+        'ja':'キャラクターID',
+        'zh':'角色ID',
+    },
+    'utilities': {
+        'en':'Utilities',
+        'ko':'유틸리티',
+        'ja':'ユーティリティ',
+        'zh':'工具',
+    },
+    'user-id': {
+        'en':'User ID',
+        'ko':'유저 ID',
+        'ja':'ユーザーID',
+        'zh':'用户ID',
+    },
+    'kick': {
+        'en':'Kick',
+        'ko':'킥',
+        'ja':'キック',
+        'zh':'踢出',
+    },
+    'change': {
+        'en':'Change',
+        'ko':'변경',
+        'ja':'変更',
+        'zh':'更改',
+    },
+    'vip-pass': {
+        'en':'VIP Pass',
+        'ko':'VIP 패스',
+        'ja':'VIPパス',
+        'zh':'VIP通行证',
+    },
+    'hero-pass': {
+        'en':'Hero Pass',
+        'ko':'히어로 패스',
+        'ja':'ヒーローパス',
+        'zh':'英雄通行证',
+    },
+    'purchase': {
+        'en':'Purchase',
+        'ko':'구매',
+        'ja':'購入',
+        'zh':'购买',
     },
     'ctm':{
         'en':'Capture The Milk',
@@ -1224,7 +1344,7 @@ ipcRenderer.on('skillcode', (e, code:number) => {
 // })
 
 $_('change-NaN').addEventListener('click', () => {ipcRenderer.send('change-NaN');});
-$_('change-ads-reward').addEventListener('click', () => {ipcRenderer.send('change-ads-reward');});
+// $_('change-ads-reward').addEventListener('click', () => {ipcRenderer.send('change-ads-reward');});
 
 const blurCurrent = () => {(document.activeElement as HTMLInputElement).blur();}
 const changePosition = () => {ipcRenderer.send('pos', [parseFloat(xel.value || "0"), parseFloat(yel.value || "0"), parseFloat(zel.value || "0")]);}
@@ -1252,6 +1372,22 @@ sel.addEventListener('change', blurCurrent);
 // $_('scan-epos').addEventListener('click', () => {ipcRenderer.send('scan-epos');});
 // $_('scan-entity').addEventListener('click', () => {ipcRenderer.send('scan-entity');});
 // $_('clear-all').addEventListener('click', () => {ipcRenderer.send('clear-all');});
+
+$_('match-win').addEventListener('click', () => {ipcRenderer.send('match-win');});
+$_('match-lose').addEventListener('click', () => {ipcRenderer.send('match-lose');});
+$_('match-draw').addEventListener('click', () => {ipcRenderer.send('match-draw');});
+$_('receive-dia').addEventListener('click', () => {ipcRenderer.send('receive-dia', parseInt($i('resource-hack-dia').value) || 0);});
+$_('receive-gold').addEventListener('click', () => {ipcRenderer.send('receive-gold', parseInt($i('resource-hack-gold').value) || 0);});
+$_('receive-xp').addEventListener('click', () => {ipcRenderer.send('receive-xp', parseInt($i('resource-hack-xp').value) || 0);});
+$_('receive-clan-xp').addEventListener('click', () => {ipcRenderer.send('receive-clan-xp', parseInt($i('resource-hack-clan-xp').value) || 0);});
+$_('receive-sl-coin').addEventListener('click', () => {ipcRenderer.send('receive-sl-coin', parseInt($i('resource-hack-sl-coin').value) || 0);});
+$_('receive-sl-point').addEventListener('click', () => {ipcRenderer.send('receive-sl-point', parseInt($i('resource-hack-sl-point').value) || 0);});
+$_('unlock-sl-medal').addEventListener('click', () => {ipcRenderer.send('unlock-sl-medal');});
+$_('unlock-all-item').addEventListener('click', () => {ipcRenderer.send('unlock-all-item', parseInt($i('unlock-all-item-char-id').value) || 0);});
+$_('kick-player').addEventListener('click', () => {ipcRenderer.send('kick-player', parseInt($i('kick-player-number').value) || 0);});
+$_('change-nickname').addEventListener('click', () => {ipcRenderer.send('change-nickname', $i('nickname-value').value || '');});
+$_('purchase-pass').addEventListener('click', () => {ipcRenderer.send('purchase-pass', parseInt($i('purchase-player-number').value) || 0, parseInt($i('purchase-item').value) || 1);});
+
 
 updateExceptNumber();
 $_('except-number').addEventListener('change', updateExceptNumber);

@@ -119,19 +119,51 @@ export const executeProcess = async (
     _script:string,
     recieveCallback:(message: frida.Message, data: Buffer | null) => void,
     attachCallback:() => void,
-    disposeCallback:() => void
+    disposeCallback:() => void,
+    useEmulator:boolean = false
 ):Promise<[
     () => Promise<void>,
-    frida.Script
+    frida.Script,
+    number | null
 ]> => {
     const pid = await device.spawn([process])
-    const session = await device.attach(pid, { realm: frida.Realm.Emulated })
+    const session = await device.attach(pid, { realm: useEmulator ? frida.Realm.Emulated : frida.Realm.Native })
     Logger.info(`[*] Process attached`)
     const script = await session.createScript(_script)
     await script.load()
     await session.resume()
     await device.resume(pid)
     Logger.info(`[*] Session resumed`)
+    attachCallback()
+    script.message.connect(recieveCallback)
+    session.detached.connect(disposeCallback)
+    const dispose = async () => {
+        script.message.disconnect(recieveCallback)
+        session.detached.disconnect(disposeCallback)
+        await session.detach()
+    }
+    return [dispose, script, pid]
+}
+
+export const attachProcess = async (
+    pid:number,
+    device:frida.Device,
+    _script:string,
+    recieveCallback:(message: frida.Message, data: Buffer | null) => void,
+    attachCallback:() => void,
+    disposeCallback:() => void,
+    useEmulator:boolean = false
+):Promise<[
+    () => Promise<void>,
+    frida.Script
+]> => {
+    if (!pid) {
+        Logger.error(`[*] Process not found`)
+        return [async () => {}, null]
+    }
+    const session = await device.attach(pid, { realm: useEmulator ? frida.Realm.Emulated : frida.Realm.Native })
+    const script = await session.createScript(_script)
+    await script.load()
     attachCallback()
     script.message.connect(recieveCallback)
     session.detached.connect(disposeCallback)

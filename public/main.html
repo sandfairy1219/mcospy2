@@ -456,6 +456,25 @@
             <details data-cheat="skill-damage">
                 <summary class="no" id="skill-damage" data-lang="skill-damage"></summary>
             </details>
+            <details data-cheat="debuff">
+                <summary id="debuff" data-lang="debuff"></summary>
+                <main>
+                    <div data-lang="keybind"></div>
+                    <input type="text" id="key-debuff" class="keybind" data-lang-ph="keybind">
+                </main>
+                <main>
+                    <div data-lang="debuff-ignore"></div>
+                    <input class="config" type="checkbox" id="debuff-ignore">
+                </main>
+                <main>
+                    <div data-lang="debuff-electric"></div>
+                    <input class="config" type="checkbox" id="debuff-electric">
+                </main>
+                <main>
+                    <div data-lang="debuff-mago"></div>
+                    <input class="config" type="checkbox" id="debuff-mago">
+                </main>
+            </details>
             <details data-cheat="hide-me">
                 <summary class="no" id="hide-me" data-lang="hide-me"></summary>
             </details>
@@ -490,6 +509,59 @@
                     <button class="w-full" id="match-win" data-lang="win"></button>
                     <button class="w-full" id="match-lose" data-lang="lose"></button>
                     <button class="w-full" id="match-draw" data-lang="draw"></button>
+                </main>
+            </details>
+            <details data-cheat="resource-hack">
+                <summary data-lang="resource-hack"></summary>
+                <main>
+                    <input type="text" id="resource-hack-dia" class="w-full text-center" data-lang-ph="dia">
+                    <button class="w-full" id="receive-dia" data-lang="receive"></button>
+                </main>
+                <main>
+                    <input type="text" id="resource-hack-gold" class="w-full text-center" data-lang-ph="gold">
+                    <button class="w-full" id="receive-gold" data-lang="receive"></button>
+                </main>
+                <main>
+                    <input type="text" id="resource-hack-xp" class="w-full text-center" data-lang-ph="xp">
+                    <button class="w-full" id="receive-xp" data-lang="receive"></button>
+                </main>
+                <main>
+                    <input type="text" id="resource-hack-clan-xp" class="w-full text-center" data-lang-ph="clan-xp">
+                    <button class="w-full" id="receive-clan-xp" data-lang="receive"></button>
+                </main>
+                <main>
+                    <input type="text" id="resource-hack-sl-coin" class="w-full text-center" data-lang-ph="sl-coin">
+                    <button class="w-full" id="receive-sl-coin" data-lang="receive"></button>
+                </main>
+                <main>
+                    <input type="text" id="resource-hack-sl-point" class="w-full text-center" data-lang-ph="sl-point">
+                    <button class="w-full" id="receive-sl-point" data-lang="receive"></button>
+                </main>
+                <main>
+                    <button class="w-full" id="unlock-sl-medal" data-lang="unlock-sl-medal"></button>
+                </main>
+                <main>
+                    <input type="text" id="unlock-all-item-char-id" class="w-full text-center" data-lang-ph="char-id">
+                    <button class="w-full" id="unlock-all-item" data-lang="unlock-all-item"></button>
+                </main>
+            </details>
+            <details data-cheat="utilities">
+                <summary data-lang="utilities"></summary>
+                <main>
+                    <input type="text" id="kick-player-number" class="w-full text-center" data-lang-ph="user-id">
+                    <button class="w-full" id="kick-player" data-lang="kick"></button>
+                </main>
+                <main>
+                    <input type="text" id="nickname-value" class="w-full text-center" data-lang-ph="nickname">
+                    <button class="w-full" id="change-nickname" data-lang="change"></button>
+                </main>
+                <main>
+                    <input type="text" id="purchase-player-number" class="w-full text-center" data-lang-ph="user-id">
+                    <select name="purchase-item" id="purchase-item" value="0">
+                        <option value="1" data-lang="vip-pass"></option>
+                        <option value="2" data-lang="hero-pass"></option>
+                    </select>
+                    <button class="w-full" id="purchase-pass" data-lang="purchase"></button>
                 </main>
             </details>
             <!-- <details data-cheat="ctm">

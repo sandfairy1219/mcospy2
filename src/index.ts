@@ -10,7 +10,7 @@ import { autoUpdater } from "electron-updater";
 import isDev from "electron-is-dev";
 import frida from "frida";
 import { existsSync, readFileSync } from "fs";
-import { adb, checkFridaPerm, conenctFrida, connectAdbDevice, executeProcess, fileExist, fileName, getArch, getUrl, startFrida } from "./data/frida";
+import { adb, attachProcess, checkFridaPerm, conenctFrida, connectAdbDevice, executeProcess, fileExist, fileName, getArch, getUrl, startFrida } from "./data/frida";
 import { exec } from "child_process";
 import express from "express";
 import http from "http";
@@ -340,7 +340,8 @@ app.on("ready", async () => {
                 () => {
                     state("session", "error", "Session disposed");
                     dispose();
-                }
+                },
+                false // useEmulator
             )
         } catch (err){
             Logger.error("Cookie error", err);
@@ -353,142 +354,178 @@ app.on("ready", async () => {
         if(!fridaDevice) return state("session", "error", "Frida not connected");
         state("session", "pending", "Starting agent");
         let found:boolean = false;
-        const scr = cookie.trim() ? agentScript.replace("/*cookie*/", cookie) : agentScript;
         try{
-            const [dispose, script] = await executeProcess(process_name, fridaDevice,
-                scr
-                // .replace("/*xaOffset*/", JSON.stringify(_xaOffset))
-                .replace("/*anOffset*/", JSON.stringify(_anOffset))
-                // .replace("/*cdOffset*/", JSON.stringify(_cdOffset))
-                .replace("/*eposOffset*/", JSON.stringify(_eposOffset))
-                ,
-                (message:frida.Message, data:Buffer) => {
+            const [bpDispose, byScript, bpPid] = await executeProcess(process_name, fridaDevice,
+                `Java.perform(() => {
+                    let XigncodeClientSystem = Java.use("com.wellbia.xigncode.XigncodeClientSystem");
+                    XigncodeClientSystem["initialize"].implementation = function (activity,str,str2,str3,callback) {
+                        send(["XigncodeClientSystem.initialize", activity, str, str2, str3]);
+                        return 0;
+                    };
+                    XigncodeClientSystem["getCookie2"].implementation = function (str) {
+                        let result = this["getCookie2"](str);
+                        return result;
+                    };
+                });`.replace("return result", `return '${cookie.trim()}'`),
+                async (message:frida.Message, data:Buffer) => {
                     if(message.type === 'send') {
-                        const [channel, ...args] = [...message.payload];
-                        if(channel == 'XigncodeClientSystem.initialize'){
-                            exp = script.exports;
-                            state("session", "active", "Xigncode Bypassed");
-                        } else if(channel == 'Cocos2dxActivity.getCookie'){
-                            if(!found) script.post(['addr']);
-                        } else if(channel == 'Address.init'){
-                            found = true;
-                            Logger.info("Address Found", args);
-                            state("session", "succeed", `Address found`);
-                            main.webContents.send("init", true);
-                            script.post(['init', cheats, keybinds, config]);
-                        } else emitter.emit(channel, ...args);
+                        state("session", "active", "Xigncode Bypassed");
+                        const [dispose, script] = await attachProcess(bpPid, fridaDevice,
+                            agentScript
+                            .replace("/*xaOffset*/", JSON.stringify(_xaOffset))
+                            .replace("/*anOffset*/", JSON.stringify(_anOffset))
+                            // .replace("/*cdOffset*/", JSON.stringify(_cdOffset))
+                            .replace("/*eposOffset*/", JSON.stringify(_eposOffset))
+                            ,
+                            (message:frida.Message, data:Buffer) => {
+                                if(message.type === 'send') {
+                                    const [channel, ...args] = [...message.payload];
+                                    if(channel == 'Address.init'){
+                                        found = true;
+                                        Logger.info("Module Initialized", args);
+                                        state("session", "succeed", `Module Initialized`);
+                                        main.webContents.send("init", true);
+                                        script.post(['init', cheats, keybinds, config]);
+                                    } else emitter.emit(channel, ...args);
+                                }
+                            },
+                            () => {
+                                state("session", "pending", "Agent attached");
+                                layout.webContents.send("init-config", config);
+                                if(tk){
+                                    emitter.on("config", (key, value) => {
+                                        script.post(['config', key, value]);
+                                    });
+                                    emitter.on("keybind", (key, value) => {
+                                        script.post(['keybind', key, value]);
+                                    });
+                                    emitter.on("cheats", (key, value) => {
+                                        script.post(['cheats', key, value]);
+                                    });
+                                    emitter.on("gk", (event:IGlobalKeyEvent, down) => {
+                                        script.post(['keyevent', event.name, event.state, down]);
+                                    });
+                                    ipcMain.on("listen-sub", (e, val:boolean) => {
+                                        script.post(['listen-sub', val]);
+                                    });
+                                    ipcMain.on("listen-main", (e, val:boolean) => {
+                                        script.post(['listen-main', val]);
+                                    });
+                                    ipcMain.on("reverse", (e) => {
+                                        script.post(['reverse']);
+                                    });
+                                    ipcMain.on("pos", (e, pos:number[]) => {
+                                        script.post(['pos', pos]);
+                                    });
+                                    ipcMain.on("skillcode", (e, code:number) => {
+                                        script.post(['skillcode', code]);
+                                    });
+                                    if(isDev) ipcMain.on("state", (e, code:number) => {
+                                        script.post(['state', code]);
+                                    });
+                                    ipcMain.on("scan-epos", async (e) => {
+                                        script.post(['scan-epos']);
+                                        script.post(['tier-numbers', await getExceptNums()]);
+                                    });
+                                    ipcMain.on("scan-entity", async (e) => {
+                                        script.post(['scan-entity']);
+                                        script.post(['tier-numbers', await getExceptNums()]);
+                                    });
+                                    ipcMain.on("clear-all", (e) => {
+                                        script.post(['clear-all']);
+                                    });
+                                    ipcMain.on("except-number", (e, data:number[]) => {
+                                        script.post(['except-number', data]);
+                                    });
+                                    ipcMain.on("change-NaN", (e) => {
+                                        script.post(['change-NaN']);
+                                    });
+                                    ipcMain.on("change-ads-reward", (e) => {
+                                        script.post(['change-ads-reward']);
+                                    });
+                                    ipcMain.on("match-win", (e) => script.post(['match-win']));
+                                    ipcMain.on("match-lose", (e) => script.post(['match-lose']));
+                                    ipcMain.on("match-draw", (e) => script.post(['match-draw']));
+                                    ipcMain.on("receive-dia", (e, amount: number) => script.post(['receive-dia', amount]));
+                                    ipcMain.on("receive-gold", (e, amount: number) => script.post(['receive-gold', amount]));
+                                    ipcMain.on("receive-xp", (e, amount: number) => script.post(['receive-xp', amount]));
+                                    ipcMain.on("receive-clan-xp", (e, amount: number) => script.post(['receive-clan-xp', amount]));
+                                    ipcMain.on("receive-sl-coin", (e, amount: number) => script.post(['receive-sl-coin', amount]));
+                                    ipcMain.on("receive-sl-point", (e, amount: number) => script.post(['receive-sl-point', amount]));
+                                    ipcMain.on("unlock-sl-medal", (e) => script.post(['unlock-sl-medal']));
+                                    ipcMain.on("unlock-all-item", (e, charid: number) => script.post(['unlock-all-item', charid]));
+                                    
+                                    ipcMain.on("kick-player", (e, number: number) => script.post(['kick-player', number]));
+                                    ipcMain.on("change-nickname", (e, name: string) => script.post(['change-nickname', name]));
+                                    ipcMain.on("purchase-pass", (e, num: number, item: number) => script.post(['purchase-pass', num, item]));
+
+                                    ipcMain.on("ctm-default-milk", (e) => script.post(['ctm-default-milk']));
+                                    ipcMain.on("ctm-default-choco", (e) => script.post(['ctm-default-choco']));
+                                    ipcMain.on("ctm-desert-milk", (e) => script.post(['ctm-desert-milk']));
+                                    ipcMain.on("ctm-desert-choco", (e) => script.post(['ctm-desert-choco']));
+                                    ipcMain.on("ctm-castle-milk", (e) => script.post(['ctm-castle-milk']));
+                                    ipcMain.on("ctm-castle-choco", (e) => script.post(['ctm-castle-choco']));
+                                    ipcMain.on("ctm-mountain-milk", (e) => script.post(['ctm-mountain-milk']));
+                                    ipcMain.on("ctm-mountain-choco", (e) => script.post(['ctm-mountain-choco']));
+                                    ipcMain.on("get-ranges", (e, data:string) => {
+                                        script.post(['get-ranges', data]);
+                                    });
+                                    ipcMain.on("find-ranges", (e, data:string) => {
+                                        script.post(['find-ranges', data]);
+                                    });
+                                    ipcMain.on("search-pattern", (e, data:string) => {
+                                        script.post(['search-pattern', data]);
+                                    });
+                                    ipcMain.on("execute-cmd", (e, data:string) => script.post(['execute-cmd', data]));
+                                    emitter.on("gyro", (data) => {
+                                        script.post(['gyro', data]);
+                                    });
+                                    emitter.on('execute-macro', (e, id:string) => {
+                                        script.post(['execute-macro', id]);
+                                    });
+                                }
+                            },
+                            () => {
+                                layout.webContents.send("init-config", config);
+                                main.webContents.send("init", false);
+                                emitter.removeAllListeners("config");
+                                emitter.removeAllListeners("keybind");
+                                emitter.removeAllListeners("cheats");
+                                emitter.removeAllListeners("gk");
+                                ipcMain.removeAllListeners("listen-sub");
+                                ipcMain.removeAllListeners("listen-main");
+                                ipcMain.removeAllListeners("reverse");
+                                ipcMain.removeAllListeners("pos");
+                                ipcMain.removeAllListeners("skillcode");
+                                if(isDev) ipcMain.removeAllListeners("state");
+                                ipcMain.removeAllListeners("scan-epos");
+                                ipcMain.removeAllListeners("scan-entity");
+                                ipcMain.removeAllListeners("clear-all");
+                                ipcMain.removeAllListeners("except-number");
+                                ipcMain.removeAllListeners("change-NaN");
+                                ipcMain.removeAllListeners("change-ads-reward");
+                                ipcMain.removeAllListeners("get-ranges");
+                                ipcMain.removeAllListeners("find-ranges");
+                                ipcMain.removeAllListeners("execute-cmd");
+                                emitter.removeAllListeners("gyro");
+                                emitter.removeAllListeners("execute-macro");
+                                exp = null;
+                                cheats = {};
+                                state("session", "error", "Session disposed");
+                                dispose();
+                            },
+                            true // useEmulator
+                        )
                     }
                 },
                 () => {
-                    state("session", "pending", "Agent attached");
-                    layout.webContents.send("init-config", config);
-                    if(tk){
-                        emitter.on("config", (key, value) => {
-                            script.post(['config', key, value]);
-                        });
-                        emitter.on("keybind", (key, value) => {
-                            script.post(['keybind', key, value]);
-                        });
-                        emitter.on("cheats", (key, value) => {
-                            script.post(['cheats', key, value]);
-                        });
-                        emitter.on("gk", (event:IGlobalKeyEvent, down) => {
-                            script.post(['keyevent', event.name, event.state, down]);
-                        });
-                        ipcMain.on("listen-sub", (e, val:boolean) => {
-                            script.post(['listen-sub', val]);
-                        });
-                        ipcMain.on("listen-main", (e, val:boolean) => {
-                            script.post(['listen-main', val]);
-                        });
-                        ipcMain.on("reverse", (e) => {
-                            script.post(['reverse']);
-                        });
-                        ipcMain.on("pos", (e, pos:number[]) => {
-                            script.post(['pos', pos]);
-                        });
-                        ipcMain.on("skillcode", (e, code:number) => {
-                            script.post(['skillcode', code]);
-                        });
-                        if(isDev) ipcMain.on("state", (e, code:number) => {
-                            script.post(['state', code]);
-                        });
-                        ipcMain.on("scan-epos", async (e) => {
-                            script.post(['scan-epos']);
-                            script.post(['tier-numbers', await getExceptNums()]);
-                        });
-                        ipcMain.on("scan-entity", async (e) => {
-                            script.post(['scan-entity']);
-                            script.post(['tier-numbers', await getExceptNums()]);
-                        });
-                        ipcMain.on("clear-all", (e) => {
-                            script.post(['clear-all']);
-                        });
-                        ipcMain.on("except-number", (e, data:number[]) => {
-                            script.post(['except-number', data]);
-                        });
-                        ipcMain.on("change-NaN", (e) => {
-                            script.post(['change-NaN']);
-                        });
-                        ipcMain.on("change-ads-reward", (e) => {
-                            script.post(['change-ads-reward']);
-                        });
-                        ipcMain.on("ctm-default-milk", (e) => script.post(['ctm-default-milk']));
-                        ipcMain.on("ctm-default-choco", (e) => script.post(['ctm-default-choco']));
-                        ipcMain.on("ctm-desert-milk", (e) => script.post(['ctm-desert-milk']));
-                        ipcMain.on("ctm-desert-choco", (e) => script.post(['ctm-desert-choco']));
-                        ipcMain.on("ctm-castle-milk", (e) => script.post(['ctm-castle-milk']));
-                        ipcMain.on("ctm-castle-choco", (e) => script.post(['ctm-castle-choco']));
-                        ipcMain.on("ctm-mountain-milk", (e) => script.post(['ctm-mountain-milk']));
-                        ipcMain.on("ctm-mountain-choco", (e) => script.post(['ctm-mountain-choco']));
-                        ipcMain.on("get-ranges", (e, data:string) => {
-                            script.post(['get-ranges', data]);
-                        });
-                        ipcMain.on("find-ranges", (e, data:string) => {
-                            script.post(['find-ranges', data]);
-                        });
-                        ipcMain.on("search-pattern", (e, data:string) => {
-                            script.post(['search-pattern', data]);
-                        });
-                        ipcMain.on("execute-cmd", (e, data:string) => script.post(['execute-cmd', data]));
-                        emitter.on("gyro", (data) => {
-                            script.post(['gyro', data]);
-                        });
-                        emitter.on('execute-macro', (e, id:string) => {
-                            script.post(['execute-macro', id]);
-                        });
-                    }
+                    state("session", "pending", "Process attached");
                 },
                 () => {
-                    layout.webContents.send("init-config", config);
-                    main.webContents.send("init", false);
-                    emitter.removeAllListeners("config");
-                    emitter.removeAllListeners("keybind");
-                    emitter.removeAllListeners("cheats");
-                    emitter.removeAllListeners("gk");
-                    ipcMain.removeAllListeners("listen-sub");
-                    ipcMain.removeAllListeners("listen-main");
-                    ipcMain.removeAllListeners("reverse");
-                    ipcMain.removeAllListeners("pos");
-                    ipcMain.removeAllListeners("skillcode");
-                    if(isDev) ipcMain.removeAllListeners("state");
-                    ipcMain.removeAllListeners("scan-epos");
-                    ipcMain.removeAllListeners("scan-entity");
-                    ipcMain.removeAllListeners("clear-all");
-                    ipcMain.removeAllListeners("except-number");
-                    ipcMain.removeAllListeners("change-NaN");
-                    ipcMain.removeAllListeners("change-ads-reward");
-                    ipcMain.removeAllListeners("get-ranges");
-                    ipcMain.removeAllListeners("find-ranges");
-                    ipcMain.removeAllListeners("execute-cmd");
-                    emitter.removeAllListeners("gyro");
-                    emitter.removeAllListeners("execute-macro");
-                    exp = null;
-                    cheats = {};
                     state("session", "error", "Session disposed");
-                    dispose();
-                }
-            )
+                    bpDispose();
+                }, false // useEmulator
+            );
         } catch (err){
             Logger.error("Agent error", err);
             state("session", "error", "Failed to start agent");

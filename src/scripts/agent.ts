@@ -73,7 +73,7 @@ let jtRange:number = null;
 let cas:RangeDetails[] = [];
 let cambase:NativePointer = null;
 let epos:NativePointer = null;
-let entityList:Set<NativePointer> = new Set();
+let entityList:Set<string> = new Set();
 let excns:number[] = [];
 let excepts:number[] = [];
 
@@ -86,88 +86,227 @@ let macros:Macro[] = [];
 let listenSub: boolean = false;
 let listenMain: boolean = false;
 
-let activeTouches: Record<string, any> = {}
-let InputManager:any = null;
+// let activeTouches: Record<string, any> = {}
+// let InputManager:any = null;
+
+let setYaw: any = null;
+let setPitch: any = null;
+let endgame: any = null;
+let setDia: any = null;
+let setGold: any = null;
+let setXp: any = null;
+let setClanXp: any = null;
+let setSLCoin: any = null;
+let setSLPoint: any = null;
+let unlockSLMedal: any = null;
+let unlockChar: any = null;
+let purchaseP: any = null;
+let purchaseT: any = null;
+let changeNickname: any = null;
 
 const log = (...args:any[]) => send(['log', ...args]);
-const ck = '/*cookie*/';
 
 const loadModule = setInterval(() => {
     if(Module.getBaseAddress('libMyGame.so')) {
         _libMyGame = Process.findModuleByName('libMyGame.so');
         send(['Address.init', _libMyGame ? _libMyGame.base.toString() : 'null']);
         init();
+        loop();
         clearInterval(loadModule);
     }
 }, 500);
-Java.perform(() => {
-    Java.scheduleOnMainThread(() => {
-        loop();
-        let XigncodeClientSystem = Java.use("com.wellbia.xigncode.XigncodeClientSystem");
-        if(ck != '/*cookie*/') {
-            XigncodeClientSystem["initialize"].implementation = function (activity:any,str:string,str2:string,str3:string,callback:() => void) {
-                send(["XigncodeClientSystem.initialize", activity, str, str2, str3]);
-                return 0;
-            };
-            XigncodeClientSystem["getCookie2"].implementation = function (str:string) {
-                let result = this["getCookie2"](str);
-                send(["Cocos2dxActivity.getCookie"]);
-                return ck;
-            };
-            // let Cocos2dxActivity = Java.use("org.cocos2dx.lib.Cocos2dxActivity");
+// Java.perform(() => {
+    // let Activity = Java.use("android.app.Activity");
+    // let MotionEvent = Java.use("android.view.MotionEvent");
+    // Activity.dispatchTouchEvent.overload('android.view.MotionEvent').implementation = function(event: Java.Wrapper) {
+    //     var actionMasked = event.getActionMasked();
+    //     var pointerIndex = event.getActionIndex();
+    //     var pointerId = event.getPointerId(pointerIndex);
+    //     if (actionMasked === MotionEvent.ACTION_DOWN.value || actionMasked === MotionEvent.ACTION_POINTER_DOWN.value) {
+    //         var x = event.getX(pointerIndex);
+    //         var y = event.getY(pointerIndex);
+    //         activeTouches[pointerId] = { x: x, y: y };
+    //     }
+    //     else if (actionMasked === MotionEvent.ACTION_MOVE.value) {
+    //         var pointerCount = event.getPointerCount();
+    //         for (var i = 0; i < pointerCount; i++) {
+    //             var id = event.getPointerId(i);
+    //             var x = event.getX(i);
+    //             var y = event.getY(i);
+    //             if (activeTouches[id]) {
+    //                 activeTouches[id].x = x;
+    //                 activeTouches[id].y = y;
+    //             }
+    //         }
+    //     }
+    //     else if (actionMasked === MotionEvent.ACTION_UP.value || actionMasked === MotionEvent.ACTION_POINTER_UP.value || actionMasked === MotionEvent.ACTION_CANCEL.value) {
+    //         if (activeTouches.hasOwnProperty(pointerId)) {
+    //             delete activeTouches[pointerId];
+    //         }
+    //     }
+    //     var x = event.getX();
+    //     var y = event.getY();
+    //     if(listenSub){
+    //         config['autoswap-subweapon-x'] = x;
+    //         config['autoswap-subweapon-y'] = y;
+    //         listenSub = false;
+    //         send(['listen-sub', [x, y]]);
+    //     }
+    //     if(listenMain){
+    //         config['autoswap-mainweapon-x'] = x;
+    //         config['autoswap-mainweapon-y'] = y;
+    //         listenMain = false;
+    //         send(['listen-main', [x, y]]);
+    //     }
+    //     return this.dispatchTouchEvent(event);
+    // };
+    // const inp = Java.use("android.hardware.input.InputManager")
+    // InputManager = inp.getInstance();
+// });
+
+function getFilteredEntityList(exceptMark:boolean):NativePointer[]{
+    if(!epos) return [];
+    if(epos.isNull()) return [];
+    if(!entityList) return [];
+    if(entityList.size === 0) return [];
+    const reversed = config['except-reverse'] || false;
+    return [...entityList].map(pt => ptr(pt))
+    .filter(entity => entity.toString() !== '0x0')
+    .filter(entity => !entity.isNull())
+    .filter(entity => 
+        entity.add(eposOffset['zr1']).readS32() === 0
+        && entity.add(eposOffset['zr2']).readS32() === 0
+        && entity.add(eposOffset["nickname"]).readCString() !== ""
+    )
+    .filter(entity => entity.toString() !== epos.toString())
+    .filter(entity => !excns.includes(entity.add(eposOffset['number']).readS32()))
+    .filter(entity => {
+        if(exceptMark){
+            const except = excepts.includes(entity.add(eposOffset['number']).readS32())
+            return reversed ? except : !except;
         } else {
-            XigncodeClientSystem["getCookie2"].implementation = function (str:string) {
-                let result = this["getCookie2"](str);
-                send(["Cocos2dxActivity.getCookie"]);
-                return result;
-            };
+            return true;
         }
-        let Activity = Java.use("android.app.Activity");
-        let MotionEvent = Java.use("android.view.MotionEvent");
-        Activity.dispatchTouchEvent.overload('android.view.MotionEvent').implementation = function(event: Java.Wrapper) {
-            var actionMasked = event.getActionMasked();
-            var pointerIndex = event.getActionIndex();
-            var pointerId = event.getPointerId(pointerIndex);
-            if (actionMasked === MotionEvent.ACTION_DOWN.value || actionMasked === MotionEvent.ACTION_POINTER_DOWN.value) {
-                var x = event.getX(pointerIndex);
-                var y = event.getY(pointerIndex);
-                activeTouches[pointerId] = { x: x, y: y };
+    })
+}
+
+let lastEpos = false;
+let assistSpeed = 0;
+let lastTime = Date.now();
+let shooting = false;
+function makeNFunc(symbol: string, retType: any, argTypes: any[]): any {
+    return new NativeFunction(Module.findExportByName('libMyGame.so', symbol), retType, argTypes);
+}
+function attachNFunc(symbol: string, callbacksOrProbe: InvocationListenerCallbacks | InstructionProbeCallback): void {
+    Interceptor.attach(Module.findExportByName('libMyGame.so', symbol), callbacksOrProbe)
+}
+function init(){
+    let item = makeNFunc('_ZN16SystemPacketSend7BuyItemEhhhh', 'void', ['uchar', 'uchar', 'uchar', 'uchar']);
+    try {
+        attachNFunc('_ZN16SystemPacketSend12RequestLoginEiRKSsS1_', {
+            onEnter(args) {
+            },
+        })
+        setYaw = makeNFunc('_ZN5Cloud10CameraData15SetCameraAngleXEf', 'void', ['float']);
+        setPitch = makeNFunc('_ZN5Cloud10CameraData15SetCameraAngleYEf', 'void', ['float']);
+        endgame = makeNFunc('_ZN16SystemPacketSend17CheatForceEndGameENS_16ForceEndGameTypeE', 'void', ['pointer']);
+        setDia = (amount: number) => makeNFunc('_ZN16SystemPacketSend13CheatSetMoneyEii', 'void', ['int', 'int'])(amount, 0);
+        setGold = (amount: number) => makeNFunc('_ZN16SystemPacketSend12CheatSetGoldEii', 'void', ['int', 'int'])(amount, 0);
+        setXp = (amount: number) => makeNFunc('_ZN16SystemPacketSend21CheatSetGradeAndPointEhj', 'void', ['uchar', 'uint'])(1, amount);
+        setClanXp = makeNFunc('_ZN16SystemPacketSend15CheatSetClanExpEj', 'void', ['uint']);
+        setSLCoin = makeNFunc('_ZN16SystemPacketSend22CheatSetStarLeagueCoinEj', 'void', ['uint']);
+        setSLPoint = makeNFunc('_ZN16SystemPacketSend23CheatSetStarLeaguePointEt', 'void', ['uint16']);
+        unlockSLMedal = () => {
+            for(let i = 1; i <= 12; i++){
+                makeNFunc('_ZN16SystemPacketSend23CheatGetStarLeagueMedalEhm', 'void', ['uchar', 'ulong'])(i, 4);
             }
-            else if (actionMasked === MotionEvent.ACTION_MOVE.value) {
-                var pointerCount = event.getPointerCount();
-                for (var i = 0; i < pointerCount; i++) {
-                    var id = event.getPointerId(i);
-                    var x = event.getX(i);
-                    var y = event.getY(i);
-                    if (activeTouches[id]) {
-                        activeTouches[id].x = x;
-                        activeTouches[id].y = y;
+        }
+        unlockChar = (charId: number) => {
+            for(let i = 1; i <= 255; i++){item(charId, 0, i, 1)}
+            for(let i = 1; i <= 255; i++){item(charId, 1, i, 1)}
+            for(let i = 1; i <= 255; i++){item(charId, 2, i, 1)}
+            for(let i = 1; i <= 255; i++){item(charId, 3, i, 1)}
+            for(let i = 1; i <= 255; i++){item(charId, 4, i, 1)}
+            for(let i = 1; i <= 127; i++){item(charId, 6, i, 1)}
+            for(let i = 1; i <= 127; i++){item(charId, 7, i, 1)}
+        };
+        purchaseP = makeNFunc('_ZN16SystemPacketSend16SendPurchasePassEjh', 'void', ['uint', 'uchar']);
+        purchaseT = makeNFunc('_ZN16SystemPacketSend20SendPurchasePassTierEjh', 'void', ['uint', 'uchar']);
+        changeNickname = (name:string) => {
+            const sp = Memory.allocUtf8String(name);
+            makeNFunc('_ZN16SystemPacketSend14ChangeNicknameEhPKch', 'void', ["uchar", "pointer", "uchar"])(1, sp, 0);
+        }
+        attachNFunc('_ZN5Cloud10CameraData24GetCameraUserInformationEv', {
+            onLeave(retval) {
+                if(config['epos-number'] && config['epos-number'] != '0'){
+                    let ts = ptr(retval.toString());
+                    if(ts && !ts.isNull()){
+                        if(ts.readS32() === +config['epos-number']){
+                            epos = ts;
+                        } else epos = null;
+                    } else epos = null;
+                }
+            },
+        });
+        attachNFunc('_ZN15UserInfoManager16GetUserByUserSeqEj', {
+            onLeave(retval) {
+                if(epos && !epos.isNull()){
+                    let ts = ptr(retval.toString());
+                    if(ts && !ts.isNull()){
+                        if(ts.toString() === epos.toString()){
+                            if(cheats['skill-cooldown']){
+                                makeNFunc('_ZN16SystemPacketSend33CheatSetAllSkillCoolTimeOneSecondEb', 'void', ['bool'])(1);
+                            }
+                        } else {
+                            entityList.add(ts.toString());
+                            entityList.forEach(p => {
+                                try{
+                                    const pt = ptr(p);
+                                    const myslot = epos.add(eposOffset['slot']).readU8() % 2;
+                                    if(cheats['kick-all']) {
+                                        let n = pt.readS32()
+                                        let slot = pt.add(eposOffset['slot']).readU8() % 2
+                                        if(n > 0 && myslot != slot && !excs.includes(n)){
+                                            purchaseT(n, 0);
+                                        }
+                                    }
+                                    const n = pt.add(eposOffset['nickname']).readCString();
+                                    const zr1 = pt.add(eposOffset['zr1']).readFloat();
+                                    const zr2 = pt.add(eposOffset['zr2']).readFloat();
+                                    if(zr1 !== 0 || zr2 !== 0 || n === "") entityList.delete(p);
+                                } catch (e){
+                                    entityList.delete(p)
+                                }
+                            })
+                        }
                     }
                 }
-            }
-            else if (actionMasked === MotionEvent.ACTION_UP.value || actionMasked === MotionEvent.ACTION_POINTER_UP.value || actionMasked === MotionEvent.ACTION_CANCEL.value) {
-                if (activeTouches.hasOwnProperty(pointerId)) {
-                    delete activeTouches[pointerId];
+            },
+        });
+        attachNFunc('_ZN5Cloud10CameraData15GetCameraAngleYEv', {
+            onLeave(retval) {
+                let ts = ptr(retval.toString());
+                if(ts && !ts.isNull()){
+                    cambase = ts;
                 }
+            },
+        });
+        attachNFunc('_ZN5Skill16GetMaxSkillCountEh', {onLeave: retval => {if(cheats['skill-cooldown']) retval.replace(12 as any)}})
+        attachNFunc('_ZN5Skill16GetCurSkillCountEv', {onLeave: retval => {if(cheats['skill-cooldown']) retval.replace(12 as any)}})
+        attachNFunc('_ZN5Skill16IsSkillManyTimesEh', {onLeave: retval => {if(cheats['skill-cooldown']) retval.replace(1 as any)}})
+        attachNFunc('_ZN5Cloud8CharData12GetSkillTimeEv', {onLeave: retval => {if(cheats['skill-cooldown']) retval.writeFloat(1)}})
+        const stateLoop = setInterval(() => {
+            if(epos && !epos.isNull()) {
+                send(['epos-state', 'succeed', epos.toString()]);
+            } else {
+                send(['epos-state', 'error', 'Epos not found']);
             }
-            var x = event.getX();
-            var y = event.getY();
-            if(listenSub){
-                config['autoswap-subweapon-x'] = x;
-                config['autoswap-subweapon-y'] = y;
-                listenSub = false;
-                send(['listen-sub', [x, y]]);
+            if(entityList.size > 0) {
+                send(['entity-state', 'succeed', `${entityList.size} Found`]);
+            } else {
+                send(['entity-state', 'error', 'No entities found']);
             }
-            if(listenMain){
-                config['autoswap-mainweapon-x'] = x;
-                config['autoswap-mainweapon-y'] = y;
-                listenMain = false;
-                send(['listen-main', [x, y]]);
-            }
-            return this.dispatchTouchEvent(event);
-        };
-        const inp = Java.use("android.hardware.input.InputManager")
-        InputManager = inp.getInstance();
+        }, 500);
         function api(message:any[]) {
             try{
                 const [name, ...args] = message;
@@ -178,7 +317,7 @@ Java.perform(() => {
                     keybinds = args[1];
                     config = args[2];
                     excepts = (config['except-number'] as string || "").split(',').filter(v => v).map(v => parseInt(v) || 0).filter(v => v) || [];
-                } else if(name === 'addr'){
+                // } else if(name === 'addr'){
                     // isArm = Process.arch.includes('arm');
                     // const r = Process.enumerateRanges('r--');
                     // const rw = Process.enumerateRanges('rw-');
@@ -224,7 +363,6 @@ Java.perform(() => {
                     // send(['Address.init', xa.toString(), an.toString(), jit.toString()])
                     // _libMyGame = Process.findModuleByName('libMyGame.so');
                     // send(['Address.init', _libMyGame ? _libMyGame.base.toString() : 'null']);
-                    return recv(api);
                 } else if(name === 'cheats'){
                     // if(!an || !xa) return recv(api);
                     if(!_libMyGame) return recv(api);
@@ -295,8 +433,6 @@ Java.perform(() => {
                     //     entityList = scanEntityList(epos);
                     // }
                     // if(key === keybinds['clear-all'] && action === 'DOWN') clearAll();
-                    if(key === keybinds['kick-player'] && action === 'DOWN'){
-                    }
                     if(key === keybinds['esp-mark'] && action === 'DOWN'){
                         if(!cambase) return recv(api);
                         if(cambase.isNull()) return recv(api);
@@ -365,6 +501,24 @@ Java.perform(() => {
                     cashBase.add(0x58).writeS32(19);
                 } else if(name === 'change-NaN'){
                     beNaN();
+                } else if(name === 'match-win'){ if(!epos) return recv(api);
+                    if(epos.isNull()) return recv(api);
+                    endgame(ptr(epos.add(eposOffset['slot']).readU8() % 2));
+                } else if(name === 'match-lose'){ if(!epos) return recv(api);
+                    if(epos.isNull()) return recv(api);
+                    endgame(ptr(1 - epos.add(eposOffset['slot']).readU8() % 2));
+                } else if(name === 'match-draw'){ endgame(ptr(3));
+                } else if(name === 'receive-dia'){ setDia(+args[0] || 0);
+                } else if(name === 'receive-gold'){ setGold(+args[0] || 0);
+                } else if(name === 'receive-xp'){ setXp(+args[0] || 0);
+                } else if(name === 'receive-clan-xp'){ setClanXp(+args[0] || 0);
+                } else if(name === 'receive-sl-coin'){ setSLCoin(+args[0] || 0);
+                } else if(name === 'receive-sl-point'){ setSLPoint(+args[0] || 0);
+                } else if(name === 'unlock-sl-medal'){ unlockSLMedal();
+                } else if(name === 'unlock-all-item'){ unlockChar(+args[0] || 0);
+                } else if(name === 'kick-player'){ purchaseT(+args[0] || 0, 0);
+                } else if(name === 'change-nickname'){ changeNickname(args[0] || 'no name');
+                } else if(name === 'purchase-pass'){ purchaseP(+args[0] || 0, +args[1] || 0);
                 } else if(name === 'ctm-default-milk'){ ctmDefaultMilk();
                 } else if(name === 'ctm-default-choco'){ ctmDefaultChoco();
                 } else if(name === 'ctm-desert-milk'){ ctmDesertMilk();
@@ -373,14 +527,14 @@ Java.perform(() => {
                 } else if(name === 'ctm-castle-choco'){ ctmCastleChoco();
                 } else if(name === 'ctm-mountain-milk'){ ctmMountainMilk();
                 } else if(name === 'ctm-mountain-choco'){ ctmMountainChoco();
-                } else if(name === 'scan-epos'){
-                    epos = scanEpos();
-                } else if(name === 'scan-entity'){
-                    if(!epos) return recv(api);
-                    if(epos.isNull()) return recv(api);
-                    entityList = scanEntityList(epos);
-                } else if(name === 'clear-all'){
-                    clearAll();
+                // } else if(name === 'scan-epos'){
+                //     epos = scanEpos();
+                // } else if(name === 'scan-entity'){
+                //     if(!epos) return recv(api);
+                //     if(epos.isNull()) return recv(api);
+                //     entityList = scanEntityList(epos);
+                // } else if(name === 'clear-all'){
+                //     clearAll();
                 } else if(name === 'tier-numbers'){
                     excns = args[0]
                 } else if(name === 'except-number'){
@@ -416,141 +570,75 @@ Java.perform(() => {
                 }
             } catch(e){
                 log("[ERROR]", e);
+            } finally {
+                recv(api)
             }
-            recv(api)
         }
         recv(api)
-    })
-});
-
-function getFilteredEntityList(exceptMark:boolean):NativePointer[]{
-    if(!epos) return [];
-    if(epos.isNull()) return [];
-    if(!entityList) return [];
-    if(entityList.size === 0) return [];
-    const reversed = config['except-reverse'] || false;
-    return [...entityList]
-    .filter(entity => !entity.isNull())
-    .filter(entity => entity.toString() !== epos.toString())
-    .filter(entity => !excns.includes(entity.add(eposOffset['number']).readS32()))
-    .filter(entity => {
-        if(exceptMark){
-            const except = excepts.includes(entity.add(eposOffset['number']).readS32())
-            return reversed ? except : !except;
-        } else {
-            return true;
-        }
-    })
-    .filter(entity => 
-        entity.add(eposOffset['zr1']).readS32() === 0
-        && entity.add(eposOffset['zr2']).readS32() === 0
-        && entity.add(eposOffset["nickname"]).readCString() !== ""
-    )
+    } catch (e) {
+        log("[ERROR] Failed to initialize:", e);
+    }
 }
 
-let lastEpos = false;
-let assistSpeed = 0;
-let lastTime = Date.now();
-let shooting = false;
-
-function init(){
-    Interceptor.attach(Module.getExportByName('libMyGame.so', '_ZN5Cloud10CameraData24GetCameraUserInformationEv'), {
-        onLeave(retval) {
-            if(config['epos-number'] && config['epos-number'] !== '0'){
-                if(retval && !retval.isNull()){
-                    if(retval.readS32() === +config['epos-number']){
-                        epos = retval;
-                    } else epos = null;
-                } else epos = null;
-            }
-        },
-    });
-    Interceptor.attach(Module.getExportByName('libMyGame.so', '_ZN15UserInfoManager16GetUserByUserSeqEj'), {
-        onLeave(retval) {
-            entityList.add(retval as NativePointer);
-            entityList.forEach(pt => {
-                try{
-                    const p = pt.toString();
-                    const myslot = epos.add(eposOffsets.slot).readU8() % 2
-                    if(p == epos.toString()){
-                        if(cheats['win']) win(pt.add(eposOffsets.slot).readU8() % 2);
-                    } else if(cheats['kick-all']) {
-                        let n = pt.readS32()
-                        let slot = pt.add(eposOffsets.slot).readU8() % 2
-                        if(n > 0 && myslot != slot && !excs.includes(n)){
-                            kick(n);
-                        }
-                    }
-                    const n = pt.add(eposOffsets.nickname).readCString();
-                    const zr1 = pt.add(eposOffsets.zr1).readFloat();
-                    const zr2 = pt.add(eposOffsets.zr2).readFloat();
-                    if(zr1 !== 0 || zr2 !== 0 || n === "") entityList.delete(pt);
-                } catch (e){
-                    entityList.delete(pt)
-                }
-            })
-        },
-    });
-}
-
+let toggleDetector = makeNFunc('_ZN9GameScene21ToggleAbusingDetectorEb', 'void', ['bool']);
 function loop(){
     const delta = Date.now() - lastTime;
     lastTime = Date.now();
-    if(!an || !xa) return setTimeout(loop, 1000/(config['frame'] || 60));
+    // if(!an || !xa) return setTimeout(loop, 1000/(config['frame'] || 60));
     // Pin values
     try{
-        const eposPointer = epos;
-        if(eposPointer && !eposPointer.isNull()){
-            if(!lastEpos){
-                lastEpos = true;
-                entityList = scanEntityList(eposPointer);
-            }
-            const x = eposPointer.add(eposOffset['x']).readFloat();
-            const y = eposPointer.add(eposOffset['y']).readFloat();
-            const z = eposPointer.add(eposOffset['z']).readFloat();
+        if(epos && !epos.isNull()){
+            toggleDetector(0);
+            // if(!lastEpos){
+            //     lastEpos = true;
+            //     entityList = scanEntityList(epos);
+            // }
+            const x = epos.add(eposOffset['x']).readFloat();
+            const y = epos.add(eposOffset['y']).readFloat();
+            const z = epos.add(eposOffset['z']).readFloat();
             send(['pos', [x, y, z]])
-            const char = eposPointer.add(eposOffset['char']).readS8();
+            const char = epos.add(eposOffset['char']).readS8();
             send(['skillcode', char])
-            const state = eposPointer.add(eposOffset['state']).readS32();
+            const state = epos.add(eposOffset['state']).readS32();
             // send(['state', state])
-            if(isShooting(eposPointer) && !shooting){
+            if(isShooting(epos) && !shooting){
                 shooting = true;
-                if(cheats['autoswap']){
-                    const weapon = eposPointer.add(eposOffset['weapon']).readS16();
-                    const useZoom = config['autoswap-use-zoom'] || false;
-                    const subposX = +config['autoswap-subweapon-x'] || 0;
-                    const subposY = +config['autoswap-subweapon-y'] || 0;
-                    const mainposX = +config['autoswap-mainweapon-x'] || 0;
-                    const mainposY = +config['autoswap-mainweapon-y'] || 0;
-                    // const mainKey = keybinds['autoswap-main'] || 'NUMPAD 0';
-                    // const subKey = keybinds['autoswap-sub'] || 'NUMPAD 1';
-                    // const zoomKey = keybinds['autoswap-zoom'] || 'NUMPAD 2';
-                    if(weapon === 0){
-                        // send(['sendkey', subKey])
-                        Click(subposX, subposY, 0);
-                    } else if(weapon === 1){
-                        // send(['sendkey', mainKey])
-                        // if(useZoom) send(['sendkey', zoomKey])
-                        Click(mainposX, mainposY, 0);
-                    }
-                }
+                // if(cheats['autoswap']){
+                //     const weapon = epos.add(eposOffset['weapon']).readS16();
+                //     const useZoom = config['autoswap-use-zoom'] || false;
+                //     const subposX = +config['autoswap-subweapon-x'] || 0;
+                //     const subposY = +config['autoswap-subweapon-y'] || 0;
+                //     const mainposX = +config['autoswap-mainweapon-x'] || 0;
+                //     const mainposY = +config['autoswap-mainweapon-y'] || 0;
+                //     // const mainKey = keybinds['autoswap-main'] || 'NUMPAD 0';
+                //     // const subKey = keybinds['autoswap-sub'] || 'NUMPAD 1';
+                //     // const zoomKey = keybinds['autoswap-zoom'] || 'NUMPAD 2';
+                //     if(weapon === 0){
+                //         // send(['sendkey', subKey])
+                //         Click(subposX, subposY, 0);
+                //     } else if(weapon === 1){
+                //         // send(['sendkey', mainKey])
+                //         // if(useZoom) send(['sendkey', zoomKey])
+                //         Click(mainposX, mainposY, 0);
+                //     }
+                // }
             } else {
                 shooting = false;
             }
             if(cheats['aimbot']){
                 if(!keybinds['aimbot'] || keymap[keybinds['aimbot']]){
-                    aimbot(eposPointer, delta);
+                    aimbot(epos, delta);
                 }
             }
             if(cheats['aim-assist']){
-                if(isShooting(eposPointer)){
+                if(isShooting(epos)){
                     const _aimAssistSpeed = config['aim-assist-speed'] || 20;
                     assistSpeed = _aimAssistSpeed;
                 } else if(assistSpeed > 0.001) {
                     assistSpeed -= assistSpeed * (config['aim-assist-decay'] || 0.1);
                     if(assistSpeed <= 0.001) assistSpeed = 0;
                 }
-                aimassist(eposPointer, delta);
+                aimassist(epos, delta);
             }
             if(cheats['esp']){
                 if(cambase && !cambase.isNull() && entityList.size > 0){
@@ -587,7 +675,7 @@ function loop(){
                             {x: x + sideSize, y: y + downSize, z: z - sideSize},
                         ].map(vec3 => calcESP(vec3, {x: camX, y: camY, z: camZ}, yaw, pitch, camFov)).filter(point => point);
                         const isMark = excepts.includes(number);
-                        const _isTeam = isTeam(eposPointer, entity);
+                        const _isTeam = isTeam(epos, entity);
                         const _isDead = isDead(entity);
                         return {
                             upside, downside, number, nickname, isMark, isTeam: _isTeam, isDead: _isDead,
@@ -599,18 +687,18 @@ function loop(){
             }
             if(cheats['blackhole']){
                 if(!keybinds['blackhole'] || keymap[keybinds['blackhole']]){
-                    blackhole(eposPointer);
+                    blackhole(epos);
                 }
             }
             if(cheats['shoot-speed']){
                 if(!keybinds['shoot-speed'] || keymap[keybinds['shoot-speed']]){
-                    eposPointer.add(eposOffset['w1c']).writeFloat(0);
-                    eposPointer.add(eposOffset['w2c']).writeFloat(0);
+                    epos.add(eposOffset['w1c']).writeFloat(0);
+                    epos.add(eposOffset['w2c']).writeFloat(0);
                 }
             }
             if(cheats['infinite-ammo']){
-                eposPointer.add(eposOffset['bulletusedw1']).readU8() > 0 && eposPointer.add(eposOffset['bulletusedw1']).writeU8(0);
-                eposPointer.add(eposOffset['bulletusedw2']).readU8() > 0 && eposPointer.add(eposOffset['bulletusedw2']).writeU8(0);
+                epos.add(eposOffset['bulletusedw1']).readU8() > 0 && epos.add(eposOffset['bulletusedw1']).writeU8(0);
+                epos.add(eposOffset['bulletusedw2']).readU8() > 0 && epos.add(eposOffset['bulletusedw2']).writeU8(0);
             }
             if(cheats['no-timer']){
                 const reloadTimer: boolean = config['no-timer-reload'] || false;
@@ -618,48 +706,48 @@ function loop(){
                 const respawnTimer: boolean = config['no-timer-respawn'] || false;
                 if(reloadTimer &&
                     (state === 64 || state === 65 || state === 66 || state === 67)
-                ) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                ) epos.add(eposOffset['timer']).writeFloat(9999);
                 if(grenadeTimer &&
                     (state === 128 || state === 129 || state === 130 || state === 131)
-                ) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                ) epos.add(eposOffset['timer']).writeFloat(9999);
                 if(respawnTimer && state === 16){
-                    const dc = Math.round(eposPointer.add(eposOffset['dc']).readFloat());
-                    if(dc != 1 && dc != 0) eposPointer.add(eposOffset['dc']).writeFloat(1);
+                    const dc = Math.round(epos.add(eposOffset['dc']).readFloat());
+                    if(dc != 1 && dc != 0) epos.add(eposOffset['dc']).writeFloat(1);
                 }
             }
             if(cheats['move-speed']){
                 if((!keybinds['move-speed'] || keymap[keybinds['move-speed']])){
                     const half:number = Math.sin(45/180*Math.PI)
                     const val:number = (+config['move-speed-value']) || 3;
-                    if(keymap["W"] && keymap["A"]) eposPointer.add(eposOffset['dx']).writeFloat(half*val), eposPointer.add(eposOffset['dz']).writeFloat(half*val);
-                    else if(keymap["W"] && keymap["D"]) eposPointer.add(eposOffset['dx']).writeFloat(half*val), eposPointer.add(eposOffset['dz']).writeFloat(-half*val);
-                    else if(keymap["S"] && keymap["A"]) eposPointer.add(eposOffset['dx']).writeFloat(-half*val), eposPointer.add(eposOffset['dz']).writeFloat(half*val);
-                    else if(keymap["S"] && keymap["D"]) eposPointer.add(eposOffset['dx']).writeFloat(-half*val), eposPointer.add(eposOffset['dz']).writeFloat(-half*val);
-                    else if(keymap["W"]) eposPointer.add(eposOffset['dx']).writeFloat(val);
-                    else if(keymap["S"]) eposPointer.add(eposOffset['dx']).writeFloat(-val);
-                    else if(keymap["A"]) eposPointer.add(eposOffset['dz']).writeFloat(val);
-                    else if(keymap["D"]) eposPointer.add(eposOffset['dz']).writeFloat(-val);
+                    if(keymap["W"] && keymap["A"]) epos.add(eposOffset['dx']).writeFloat(half*val), epos.add(eposOffset['dz']).writeFloat(half*val);
+                    else if(keymap["W"] && keymap["D"]) epos.add(eposOffset['dx']).writeFloat(half*val), epos.add(eposOffset['dz']).writeFloat(-half*val);
+                    else if(keymap["S"] && keymap["A"]) epos.add(eposOffset['dx']).writeFloat(-half*val), epos.add(eposOffset['dz']).writeFloat(half*val);
+                    else if(keymap["S"] && keymap["D"]) epos.add(eposOffset['dx']).writeFloat(-half*val), epos.add(eposOffset['dz']).writeFloat(-half*val);
+                    else if(keymap["W"]) epos.add(eposOffset['dx']).writeFloat(val);
+                    else if(keymap["S"]) epos.add(eposOffset['dx']).writeFloat(-val);
+                    else if(keymap["A"]) epos.add(eposOffset['dz']).writeFloat(val);
+                    else if(keymap["D"]) epos.add(eposOffset['dz']).writeFloat(-val);
                     else {
-                        eposPointer.add(eposOffset['dx']).writeFloat(0);
-                        eposPointer.add(eposOffset['dz']).writeFloat(0);
+                        epos.add(eposOffset['dx']).writeFloat(0);
+                        epos.add(eposOffset['dz']).writeFloat(0);
                     }
                 }
             }
             if(cheats['fly']){
-                eposPointer.add(eposOffset['dy']).writeFloat(-.1);
-                eposPointer.add(eposOffset['fall']).writeS8(0);
-                const y = +eposPointer.add(eposOffset['y']).readFloat();
-                if(keybinds['fly-up'] && keymap[keybinds['fly-up']]) eposPointer.add(eposOffset['y']).writeFloat(y + (+config['fly-speed'] || 1));
-                if(keybinds['fly-down'] && keymap[keybinds['fly-down']]) eposPointer.add(eposOffset['y']).writeFloat(y - (+config['fly-speed'] || 1));
+                epos.add(eposOffset['dy']).writeFloat(-.1);
+                epos.add(eposOffset['fall']).writeS8(0);
+                const y = +epos.add(eposOffset['y']).readFloat();
+                if(keybinds['fly-up'] && keymap[keybinds['fly-up']]) epos.add(eposOffset['y']).writeFloat(y + (+config['fly-speed'] || 1));
+                if(keybinds['fly-down'] && keymap[keybinds['fly-down']]) epos.add(eposOffset['y']).writeFloat(y - (+config['fly-speed'] || 1));
             }
             if(cheats['freecam']){
                 const camspeed = config["freecam-cam-speed"] || 0.05;
                 const mvspeed = config["freecam-move-speed"] || 2;
                 const pc = cambase.add(anOffset["pitch"])
                 const yw = cambase.add(anOffset["yaw"])
-                const x = eposPointer.add(eposOffset["x"])
-                const y = eposPointer.add(eposOffset["x"])
-                const z = eposPointer.add(eposOffset["x"])
+                const x = epos.add(eposOffset["x"])
+                const y = epos.add(eposOffset["x"])
+                const z = epos.add(eposOffset["x"])
                 if(keymap["NUMPAD 8"]){
                     pc.writeFloat(pc.readFloat() + camspeed)
                 }
@@ -687,139 +775,155 @@ function loop(){
             }
             if(cheats['upskill'] && (!keybinds['upskill'] || keymap[keybinds['upskill']])){
                 const onlyonce = config['upskill-only-once'] || false;
-                const timer = eposPointer.add(eposOffset['timer']).readFloat();
+                const timer = epos.add(eposOffset['timer']).readFloat();
                 switch(char){
-                    case 1: if(isSkill(eposPointer)) {
+                    case 1: if(isSkill(epos)) {
                         if(onlyonce) {
-                            if(timer < 0.37) eposPointer.add(eposOffset['timer']).writeFloat(0.37);
-                            else if(timer > 0.37) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                            if(timer < 0.37) epos.add(eposOffset['timer']).writeFloat(0.37);
+                            else if(timer > 0.37) epos.add(eposOffset['timer']).writeFloat(9999);
                         } else {
-                            eposPointer.add(eposOffset['timer']).writeFloat(0.37);
+                            epos.add(eposOffset['timer']).writeFloat(0.37);
                         }
                     }; break;
-                    case 2: if(isSkill(eposPointer)) eposPointer.add(eposOffset['timer']).writeFloat(9999); break;
-                    case 3: if(isSkill(eposPointer)) {
+                    case 2: if(isSkill(epos)) epos.add(eposOffset['timer']).writeFloat(9999); break;
+                    case 3: if(isSkill(epos)) {
                         if(onlyonce) {
-                            if(timer < 0.31) eposPointer.add(eposOffset['timer']).writeFloat(0.31);
-                            else if(timer > 0.31) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                            if(timer < 0.31) epos.add(eposOffset['timer']).writeFloat(0.31);
+                            else if(timer > 0.31) epos.add(eposOffset['timer']).writeFloat(9999);
                         } else {
-                            eposPointer.add(eposOffset['timer']).writeFloat(0.31);
+                            epos.add(eposOffset['timer']).writeFloat(0.31);
                         }
                     }; break;
-                    case 4: eposPointer.add(eposOffset['sc']).writeFloat(9999); break;
-                    case 5: if(isSkill(eposPointer)) {
+                    case 4: epos.add(eposOffset['sc']).writeFloat(9999); break;
+                    case 5: if(isSkill(epos)) {
                         if(onlyonce) {
-                            if(timer < 0.85) eposPointer.add(eposOffset['timer']).writeFloat(0.85);
-                            else if(timer > 0.85) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                            if(timer < 0.85) epos.add(eposOffset['timer']).writeFloat(0.85);
+                            else if(timer > 0.85) epos.add(eposOffset['timer']).writeFloat(9999);
                         } else {
-                            eposPointer.add(eposOffset['timer']).writeFloat(0.85);
+                            epos.add(eposOffset['timer']).writeFloat(0.85);
                         }
                     }; break;
-                    case 7: if(isSkill(eposPointer)) {
+                    case 7: if(isSkill(epos)) {
                         if(onlyonce) {
-                            if(timer < 2.3) eposPointer.add(eposOffset['timer']).writeFloat(2.3);
-                            else if(timer > 2.3) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                            if(timer < 2.3) epos.add(eposOffset['timer']).writeFloat(2.3);
+                            else if(timer > 2.3) epos.add(eposOffset['timer']).writeFloat(9999);
                         } else {
-                            eposPointer.add(eposOffset['timer']).writeFloat(2.3);
+                            epos.add(eposOffset['timer']).writeFloat(2.3);
                         }
                     } else {
-                        eposPointer.add(eposOffset['skill']).writeU8(1);
+                        epos.add(eposOffset['skill']).writeU8(1);
                     }; break;
-                    case 8: if(isSkill(eposPointer)) {
+                    case 8: if(isSkill(epos)) {
                         if(onlyonce) {
-                            if(timer < 0.99) eposPointer.add(eposOffset['timer']).writeFloat(0.99);
-                            else if(timer > 0.99) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                            if(timer < 0.99) epos.add(eposOffset['timer']).writeFloat(0.99);
+                            else if(timer > 0.99) epos.add(eposOffset['timer']).writeFloat(9999);
                         } else {
-                            eposPointer.add(eposOffset['timer']).writeFloat(0.99);
+                            epos.add(eposOffset['timer']).writeFloat(0.99);
                         }
                     }; break;
-                    case 9: if(isSkill(eposPointer)) eposPointer.add(eposOffset['timer']).writeFloat(9999); break;
+                    case 9: if(isSkill(epos)) epos.add(eposOffset['timer']).writeFloat(9999); break;
                     case 10:
-                    if(isSkill(eposPointer)) {
+                    if(isSkill(epos)) {
                         if(onlyonce) {
-                            if(timer < 1.14) eposPointer.add(eposOffset['timer']).writeFloat(1.14);
-                            else if(timer > 1.14) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                            if(timer < 1.14) epos.add(eposOffset['timer']).writeFloat(1.14);
+                            else if(timer > 1.14) epos.add(eposOffset['timer']).writeFloat(9999);
                         } else {
-                            eposPointer.add(eposOffset['timer']).writeFloat(1.14);
+                            epos.add(eposOffset['timer']).writeFloat(1.14);
                         }
                     }; break;
-                    case 12: if(isSkill(eposPointer)) {
+                    case 12: if(isSkill(epos)) {
                         if(onlyonce) {
-                            if(timer < 0.44) eposPointer.add(eposOffset['timer']).writeFloat(0.44);
-                            else if(timer > 0.44) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                            if(timer < 0.44) epos.add(eposOffset['timer']).writeFloat(0.44);
+                            else if(timer > 0.44) epos.add(eposOffset['timer']).writeFloat(9999);
                         } else {
-                            eposPointer.add(eposOffset['timer']).writeFloat(0.44);
+                            epos.add(eposOffset['timer']).writeFloat(0.44);
                         }
                     }; break;
-                    case 13: if(isSkill(eposPointer)) {
+                    case 13: if(isSkill(epos)) {
                         if(onlyonce) {
-                            if(timer < 0.09) eposPointer.add(eposOffset['timer']).writeFloat(0.09);
-                            else if(timer > 0.09) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                            if(timer < 0.09) epos.add(eposOffset['timer']).writeFloat(0.09);
+                            else if(timer > 0.09) epos.add(eposOffset['timer']).writeFloat(9999);
                         } else {
-                            eposPointer.add(eposOffset['timer']).writeFloat(0.09);
+                            epos.add(eposOffset['timer']).writeFloat(0.09);
                         }
                     }; break;
-                    case 15: if(isSkill(eposPointer)) {
+                    case 15: if(isSkill(epos)) {
                         if(onlyonce) {
-                            if(timer < 0.09) eposPointer.add(eposOffset['timer']).writeFloat(0.09);
-                            else if(timer > 0.09) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                            if(timer < 0.09) epos.add(eposOffset['timer']).writeFloat(0.09);
+                            else if(timer > 0.09) epos.add(eposOffset['timer']).writeFloat(9999);
                         } else {
-                            eposPointer.add(eposOffset['timer']).writeFloat(0.09);
+                            epos.add(eposOffset['timer']).writeFloat(0.09);
                         }
                     }; break;
-                    case 17: if(isSkill(eposPointer)) eposPointer.add(eposOffset['timer']).writeFloat(9999); break;
-                    case 20: if(isSkill(eposPointer)) {
+                    case 17: if(isSkill(epos)) epos.add(eposOffset['timer']).writeFloat(9999); break;
+                    case 20: if(isSkill(epos)) {
                         if(onlyonce) {
-                            if(timer < 0.09) eposPointer.add(eposOffset['timer']).writeFloat(0.09);
-                            else if(timer > 0.09) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                            if(timer < 0.09) epos.add(eposOffset['timer']).writeFloat(0.09);
+                            else if(timer > 0.09) epos.add(eposOffset['timer']).writeFloat(9999);
                         } else {
-                            eposPointer.add(eposOffset['timer']).writeFloat(0.09);
+                            epos.add(eposOffset['timer']).writeFloat(0.09);
                         }
                     }; break;
-                    case 21: if(isSkill(eposPointer)) {
+                    case 21: if(isSkill(epos)) {
                         if(onlyonce) {
-                            if(timer < 0.99) eposPointer.add(eposOffset['timer']).writeFloat(0.99);
-                            else if(timer > 0.99) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                            if(timer < 0.99) epos.add(eposOffset['timer']).writeFloat(0.99);
+                            else if(timer > 0.99) epos.add(eposOffset['timer']).writeFloat(9999);
                         } else {
-                            eposPointer.add(eposOffset['timer']).writeFloat(0.99);
+                            epos.add(eposOffset['timer']).writeFloat(0.99);
                         }
                     }; break;
-                    case 24: if(isSkill(eposPointer)) {
+                    case 24: if(isSkill(epos)) {
                         if(onlyonce) {
-                            if(timer < 0.49) eposPointer.add(eposOffset['timer']).writeFloat(0.49);
-                            else if(timer > 0.49) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                            if(timer < 0.49) epos.add(eposOffset['timer']).writeFloat(0.49);
+                            else if(timer > 0.49) epos.add(eposOffset['timer']).writeFloat(9999);
                         } else {
-                            eposPointer.add(eposOffset['timer']).writeFloat(0.49);
+                            epos.add(eposOffset['timer']).writeFloat(0.49);
                         }
                     }; break;
-                    case 25: if(isSkill(eposPointer)) {
+                    case 25: if(isSkill(epos)) {
                         if(onlyonce) {
-                            if(timer < 0.99) eposPointer.add(eposOffset['timer']).writeFloat(0.99);
-                            else if(timer > 0.99) eposPointer.add(eposOffset['timer']).writeFloat(9999);
+                            if(timer < 0.99) epos.add(eposOffset['timer']).writeFloat(0.99);
+                            else if(timer > 0.99) epos.add(eposOffset['timer']).writeFloat(9999);
                         } else {
-                            eposPointer.add(eposOffset['timer']).writeFloat(0.99);
+                            epos.add(eposOffset['timer']).writeFloat(0.99);
                         }
                     }; break;
                 }
             }
             if(cheats['grenade'] && (!keybinds['grenade'] || keymap[keybinds['grenade']])){
-                an.add(anOffset['grenade-base']).writeS8(1);
-                eposPointer.add(eposOffset['gc']).writeFloat(0);
+                // an.add(anOffset['grenade-base']).writeS8(1);
+                epos.add(eposOffset['gc']).writeFloat(0);
+            }
+            if(cheats['debuff']){
+                if(!keybinds['debuff'] || keymap[keybinds['debuff']]){
+                    let ignoreExcepts = config['debuff-ignore'] || false;
+                    let electric = config['debuff-electric'] || false;
+                    let mago = config['debuff-mago'] || false;
+                    let mynum = epos.add(eposOffset['number']).readS32();
+                    getFilteredEntityList(ignoreExcepts)
+                    .filter(entity => !isTeam(epos, entity))
+                    .filter(entity => !isDead(entity))
+                    .forEach(entity => {
+                        let num = entity.add(eposOffset['number']).readS32();
+                        if(electric) makeNFunc('_ZN16SystemPacketSend15BuffHitElectricERK9UserInforjj', 'void', ['pointer', 'uint', 'uint'])(entity, mynum, mynum)
+                        if(mago) makeNFunc('_ZN16SystemPacketSend20DeBuffSkillMagoTotemEjj', 'void', ['uint', 'uint'])(mynum, num);
+                    });
+                }
             }
             if(cheats['hide-me']){
-                eposPointer.add(eposOffset['oy']).writeFloat(100);
+                epos.add(eposOffset['oy']).writeFloat(100);
             } else {
-                eposPointer.add(eposOffset['oy']).writeFloat(0);
+                epos.add(eposOffset['oy']).writeFloat(0);
             }
         } else {
-            lastEpos = false;
-            clearAll();
+            // lastEpos = false;
+            // clearAll();
         }
-        if(cheats['skill-cooldown']){
-            an.add(anOffset['skill-base']).writeS8(1);
-        }
+        // if(cheats['skill-cooldown']){
+        //     an.add(anOffset['skill-base']).writeS8(1);
+        // }
     } catch(e){
-        log(e);
+        // log(e);
     }
     setTimeout(loop, 1000/(config['frame'] || 60));
 }
@@ -941,6 +1045,7 @@ function beNaN(){
 function aimbot(eposPointer:NativePointer, delta:number){
     if(!cambase) return;
     if(!eposPointer) return;
+    if(cambase.isNull()) return;
     if(eposPointer.isNull()) return;
     if(isDead(eposPointer)) return;
     if(config['aimbot-main-weapon-only'] && eposPointer.add(eposOffset["weapon"]).readS16() == 1) return;
@@ -984,8 +1089,8 @@ function aimbot(eposPointer:NativePointer, delta:number){
     const target = targets[0];
     if(target){
         if(mode === "instant") {
-            cambase.add(0x4).writeFloat(target[0]);
-            cambase.writeFloat(target[1] - pitchOffset);
+            setYaw(target[0]);
+            setPitch(target[1] - pitchOffset);
         } else {
             const radyaw = target[2] > 0 ? rad : -rad;
             const radpitch = target[3] > 0 ? rad : -rad;
@@ -997,8 +1102,8 @@ function aimbot(eposPointer:NativePointer, delta:number){
             const rp3 = target[3] > 0 ? Math.min(target[3], rp2) : Math.max(target[3], rp2);
             const nyaw = yaw - (mode === 'smooth' ? ry3 * (speed/100) : target[2] * (speed/100));
             const npitch = pitch - (mode === 'smooth' ? rp3 * (speed/100) : target[3] * (speed/100));
-            cambase.add(0x4).writeFloat(nyaw);
-            cambase.writeFloat(npitch - pitchOffset);
+            setYaw(nyaw);
+            setPitch(npitch - pitchOffset);
         }
     }
 }
@@ -1006,7 +1111,9 @@ function aimbot(eposPointer:NativePointer, delta:number){
 function aimassist(eposPointer:NativePointer, delta:number){
     if(!cambase) return;
     if(!eposPointer) return;
+    if(cambase.isNull()) return;
     if(eposPointer.isNull()) return;
+    if(isDead(eposPointer)) return;
     const angle = config['aim-assist-angle'] || 10;
     const ignoreExcept = config['aim-assist-ignore'] || false;
     const ignoreTeam = config['aim-assist-ignore-team'] || false;
@@ -1046,8 +1153,8 @@ function aimassist(eposPointer:NativePointer, delta:number){
         const rp3 = target[3] > 0 ? Math.min(target[3], rp2) : Math.max(target[3], rp2);
         const nyaw = yaw - ry3 * (assistSpeed/100 * (delta/10));
         const npitch = pitch - rp3 * (assistSpeed/100 * (delta/10));
-        cambase.add(0x4).writeFloat(nyaw);
-        cambase.writeFloat(npitch - pitchOffset);
+        setYaw(nyaw);
+        setPitch(npitch - pitchOffset);
     }
 }
 
@@ -1071,6 +1178,8 @@ function calcESP(vec3:{x:number; y:number; z:number;}, cam3:{x:number; y:number;
 
 function blackhole(eposPointer:NativePointer){
     if(!cambase) return;
+    if(!eposPointer) return;
+    if(cambase.isNull()) return;
     if(eposPointer.isNull()) return;
     const ignoreExcept = config['blackhole-ignore'] || false;
     const ignoreTeam = config['blackhole-ignore-team'] || false;
@@ -1158,146 +1267,146 @@ function isTeam(my:NativePointer, eposPointer:NativePointer):boolean{
     return myslot % 2 === tarslot % 2;
 }
 
-function actionName(action: number) {
-    const names:Record<number, string> = {
-        0: 'DOWN',
-        1: 'UP',
-        2: 'MOVE',
-        3: 'CANCEL',
-        5: 'POINTER_DOWN',
-        6: 'POINTER_UP',
-    };
-    return names[action] || 'UNKNOWN';
-}
+// function actionName(action: number) {
+//     const names:Record<number, string> = {
+//         0: 'DOWN',
+//         1: 'UP',
+//         2: 'MOVE',
+//         3: 'CANCEL',
+//         5: 'POINTER_DOWN',
+//         6: 'POINTER_UP',
+//     };
+//     return names[action] || 'UNKNOWN';
+// }
 
-function Click(x:number, y:number, msOffset:number = 0): void{
-    if(InputManager){
-        const touchUpDelay = 10;
-        const MotionEvent = Java.use('android.view.MotionEvent');
-        const PointerProperties = Java.use('android.view.MotionEvent$PointerProperties');
-        const PointerCoords = Java.use('android.view.MotionEvent$PointerCoords');
-        const SystemClock = Java.use('android.os.SystemClock');
+// function Click(x:number, y:number, msOffset:number = 0): void{
+//     if(InputManager){
+//         const touchUpDelay = 10;
+//         const MotionEvent = Java.use('android.view.MotionEvent');
+//         const PointerProperties = Java.use('android.view.MotionEvent$PointerProperties');
+//         const PointerCoords = Java.use('android.view.MotionEvent$PointerCoords');
+//         const SystemClock = Java.use('android.os.SystemClock');
 
-        const now: number = SystemClock.uptimeMillis() + msOffset;
-        const existingPointerIds = Object.keys(activeTouches).map(id => parseInt(id));
-        const newPointerId = Math.max(...existingPointerIds, -1) + 1;
-        const pointerCount = existingPointerIds.length + 1;
-        const newPointerIndex = existingPointerIds.length; // Index of the new pointer being added
+//         const now: number = SystemClock.uptimeMillis() + msOffset;
+//         const existingPointerIds = Object.keys(activeTouches).map(id => parseInt(id));
+//         const newPointerId = Math.max(...existingPointerIds, -1) + 1;
+//         const pointerCount = existingPointerIds.length + 1;
+//         const newPointerIndex = existingPointerIds.length; // Index of the new pointer being added
 
-        // Create arrays with the final size
-        const PointerPropertiesArray = Java.use('[Landroid.view.MotionEvent$PointerProperties;');
-        let pointerPropertiesArray = PointerPropertiesArray.$new(pointerCount);
-        const PointerCoordsArray = Java.use('[Landroid.view.MotionEvent$PointerCoords;');
-        let pointerCoordsArray = PointerCoordsArray.$new(pointerCount);
+//         // Create arrays with the final size
+//         const PointerPropertiesArray = Java.use('[Landroid.view.MotionEvent$PointerProperties;');
+//         let pointerPropertiesArray = PointerPropertiesArray.$new(pointerCount);
+//         const PointerCoordsArray = Java.use('[Landroid.view.MotionEvent$PointerCoords;');
+//         let pointerCoordsArray = PointerCoordsArray.$new(pointerCount);
 
-        // Populate existing pointers
-        for (let i = 0; i < existingPointerIds.length; i++) {
-            const id = existingPointerIds[i];
-            const prop = PointerProperties.$new();
-            prop.id.value = id;
-            prop.toolType.value = MotionEvent.TOOL_TYPE_FINGER.value;
-            pointerPropertiesArray[i] = prop;
+//         // Populate existing pointers
+//         for (let i = 0; i < existingPointerIds.length; i++) {
+//             const id = existingPointerIds[i];
+//             const prop = PointerProperties.$new();
+//             prop.id.value = id;
+//             prop.toolType.value = MotionEvent.TOOL_TYPE_FINGER.value;
+//             pointerPropertiesArray[i] = prop;
 
-            const coord = PointerCoords.$new();
-            coord.x.value = activeTouches[id].x;
-            coord.y.value = activeTouches[id].y;
-            coord.pressure.value = 1.0;
-            coord.size.value = 1.0;
-            pointerCoordsArray[i] = coord;
-        }
+//             const coord = PointerCoords.$new();
+//             coord.x.value = activeTouches[id].x;
+//             coord.y.value = activeTouches[id].y;
+//             coord.pressure.value = 1.0;
+//             coord.size.value = 1.0;
+//             pointerCoordsArray[i] = coord;
+//         }
 
-        // Populate the new pointer
-        const newProp = PointerProperties.$new();
-        newProp.id.value = newPointerId;
-        newProp.toolType.value = MotionEvent.TOOL_TYPE_FINGER.value;
-        pointerPropertiesArray[newPointerIndex] = newProp;
+//         // Populate the new pointer
+//         const newProp = PointerProperties.$new();
+//         newProp.id.value = newPointerId;
+//         newProp.toolType.value = MotionEvent.TOOL_TYPE_FINGER.value;
+//         pointerPropertiesArray[newPointerIndex] = newProp;
 
-        const newCoord = PointerCoords.$new();
-        newCoord.x.value = x;
-        newCoord.y.value = y;
-        newCoord.pressure.value = 1.0;
-        newCoord.size.value = 1.0;
-        pointerCoordsArray[newPointerIndex] = newCoord;
+//         const newCoord = PointerCoords.$new();
+//         newCoord.x.value = x;
+//         newCoord.y.value = y;
+//         newCoord.pressure.value = 1.0;
+//         newCoord.size.value = 1.0;
+//         pointerCoordsArray[newPointerIndex] = newCoord;
 
-        // Get the specific obtain method overload
-        const obtainMethod = MotionEvent.obtain.overload(
-            'long', 'long', 'int', 'int',
-            '[Landroid.view.MotionEvent$PointerProperties;',
-            '[Landroid.view.MotionEvent$PointerCoords;',
-            'int', 'int', 'float', 'float', 'int', 'int', 'int', 'int'
-        );
+//         // Get the specific obtain method overload
+//         const obtainMethod = MotionEvent.obtain.overload(
+//             'long', 'long', 'int', 'int',
+//             '[Landroid.view.MotionEvent$PointerProperties;',
+//             '[Landroid.view.MotionEvent$PointerCoords;',
+//             'int', 'int', 'float', 'float', 'int', 'int', 'int', 'int'
+//         );
 
-        // Determine the correct DOWN action
-        var downAction;
-        if (pointerCount === 1) { // First pointer down
-            downAction = MotionEvent.ACTION_DOWN.value; // 0
-        } else { // Additional pointer down
-            downAction = (newPointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT.value) | MotionEvent.ACTION_POINTER_DOWN.value; // (index << 8) + 5
-        }
+//         // Determine the correct DOWN action
+//         var downAction;
+//         if (pointerCount === 1) { // First pointer down
+//             downAction = MotionEvent.ACTION_DOWN.value; // 0
+//         } else { // Additional pointer down
+//             downAction = (newPointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT.value) | MotionEvent.ACTION_POINTER_DOWN.value; // (index << 8) + 5
+//         }
 
-        // Create the DOWN event
-        var downEvent = obtainMethod(
-            now, // downTime
-            now, // eventTime
-            downAction,
-            pointerCount,
-            pointerPropertiesArray,
-            pointerCoordsArray,
-            0, // metaState
-            0, // buttonState
-            1.0, // xPrecision
-            1.0, // yPrecision
-            0, // deviceId
-            0, // edgeFlags
-            0x1002, // source InputDevice.SOURCE_TOUCHSCREEN
-            0 // flags
-        );
+//         // Create the DOWN event
+//         var downEvent = obtainMethod(
+//             now, // downTime
+//             now, // eventTime
+//             downAction,
+//             pointerCount,
+//             pointerPropertiesArray,
+//             pointerCoordsArray,
+//             0, // metaState
+//             0, // buttonState
+//             1.0, // xPrecision
+//             1.0, // yPrecision
+//             0, // deviceId
+//             0, // edgeFlags
+//             0x1002, // source InputDevice.SOURCE_TOUCHSCREEN
+//             0 // flags
+//         );
 
-        // Inject the DOWN event
-        InputManager.injectInputEvent(downEvent, 0); // INJECT_INPUT_EVENT_MODE_ASYNC
+//         // Inject the DOWN event
+//         InputManager.injectInputEvent(downEvent, 0); // INJECT_INPUT_EVENT_MODE_ASYNC
 
-        // Schedule the UP event
-        setTimeout(function () {
-            const upTime = now + touchUpDelay;
+//         // Schedule the UP event
+//         setTimeout(function () {
+//             const upTime = now + touchUpDelay;
 
-            // Determine the correct UP action
-            var upAction;
-            if (pointerCount === 1) { // Last pointer up
-                upAction = MotionEvent.ACTION_UP.value; // 1
-            } else { // One of multiple pointers going up
-                upAction = (newPointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT.value) | MotionEvent.ACTION_POINTER_UP.value; // (index << 8) + 6
-            }
+//             // Determine the correct UP action
+//             var upAction;
+//             if (pointerCount === 1) { // Last pointer up
+//                 upAction = MotionEvent.ACTION_UP.value; // 1
+//             } else { // One of multiple pointers going up
+//                 upAction = (newPointerIndex << MotionEvent.ACTION_POINTER_INDEX_SHIFT.value) | MotionEvent.ACTION_POINTER_UP.value; // (index << 8) + 6
+//             }
 
-            // Create the UP event
-            // Note: For ACTION_POINTER_UP, the pointerCount and arrays should reflect the state *before* the pointer goes up.
-            // The 'action' indicates which pointer is going up.
-            var upEvent = obtainMethod(
-                now, // downTime (original down time)
-                upTime, // eventTime
-                upAction,
-                pointerCount, // Still includes the pointer going up
-                pointerPropertiesArray, // Still includes the pointer going up
-                pointerCoordsArray, // Still includes the pointer going up
-                0, // metaState
-                0, // buttonState
-                1.0, // xPrecision
-                1.0, // yPrecision
-                0, // deviceId
-                0, // edgeFlags
-                0x1002, // source
-                0 // flags
-            );
+//             // Create the UP event
+//             // Note: For ACTION_POINTER_UP, the pointerCount and arrays should reflect the state *before* the pointer goes up.
+//             // The 'action' indicates which pointer is going up.
+//             var upEvent = obtainMethod(
+//                 now, // downTime (original down time)
+//                 upTime, // eventTime
+//                 upAction,
+//                 pointerCount, // Still includes the pointer going up
+//                 pointerPropertiesArray, // Still includes the pointer going up
+//                 pointerCoordsArray, // Still includes the pointer going up
+//                 0, // metaState
+//                 0, // buttonState
+//                 1.0, // xPrecision
+//                 1.0, // yPrecision
+//                 0, // deviceId
+//                 0, // edgeFlags
+//                 0x1002, // source
+//                 0 // flags
+//             );
 
-            // Inject the UP event
-            InputManager.injectInputEvent(upEvent, 0); // INJECT_INPUT_EVENT_MODE_ASYNC
+//             // Inject the UP event
+//             InputManager.injectInputEvent(upEvent, 0); // INJECT_INPUT_EVENT_MODE_ASYNC
 
-            // Clean up the pointer from activeTouches *after* injecting UP event
-            // This part was missing in the original logic and might be needed depending on how activeTouches is used elsewhere.
-            // delete activeTouches[newPointerId]; // Uncomment if necessary
+//             // Clean up the pointer from activeTouches *after* injecting UP event
+//             // This part was missing in the original logic and might be needed depending on how activeTouches is used elsewhere.
+//             // delete activeTouches[newPointerId]; // Uncomment if necessary
 
-        }, touchUpDelay);
-    }
-}
+//         }, touchUpDelay);
+//     }
+// }
 
 function gyro(data:{
     alpha:number;
@@ -1313,8 +1422,8 @@ function gyro(data:{
     const beta = data.beta * sensitivity;
     const gamma = data.gamma * sensitivity;
     const pitchAdd = (config['gyro-scope-use-gamma'] ? gamma : beta) * (config['gyro-scope-invert'] ? -1 : 1);
-    cambase.add(0x4).writeFloat(yaw + alpha);
-    cambase.writeFloat(pitch + pitchAdd);
+    setYaw(yaw + alpha);
+    setPitch(pitch + pitchAdd);
 }
 
 function executeMacro(events:MacroEvent[]){
@@ -1650,10 +1759,10 @@ function qwordToHex(qword: Int64): string {
 function forceWriteS32(_ptr:NativePointer, value:number){
     Memory.protect(_ptr, Process.pageSize, 'rwx');
     _ptr.writeS32(value);
-    Memory.protect(_ptr, Process.pageSize, isArm ? 'r-x' : 'r--');
+    Memory.protect(_ptr, Process.pageSize, isArm ? 'r-x' : 'r-x');
 }
 function forceWriteFloat(_ptr:NativePointer, value:number){
     Memory.protect(_ptr, Process.pageSize, 'rwx');
     _ptr.writeFloat(value);
-    Memory.protect(_ptr, Process.pageSize, isArm ? 'r-x' : 'r--');
+    Memory.protect(_ptr, Process.pageSize, isArm ? 'r-x' : 'r-x');
 }
