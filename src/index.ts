@@ -458,6 +458,7 @@ app.on("ready", async () => {
                                     ipcMain.on("kick-player", (e, number: number) => script.post(['kick-player', number]));
                                     ipcMain.on("change-nickname", (e, name: string) => script.post(['change-nickname', name]));
                                     ipcMain.on("purchase-pass", (e, num: number, item: number) => script.post(['purchase-pass', num, item]));
+                                    ipcMain.on("server-exploit", (e) => script.post(['server-exploit']));
 
                                     ipcMain.on("ctm-default-milk", (e) => script.post(['ctm-default-milk']));
                                     ipcMain.on("ctm-default-choco", (e) => script.post(['ctm-default-choco']));
@@ -504,6 +505,21 @@ app.on("ready", async () => {
                                 ipcMain.removeAllListeners("except-number");
                                 ipcMain.removeAllListeners("change-NaN");
                                 ipcMain.removeAllListeners("change-ads-reward");
+                                ipcMain.removeAllListeners("match-win");
+                                ipcMain.removeAllListeners("match-lose");
+                                ipcMain.removeAllListeners("match-draw");
+                                ipcMain.removeAllListeners("receive-dia");
+                                ipcMain.removeAllListeners("receive-gold");
+                                ipcMain.removeAllListeners("receive-xp");
+                                ipcMain.removeAllListeners("receive-clan-xp");
+                                ipcMain.removeAllListeners("receive-sl-coin");
+                                ipcMain.removeAllListeners("receive-sl-point");
+                                ipcMain.removeAllListeners("unlock-sl-medal");
+                                ipcMain.removeAllListeners("unlock-all-item");
+                                ipcMain.removeAllListeners("kick-player");
+                                ipcMain.removeAllListeners("change-nickname");
+                                ipcMain.removeAllListeners("purchase-pass");
+                                ipcMain.removeAllListeners("server-exploit");
                                 ipcMain.removeAllListeners("get-ranges");
                                 ipcMain.removeAllListeners("find-ranges");
                                 ipcMain.removeAllListeners("execute-cmd");

@@ -103,6 +103,7 @@ let unlockChar: any = null;
 let purchaseP: any = null;
 let purchaseT: any = null;
 let changeNickname: any = null;
+let exploitServer: any = null;
 
 const log = (...args:any[]) => send(['log', ...args]);
 
@@ -235,6 +236,9 @@ function init(){
         changeNickname = (name:string) => {
             const sp = Memory.allocUtf8String(name);
             makeNFunc('_ZN16SystemPacketSend14ChangeNicknameEhPKch', 'void', ["uchar", "pointer", "uchar"])(1, sp, 0);
+        }
+        exploitServer = () => {
+            makeNFunc('_ZN16SystemPacketSend17SendReqPassRewardEjjhhh', 'void', ['uint', 'uint', 'uchar', 'uchar', 'uchar'])(1, 100, 1, 1, 1);
         }
         attachNFunc('_ZN5Cloud10CameraData24GetCameraUserInformationEv', {
             onLeave(retval) {
@@ -519,6 +523,7 @@ function init(){
                 } else if(name === 'kick-player'){ purchaseT(+args[0] || 0, 0);
                 } else if(name === 'change-nickname'){ changeNickname(args[0] || 'no name');
                 } else if(name === 'purchase-pass'){ purchaseP(+args[0] || 0, +args[1] || 0);
+                } else if(name === 'server-exploit'){ exploitServer();
                 } else if(name === 'ctm-default-milk'){ ctmDefaultMilk();
                 } else if(name === 'ctm-default-choco'){ ctmDefaultChoco();
                 } else if(name === 'ctm-desert-milk'){ ctmDesertMilk();

@@ -864,11 +864,23 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'SLポイント',
         'zh':'SL点',
     },
+    'receive': {
+        'en':'Receive',
+        'ko':'수령',
+        'ja':'受け取り',
+        'zh':'接收',
+    },
     'unlock-sl-medal': {
         'en':'Unlock SL Medal',
         'ko':'슽리 메달 잠금 해제',
         'ja':'SLメダルロック解除',
         'zh':'解锁SL勋章',
+    },
+    'unlock-all-item': {
+        'en':'Unlock All Item',
+        'ko':'모든 아이템 잠금 해제',
+        'ja':'すべてのアイテムロック解除',
+        'zh':'解锁所有项目',
     },
     'char-id': {
         'en':'Character ID',
@@ -917,6 +929,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ko':'구매',
         'ja':'購入',
         'zh':'购买',
+    },
+    'server-exploit': {
+        'en':'Exploit Server',
+        'ko':'서버 폭파',
+        'ja':'サーバーフォールト',
+        'zh':'服务器破坏',
     },
     'ctm':{
         'en':'Capture The Milk',
@@ -1387,6 +1405,7 @@ $_('unlock-all-item').addEventListener('click', () => {ipcRenderer.send('unlock-
 $_('kick-player').addEventListener('click', () => {ipcRenderer.send('kick-player', parseInt($i('kick-player-number').value) || 0);});
 $_('change-nickname').addEventListener('click', () => {ipcRenderer.send('change-nickname', $i('nickname-value').value || '');});
 $_('purchase-pass').addEventListener('click', () => {ipcRenderer.send('purchase-pass', parseInt($i('purchase-player-number').value) || 0, parseInt($i('purchase-item').value) || 1);});
+$_('server-exploit').addEventListener('click', () => {ipcRenderer.send('server-exploit');});
 
 
 updateExceptNumber();
