@@ -1,4 +1,7 @@
 import { ipcRenderer } from "electron";
+import { initDevTools } from "./ui/devtools";
+import { $, $$, $_, $c, $i, $$_ } from "./ui/dom";
+
 import { IGlobalKey } from "node-global-key-listener";
 
 const keymap:{[key:string]:IGlobalKey} = {
@@ -1079,12 +1082,7 @@ function keyOf(str: string): IGlobalKey {
     else return ""
 }
 
-const $ = (selector: string) => document.querySelector(selector);
-const $$ = (selector: string) => document.querySelectorAll(selector);
-const $_ = (selector: string) => document.getElementById(selector);
-const $c = (selector: string) => document.querySelector(`details[data-cheat="${selector}"]`);
-const $i = (selector: string):HTMLInputElement => document.getElementById(selector) as HTMLInputElement;
-const $$_ = (selector: string) => Array.from($$(selector));
+// selector helpers moved to ui/dom.ts
 const log = (...args: any[]) => ipcRenderer.send("log", args);
 
 let attached:boolean = false;
@@ -1275,7 +1273,7 @@ ipcRenderer.on('token', (e, token:Token|string) => {
         $_('logerr').textContent = token;
     } else {
         localStorage.setItem('token', JSON.stringify(token.code));
-        if(token.perms.includes('admin')) $_('selector-dev-mode').classList.remove('hide');
+        if(token.perms.includes('admin') || token.perms.includes('developer')) $_('selector-dev-mode').classList.remove('hide');
         document.querySelectorAll('details[data-cheat]').forEach((el:HTMLElement) => el.classList.add('hide'));
         token.perms.forEach((perm:string) => {
             const _el = $c(perm);
@@ -1334,7 +1332,7 @@ ipcRenderer.on('init', (e, _b:boolean) => {
     });
     $$_('.attached').forEach((el:HTMLButtonElement) => {
         el.disabled = !attached;
-    });
+    })
 })
 
 const xel = $i('pos-x');
@@ -1461,3 +1459,6 @@ $_('execute-cmd').addEventListener('click', () => {ipcRenderer.send('execute-cmd
 
 $_('server-start').addEventListener('click', () => {ipcRenderer.send('server-start', +$i('server-port').value || 3000);});
 $_('server-stop').addEventListener('click', () => {ipcRenderer.send('server-stop');});
+
+// Developer tools initialization (perf toggle and output)
+initDevTools(ipcRenderer);

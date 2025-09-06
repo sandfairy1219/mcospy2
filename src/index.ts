@@ -10,15 +10,15 @@ import { autoUpdater } from "electron-updater";
 import isDev from "electron-is-dev";
 import frida from "frida";
 import { existsSync, readFileSync } from "fs";
-import { adb, attachProcess, checkFridaPerm, conenctFrida, connectAdbDevice, executeProcess, fileExist, fileName, getArch, getUrl, startFrida } from "./data/frida";
+import { adb, attachProcess, checkFridaPerm, connectFrida, connectAdbDevice, executeProcess, fileExist, fileName, getArch, getUrl, startFrida } from "./data/frida";
 import { exec } from "child_process";
-import express from "express";
-import http from "http";
-import https from "https";
-import { Server } from "socket.io";
+import { createServer as createPixelServer } from "./core/server";
+import type { ServerFacade } from "./core/server";
 import { _anOffset, _eposOffset, _xaOffset } from "./offsets";
 import { Key, keyboard } from "@nut-tree-fork/nut-js";
 import { nutKeymap } from "./keymaps";
+import { createGuardedIpc, PermissionLevel } from "./core/guardedIpc";
+import { isCheatAllowed } from "./core/cheatPolicy";
 
 keyboard.config.autoDelayMs = 0;
 
@@ -30,11 +30,30 @@ if(!existsSync(agentPath)) {
     process.exit(1);
 }
 
-const agentScript = readFileSync(agentPath, 'utf8').toString().split('"cut";')[1];
+// Read agent script and strip everything up to the sentinel line "cut"; to avoid leaking helpers/types
+const rawAgentScript = readFileSync(agentPath, 'utf8').toString();
+let agentScript = rawAgentScript;
+const cutIdx1 = rawAgentScript.indexOf('"cut";');
+const cutIdx2 = cutIdx1 < 0 ? rawAgentScript.indexOf("'cut';") : cutIdx1;
+const marker = cutIdx1 < 0 ? "'cut';" : '"cut";';
+if (cutIdx2 >= 0) {
+    agentScript = rawAgentScript.slice(cutIdx2 + marker.length);
+} else {
+    Logger.warn('Agent sentinel "cut" not found; using full agent script as fallback');
+}
 
-// load env
-const envPath = path.join(__dirname, '/../', '/.env');
-dotenv.config({ path: envPath });
+// load env (support both dev and packaged paths gracefully)
+const envCandidates = [
+    path.resolve(__dirname, '..', '..', '.env'),
+    path.resolve(process.cwd(), '.env'),
+];
+const resolvedEnvPath = envCandidates.find(p => existsSync(p));
+if (resolvedEnvPath) {
+    dotenv.config({ path: resolvedEnvPath });
+} else {
+    dotenv.config();
+}
+
 // connect to mongodb
 const client = new MongoClient(process.env.MONGO_URI || "mongodb://localhost:27017");
 // register logger
@@ -57,25 +76,8 @@ let exp:frida.ScriptExports = null;
 let cheats:Cheats = {};
 let config:Config = {};
 let keybinds:Keybinds = {};
+let web: ServerFacade | null = null;
 
-// express server
-// const copt = {
-//     cert: readFileSync(path.join(__dirname, './../public/cert', 'cert.pem')),
-//     key: readFileSync(path.join(__dirname, './../public/cert', 'key.pem')),
-// }
-const appServer = express();
-const server = http.createServer(appServer);
-// const server = https.createServer(copt, appServer);
-const io = new Server(server);
-appServer.use(express.static(path.join(__dirname, './../public')));
-appServer.get('/', (req, res) => {res.sendFile(path.join(__dirname, './../public/routes/main.html'))});
-appServer.get('/mobile', (req, res) => {
-    if(config['plugin-server-mobile-controller']){
-        res.sendFile(path.join(__dirname, './../public/routes/mobile_controller.html'))
-    } else {
-        res.send("Mobile controller disabled");
-    }
-});
 // exit app
 const exitApp = async () => {
     const db = client.db("sanabi");
@@ -83,7 +85,7 @@ const exitApp = async () => {
     if(tk) await tokens.updateOne({ code:tk.code }, { $set: { using: false } });
     Logger.log("App closed");
     app.quit();
-    server.close();
+    try { web?.stop(); } catch {}
     process.exit(0);
 };
 
@@ -164,6 +166,13 @@ app.on("ready", async () => {
         main.webContents.send("login");
     });
 
+    // web server (create after windows + state function exist)
+    web = createPixelServer(
+        () => config,
+        (channel: string, ...args: any[]) => emitter.emit(channel, ...args),
+        (id: string, st: string, log: string) => state(id, st, log)
+    );
+
     // get token
     ipcMain.on("login", async (e, key) => {
         const db = client.db("sanabi");
@@ -222,6 +231,8 @@ app.on("ready", async () => {
         layout.webContents.send("config", id, data);
     });
     ipcMain.on("cheats", (e, id, _state:boolean) => {
+        // Permission-gated cheat toggling
+        if (!isCheatAllowed(tk, id)) return;
         cheats[id] = _state;
         emitter.emit("cheats", id, _state);
     });
@@ -303,7 +314,7 @@ app.on("ready", async () => {
 
     ipcMain.on("connect-frida", async (e) => {
         state("frida", "pending", "Connecting to frida server");
-        await conenctFrida(serial, () => state("frida", "error", "Frida server crashed"), (d) => {
+        await connectFrida(serial, () => state("frida", "error", "Frida server crashed"), (d) => {
             fridaDevice = d;
             state("frida", "active", "Connected to frida server");
         });
@@ -354,6 +365,7 @@ app.on("ready", async () => {
         if(!fridaDevice) return state("session", "error", "Frida not connected");
         state("session", "pending", "Starting agent");
         let found:boolean = false;
+        let guardInst: { on: Function; removeAll: Function } | null = null;
         try{
             const [bpDispose, byScript, bpPid] = await executeProcess(process_name, fridaDevice,
                 `Java.perform(() => {
@@ -392,6 +404,8 @@ app.on("ready", async () => {
                             () => {
                                 state("session", "pending", "Agent attached");
                                 layout.webContents.send("init-config", config);
+                                // Permission-guarded IPC
+                                guardInst = createGuardedIpc(() => tk) as any;
                                 if(tk){
                                     emitter.on("config", (key, value) => {
                                         script.post(['config', key, value]);
@@ -423,42 +437,39 @@ app.on("ready", async () => {
                                     if(isDev) ipcMain.on("state", (e, code:number) => {
                                         script.post(['state', code]);
                                     });
-                                    ipcMain.on("scan-epos", async (e) => {
+                                    (guardInst as any).on("scan-epos", PermissionLevel.User, async (e: any) => {
                                         script.post(['scan-epos']);
                                         script.post(['tier-numbers', await getExceptNums()]);
                                     });
-                                    ipcMain.on("scan-entity", async (e) => {
+                                    (guardInst as any).on("scan-entity", PermissionLevel.User, async (e: any) => {
                                         script.post(['scan-entity']);
                                         script.post(['tier-numbers', await getExceptNums()]);
                                     });
                                     ipcMain.on("clear-all", (e) => {
                                         script.post(['clear-all']);
                                     });
-                                    ipcMain.on("except-number", (e, data:number[]) => {
+                                    (guardInst as any).on("except-number", PermissionLevel.User, (e: any, data:number[]) => {
                                         script.post(['except-number', data]);
                                     });
                                     ipcMain.on("change-NaN", (e) => {
                                         script.post(['change-NaN']);
                                     });
-                                    ipcMain.on("change-ads-reward", (e) => {
-                                        script.post(['change-ads-reward']);
-                                    });
-                                    ipcMain.on("match-win", (e) => script.post(['match-win']));
-                                    ipcMain.on("match-lose", (e) => script.post(['match-lose']));
-                                    ipcMain.on("match-draw", (e) => script.post(['match-draw']));
-                                    ipcMain.on("receive-dia", (e, amount: number) => script.post(['receive-dia', amount]));
-                                    ipcMain.on("receive-gold", (e, amount: number) => script.post(['receive-gold', amount]));
-                                    ipcMain.on("receive-xp", (e, amount: number) => script.post(['receive-xp', amount]));
-                                    ipcMain.on("receive-clan-xp", (e, amount: number) => script.post(['receive-clan-xp', amount]));
-                                    ipcMain.on("receive-sl-coin", (e, amount: number) => script.post(['receive-sl-coin', amount]));
-                                    ipcMain.on("receive-sl-point", (e, amount: number) => script.post(['receive-sl-point', amount]));
-                                    ipcMain.on("unlock-sl-medal", (e) => script.post(['unlock-sl-medal']));
-                                    ipcMain.on("unlock-all-item", (e, charid: number) => script.post(['unlock-all-item', charid]));
-                                    
-                                    ipcMain.on("kick-player", (e, number: number) => script.post(['kick-player', number]));
-                                    ipcMain.on("change-nickname", (e, name: string) => script.post(['change-nickname', name]));
-                                    ipcMain.on("purchase-pass", (e, num: number, item: number) => script.post(['purchase-pass', num, item]));
-                                    ipcMain.on("server-exploit", (e) => script.post(['server-exploit']));
+                                    // Admin-level sensitive operations
+                                    (guardInst as any).on("match-win", PermissionLevel.Admin, (e: any) => script.post(['match-win']));
+                                    (guardInst as any).on("match-lose", PermissionLevel.Admin, (e: any) => script.post(['match-lose']));
+                                    (guardInst as any).on("match-draw", PermissionLevel.Admin, (e: any) => script.post(['match-draw']));
+                                    (guardInst as any).on("receive-dia", PermissionLevel.Admin, (e: any, amount: number) => script.post(['receive-dia', amount]));
+                                    (guardInst as any).on("receive-gold", PermissionLevel.Admin, (e: any, amount: number) => script.post(['receive-gold', amount]));
+                                    (guardInst as any).on("receive-xp", PermissionLevel.Admin, (e: any, amount: number) => script.post(['receive-xp', amount]));
+                                    (guardInst as any).on("receive-clan-xp", PermissionLevel.Admin, (e: any, amount: number) => script.post(['receive-clan-xp', amount]));
+                                    (guardInst as any).on("receive-sl-coin", PermissionLevel.Admin, (e: any, amount: number) => script.post(['receive-sl-coin', amount]));
+                                    (guardInst as any).on("receive-sl-point", PermissionLevel.Admin, (e: any, amount: number) => script.post(['receive-sl-point', amount]));
+                                    (guardInst as any).on("unlock-sl-medal", PermissionLevel.Admin, (e: any) => script.post(['unlock-sl-medal']));
+                                    (guardInst as any).on("unlock-all-item", PermissionLevel.Admin, (e: any, charid: number) => script.post(['unlock-all-item', charid]));
+                                    (guardInst as any).on("kick-player", PermissionLevel.Admin, (e: any, number: number) => script.post(['kick-player', number]));
+                                    (guardInst as any).on("change-nickname", PermissionLevel.Admin, (e: any, name: string) => script.post(['change-nickname', name]));
+                                    (guardInst as any).on("purchase-pass", PermissionLevel.Admin, (e: any, num: number, item: number) => script.post(['purchase-pass', num, item]));
+                                    (guardInst as any).on("server-exploit", PermissionLevel.Admin, (e: any) => script.post(['server-exploit']));
 
                                     ipcMain.on("ctm-default-milk", (e) => script.post(['ctm-default-milk']));
                                     ipcMain.on("ctm-default-choco", (e) => script.post(['ctm-default-choco']));
@@ -468,16 +479,12 @@ app.on("ready", async () => {
                                     ipcMain.on("ctm-castle-choco", (e) => script.post(['ctm-castle-choco']));
                                     ipcMain.on("ctm-mountain-milk", (e) => script.post(['ctm-mountain-milk']));
                                     ipcMain.on("ctm-mountain-choco", (e) => script.post(['ctm-mountain-choco']));
-                                    ipcMain.on("get-ranges", (e, data:string) => {
-                                        script.post(['get-ranges', data]);
-                                    });
-                                    ipcMain.on("find-ranges", (e, data:string) => {
-                                        script.post(['find-ranges', data]);
-                                    });
-                                    ipcMain.on("search-pattern", (e, data:string) => {
-                                        script.post(['search-pattern', data]);
-                                    });
-                                    ipcMain.on("execute-cmd", (e, data:string) => script.post(['execute-cmd', data]));
+                                    // Developer tools (dev-only + developer permission)
+                                    (guardInst as any).on("get-ranges", PermissionLevel.Developer, (e: any, data:string) => script.post(['get-ranges', data]), { devOnly: true });
+                                    (guardInst as any).on("find-ranges", PermissionLevel.Developer, (e: any, data:string) => script.post(['find-ranges', data]), { devOnly: true });
+                                    (guardInst as any).on("search-pattern", PermissionLevel.Developer, (e: any, data:string) => script.post(['search-pattern', data]), { devOnly: true });
+                                    (guardInst as any).on("execute-cmd", PermissionLevel.Developer, (e: any, data:string) => script.post(['execute-cmd', data]), { devOnly: true });
+                                    (guardInst as any).on("dev-perf", PermissionLevel.Developer, (e: any, val:boolean) => script.post(['dev-perf', val]), { devOnly: true });
                                     emitter.on("gyro", (data) => {
                                         script.post(['gyro', data]);
                                     });
@@ -493,6 +500,9 @@ app.on("ready", async () => {
                                 emitter.removeAllListeners("keybind");
                                 emitter.removeAllListeners("cheats");
                                 emitter.removeAllListeners("gk");
+                                // dispose guarded listeners
+                                try { guardInst && (guardInst as any).removeAll(); } catch {}
+                                guardInst = null;
                                 ipcMain.removeAllListeners("listen-sub");
                                 ipcMain.removeAllListeners("listen-main");
                                 ipcMain.removeAllListeners("reverse");
@@ -586,33 +596,17 @@ app.on("ready", async () => {
     emitter.on("except-number", (data:number[]) => {
         main.webContents.send("except-number", data);
     });
+    // developer perf output forwarding
+    emitter.on("perf", (data:any) => {
+        main.webContents.send("perf", data);
+    });
 
     // server
     ipcMain.on("server-start", (e, port:number) => {
-        state('express', 'pending', 'Starting server');
-        server.listen(port, () => {
-            state('express', 'active', `Started on port ${port}`);
-        });
+        web?.start(port || 3000);
     });
     ipcMain.on("server-stop", (e) => {
-        state('express', 'pending', 'Stopping server');
-        server.close(() => {
-            state('express', 'error', 'Server stopped');
-        });
-    });
-
-    // socket
-    io.on("connection", (socket) => {
-        console.log("Socket connected");
-        socket.on("disconnect", () => {
-            console.log("Socket disconnected");
-        });
-        socket.on("gyro", (data) => {
-            if(config['gyro-scope']) emitter.emit("gyro", data);
-        });
-        socket.on("key", (key:string) => {
-            console.log("Keydown", key);
-        });
+        web?.stop();
     });
 
     // click
@@ -620,7 +614,6 @@ app.on("ready", async () => {
         adb.shell(adbId, `input tap ${x} ${y}`);
     })
     // keyboard
-    keyboard.config.autoDelayMs = 0;
     emitter.on("sendkey", async (keyName: string) => {
         if(nutKeymap[keyName]){
             keyboard.pressKey(nutKeymap[keyName]);

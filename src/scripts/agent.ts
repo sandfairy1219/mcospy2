@@ -1,7 +1,9 @@
 "cut";
-const xaOffset = /*xaOffset*/;
-const anOffset = /*anOffset*/;
-const eposOffset = /*eposOffset*/;
+// Offsets are injected at runtime from the host by replacing the placeholder comments below.
+// Use JSON.parse on a string literal to keep this file valid TypeScript pre-injection.
+const xaOffset = JSON.parse('/*xaOffset*/');
+const anOffset = JSON.parse('/*anOffset*/');
+const eposOffset = JSON.parse('/*eposOffset*/');
 
 // 0 = ground stop
 // 1 = ground walk
@@ -85,6 +87,10 @@ let macros:Macro[] = [];
 
 let listenSub: boolean = false;
 let listenMain: boolean = false;
+let devPerf: boolean = false;
+let perfAccum = 0;
+let perfCount = 0;
+let perfLast = Date.now();
 
 // let activeTouches: Record<string, any> = {}
 // let InputManager:any = null;
@@ -174,11 +180,14 @@ function getFilteredEntityList(exceptMark:boolean):NativePointer[]{
     return [...entityList].map(pt => ptr(pt))
     .filter(entity => entity.toString() !== '0x0')
     .filter(entity => !entity.isNull())
-    .filter(entity => 
-        entity.add(eposOffset['zr1']).readS32() === 0
-        && entity.add(eposOffset['zr2']).readS32() === 0
-        && entity.add(eposOffset["nickname"]).readCString() !== ""
-    )
+    .filter(entity => {
+        // Treat zr1/zr2 as float flags and ignore entities with non-zero values
+        const zr1 = entity.add(eposOffset['zr1']).readFloat();
+        const zr2 = entity.add(eposOffset['zr2']).readFloat();
+        const name = entity.add(eposOffset["nickname"]).readCString();
+        const eps = 1e-6;
+        return Math.abs(zr1) < eps && Math.abs(zr2) < eps && name !== "";
+    })
     .filter(entity => entity.toString() !== epos.toString())
     .filter(entity => !excns.includes(entity.add(eposOffset['number']).readS32()))
     .filter(entity => {
@@ -550,7 +559,7 @@ function init(){
                 } else if(name === 'find-ranges'){
                     const r = Process.findRangeByAddress(ptr(args[0]));
                     const f = Process.enumerateRanges('rw-').find(range => range.base.equals(ptr(args[0])))
-                    const c = !r.file && r.size >= 0x20_0000 && r.size % 0x10_0000 == 0
+                    const c = !r.file && r.size >= 0x20_0000 && r.size < 0x1000_0000 && r.size % 0x10_0000 == 0
                     log(r, f, c)
                 } else if(name === 'search-pattern'){
                     if(jit && !jit.isNull()){
@@ -572,6 +581,9 @@ function init(){
                 } else if(name === 'execute-macro'){
                     const macro = macros.find(macro => macro.id === args[0]);
                     if(macro) executeMacro(macro.events);
+                } else if(name === 'dev-perf'){
+                    devPerf = !!args[0];
+                    perfAccum = 0; perfCount = 0; perfLast = Date.now();
                 }
             } catch(e){
                 log("[ERROR]", e);
@@ -927,6 +939,16 @@ function loop(){
         // if(cheats['skill-cooldown']){
         //     an.add(anOffset['skill-base']).writeS8(1);
         // }
+        if(devPerf){
+            perfAccum += delta;
+            perfCount += 1;
+            const now = Date.now();
+            if(now - perfLast >= 1000){
+                const fps = perfCount / ((now - perfLast) / 1000);
+                send(['perf', { fps: +fps.toFixed(1), entities: entityList.size }]);
+                perfAccum = 0; perfCount = 0; perfLast = now;
+            }
+        }
     } catch(e){
         // log(e);
     }
@@ -1761,13 +1783,30 @@ function qwordToHex(qword: Int64): string {
     const x = qword.toString(16)
     return x.match(/.{2}/g).reverse().join(' ')
 }
+function withWritable<T>(_ptr: NativePointer, fn: () => T): T {
+    let base: NativePointer = _ptr;
+    let size: number = Process.pageSize;
+    let originalProt: any = 'r-x';
+    try {
+        const range = Process.getRangeByAddress(_ptr);
+        base = range.base;
+        size = range.size;
+        originalProt = range.protection as any;
+    } catch (_) {
+        // Fallback to single page protection if range lookup fails
+    }
+    Memory.protect(base, size, 'rwx');
+    try {
+        return fn();
+    } finally {
+        Memory.protect(base, size, originalProt);
+    }
+}
 function forceWriteS32(_ptr:NativePointer, value:number){
-    Memory.protect(_ptr, Process.pageSize, 'rwx');
-    _ptr.writeS32(value);
-    Memory.protect(_ptr, Process.pageSize, isArm ? 'r-x' : 'r-x');
+    // Write 32-bit signed integer with safe protection handling
+    withWritable(_ptr, () => { _ptr.writeS32(value); });
 }
 function forceWriteFloat(_ptr:NativePointer, value:number){
-    Memory.protect(_ptr, Process.pageSize, 'rwx');
-    _ptr.writeFloat(value);
-    Memory.protect(_ptr, Process.pageSize, isArm ? 'r-x' : 'r-x');
+    // Write float with safe protection handling
+    withWritable(_ptr, () => { _ptr.writeFloat(value); });
 }
