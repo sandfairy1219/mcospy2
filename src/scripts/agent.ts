@@ -256,7 +256,7 @@ function init(){
         exploitServer = () => {
             makeNFunc('_ZN16SystemPacketSend17SendReqPassRewardEjjhhh', 'void', ['uint', 'uint', 'uchar', 'uchar', 'uchar'])(1, 100, 1, 1, 1);
         }
-        createClan = (name:string = genRandom(), desc:string = "", mark:number = 0, flag:number = 151) => {
+        createClan = (name:string = genRandom(), desc:string = " ", mark:number = 0, flag:number = 151) => {
             const npt = Memory.allocUtf8String(name);
             const dpt = Memory.allocUtf8String(desc);
             const nobj = Memory.alloc(Process.pageSize);
