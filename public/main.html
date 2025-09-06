@@ -478,6 +478,17 @@
             <details data-cheat="hide-me">
                 <summary class="no" id="hide-me" data-lang="hide-me"></summary>
             </details>
+            <details data-cheat="auto-end">
+                <summary id="auto-end" data-lang="auto-end"></summary>
+                <main>
+                    <div data-lang="auto-end-type"></div>
+                    <select class="config" id="auto-end-type">
+                        <option value="0">Win</option>
+                        <option value="1">Lose</option>
+                        <option value="2">Draw</option>
+                    </select>
+                </main>
+            </details>
             <!-- <details data-cheat="cooker-buff">
                 <summary class="no" id="cooker-buff" data-lang="cooker-buff"></summary>
             </details> -->
@@ -544,6 +555,9 @@
                     <input type="text" id="unlock-all-item-char-id" class="w-full text-center" data-lang-ph="char-id">
                     <button class="w-full" id="unlock-all-item" data-lang="unlock-all-item"></button>
                 </main>
+                <main>
+                    <button class="w-full" id="unlock-all-char" data-lang="unlock-all-char"></button>
+                </main>
             </details>
             <details data-cheat="utilities">
                 <summary data-lang="utilities"></summary>
@@ -564,8 +578,12 @@
                     <button class="w-full" id="purchase-pass" data-lang="purchase"></button>
                 </main>
                 <main>
-                    <button class="w-full" id="server-exploit" data-lang="server-exploit"></button>
+                    <input type="text" id="clanname-value" class="w-full text-center" data-lang-ph="clanname">
+                    <button class="w-full" id="create-clan" data-lang="create"></button>
                 </main>
+                <!-- <main>
+                    <button class="w-full" id="server-exploit" data-lang="server-exploit"></button>
+                </main> -->
             </details>
             <!-- <details data-cheat="ctm">
                 <summary data-lang="ctm"></summary>
@@ -704,8 +722,16 @@
                     <button class="w-full" id="search-pattern" data-lang="search"></button>
                 </div>
             </details>
+            <details>
+                <summary data-lang="performance"></summary>
+                <main>
+                    <div data-lang="enable-performance"></div>
+                    <input type="checkbox" id="dev-perf">
+                </main>
+                <pre id="perf-out" class="text-xs"></pre>
+            </details>
         </section>
     </div>
-    <script type="module" src="../dist/main.js"></script>
+    <script src="./renderer.js"></script>
 </body>
 </html>

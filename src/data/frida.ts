@@ -40,7 +40,8 @@ export const startFrida = async (id:string, filename:string, onCrashed:() => voi
     }
 }
 
-export const conenctFrida = async (serial:string, onCrashed:() => void, onConnected:(d:frida.Device) => void) => {
+// Backward compatibility export (to be removed after refactor)
+export const connectFrida = async (serial:string, onCrashed:() => void, onConnected:(d:frida.Device) => void) => {
     const devc = await frida.getDevice(serial);
     if(devc) {
         devc.processCrashed.connect(onCrashed);
@@ -66,6 +67,9 @@ export const conenctFrida = async (serial:string, onCrashed:() => void, onConnec
         onConnected(fridaDevice)
     })
 }
+
+// Backward compatibility export (to be removed after refactor)
+export const conenctFrida = connectFrida;
 
 export const connectAdbDevice = async (serial:string):Promise<string> => {
     try{

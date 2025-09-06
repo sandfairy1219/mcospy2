@@ -1,6 +1,6 @@
 {
   "name": "pixel",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "milkchoco frida cheat tool",
   "main": "dist/index.js",
   "scripts": {
@@ -76,8 +76,7 @@
         "provider": "github",
         "private": true,
         "owner": "MswTester",
-        "repo": "pixel",
-        "token": "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"
+        "repo": "pixel"
       }
     ]
   },

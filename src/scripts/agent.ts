@@ -1,7 +1,9 @@
 "cut";
-const xaOffset = /*xaOffset*/;
-const anOffset = /*anOffset*/;
-const eposOffset = /*eposOffset*/;
+// Offsets are injected at runtime from the host by replacing the placeholder comments below.
+// Use JSON.parse on a string literal to keep this file valid TypeScript pre-injection.
+const xaOffset = JSON.parse('/*xaOffset*/');
+const anOffset = JSON.parse('/*anOffset*/');
+const eposOffset = JSON.parse('/*eposOffset*/');
 
 // 0 = ground stop
 // 1 = ground walk
@@ -85,6 +87,11 @@ let macros:Macro[] = [];
 
 let listenSub: boolean = false;
 let listenMain: boolean = false;
+let devPerf: boolean = false;
+let perfAccum = 0;
+let perfCount = 0;
+let perfLast = Date.now();
+let autoEnd = false;
 
 // let activeTouches: Record<string, any> = {}
 // let InputManager:any = null;
@@ -100,10 +107,12 @@ let setSLCoin: any = null;
 let setSLPoint: any = null;
 let unlockSLMedal: any = null;
 let unlockChar: any = null;
+let unlockAllChar: any = null;
 let purchaseP: any = null;
 let purchaseT: any = null;
 let changeNickname: any = null;
 let exploitServer: any = null;
+let createClan: any = null;
 
 const log = (...args:any[]) => send(['log', ...args]);
 
@@ -174,11 +183,14 @@ function getFilteredEntityList(exceptMark:boolean):NativePointer[]{
     return [...entityList].map(pt => ptr(pt))
     .filter(entity => entity.toString() !== '0x0')
     .filter(entity => !entity.isNull())
-    .filter(entity => 
-        entity.add(eposOffset['zr1']).readS32() === 0
-        && entity.add(eposOffset['zr2']).readS32() === 0
-        && entity.add(eposOffset["nickname"]).readCString() !== ""
-    )
+    .filter(entity => {
+        // Treat zr1/zr2 as float flags and ignore entities with non-zero values
+        const zr1 = entity.add(eposOffset['zr1']).readFloat();
+        const zr2 = entity.add(eposOffset['zr2']).readFloat();
+        const name = entity.add(eposOffset["nickname"]).readCString();
+        const eps = 1e-6;
+        return Math.abs(zr1) < eps && Math.abs(zr2) < eps && name !== "";
+    })
     .filter(entity => entity.toString() !== epos.toString())
     .filter(entity => !excns.includes(entity.add(eposOffset['number']).readS32()))
     .filter(entity => {
@@ -191,7 +203,6 @@ function getFilteredEntityList(exceptMark:boolean):NativePointer[]{
     })
 }
 
-let lastEpos = false;
 let assistSpeed = 0;
 let lastTime = Date.now();
 let shooting = false;
@@ -231,6 +242,11 @@ function init(){
             for(let i = 1; i <= 127; i++){item(charId, 6, i, 1)}
             for(let i = 1; i <= 127; i++){item(charId, 7, i, 1)}
         };
+        unlockAllChar = () => {
+            for(let i = 1; i <= 255; i++){
+                makeNFunc('_ZN16SystemPacketSend12BuyCharacterEh', 'void', ['uchar'])(i);
+            }
+        };
         purchaseP = makeNFunc('_ZN16SystemPacketSend16SendPurchasePassEjh', 'void', ['uint', 'uchar']);
         purchaseT = makeNFunc('_ZN16SystemPacketSend20SendPurchasePassTierEjh', 'void', ['uint', 'uchar']);
         changeNickname = (name:string) => {
@@ -240,14 +256,40 @@ function init(){
         exploitServer = () => {
             makeNFunc('_ZN16SystemPacketSend17SendReqPassRewardEjjhhh', 'void', ['uint', 'uint', 'uchar', 'uchar', 'uchar'])(1, 100, 1, 1, 1);
         }
+        createClan = (name:string = genRandom(), desc:string = " ", mark:number = 0, flag:number = 151) => {
+            const npt = Memory.allocUtf8String(name);
+            const dpt = Memory.allocUtf8String(desc);
+            const nobj = Memory.alloc(Process.pageSize);
+            const dobj = Memory.alloc(Process.pageSize);
+            nobj.writePointer(npt);
+            dobj.writePointer(dpt);
+            makeNFunc('_ZN16SystemPacketSend10ClanCreateERKSsS1_hh', 'void', ["pointer", "pointer", "uchar", "uchar"])(nobj, dobj, mark, flag);
+        }
         attachNFunc('_ZN5Cloud10CameraData24GetCameraUserInformationEv', {
             onLeave(retval) {
                 if(config['epos-number'] && config['epos-number'] != '0'){
                     let ts = ptr(retval.toString());
                     if(ts && !ts.isNull()){
                         if(ts.readS32() === +config['epos-number']){
+                            if(autoEnd && epos.toString() !== ts.toString()) {
+                                const endType = config['auto-end-type'] || '0';
+                                if(endType === '0'){
+                                    endgame(ptr(ts.add(eposOffset['slot']).readU8() % 2));
+                                } else if(endType === '1'){
+                                    endgame(ptr(1 - (ts.add(eposOffset['slot']).readU8() % 2)));
+                                } else if(endType === '2'){
+                                    endgame(ptr(3));
+                                }
+                                autoEnd = false;
+                            }
                             epos = ts;
-                        } else epos = null;
+                        } else if (
+                            epos.readS32() !== +config['epos-number']
+                            || epos.isNull()
+                            || epos.add(eposOffset['nickname']).readCString().trim() === ""
+                            || epos.add(eposOffset['zr1']).readFloat() !== 0
+                            || epos.add(eposOffset['zr2']).readFloat() !== 0
+                        ) epos = null;
                     } else epos = null;
                 }
             },
@@ -270,7 +312,7 @@ function init(){
                                     if(cheats['kick-all']) {
                                         let n = pt.readS32()
                                         let slot = pt.add(eposOffset['slot']).readU8() % 2
-                                        if(n > 0 && myslot != slot && !excs.includes(n)){
+                                        if(n > 0 && myslot != slot && !excepts.includes(n)){
                                             purchaseT(n, 0);
                                         }
                                     }
@@ -299,6 +341,7 @@ function init(){
         attachNFunc('_ZN5Skill16GetCurSkillCountEv', {onLeave: retval => {if(cheats['skill-cooldown']) retval.replace(12 as any)}})
         attachNFunc('_ZN5Skill16IsSkillManyTimesEh', {onLeave: retval => {if(cheats['skill-cooldown']) retval.replace(1 as any)}})
         attachNFunc('_ZN5Cloud8CharData12GetSkillTimeEv', {onLeave: retval => {if(cheats['skill-cooldown']) retval.writeFloat(1)}})
+        attachNFunc('_ZN9GameScene4initEv', {onLeave: () => cheats['auto-end'] && (autoEnd = true)})
         const stateLoop = setInterval(() => {
             if(epos && !epos.isNull()) {
                 send(['epos-state', 'succeed', epos.toString()]);
@@ -520,10 +563,12 @@ function init(){
                 } else if(name === 'receive-sl-point'){ setSLPoint(+args[0] || 0);
                 } else if(name === 'unlock-sl-medal'){ unlockSLMedal();
                 } else if(name === 'unlock-all-item'){ unlockChar(+args[0] || 0);
+                } else if(name === 'unlock-all-char'){ unlockAllChar();
                 } else if(name === 'kick-player'){ purchaseT(+args[0] || 0, 0);
                 } else if(name === 'change-nickname'){ changeNickname(args[0] || 'no name');
                 } else if(name === 'purchase-pass'){ purchaseP(+args[0] || 0, +args[1] || 0);
                 } else if(name === 'server-exploit'){ exploitServer();
+                } else if(name === 'create-clan'){ createClan(args[0] || genRandom());
                 } else if(name === 'ctm-default-milk'){ ctmDefaultMilk();
                 } else if(name === 'ctm-default-choco'){ ctmDefaultChoco();
                 } else if(name === 'ctm-desert-milk'){ ctmDesertMilk();
@@ -550,7 +595,7 @@ function init(){
                 } else if(name === 'find-ranges'){
                     const r = Process.findRangeByAddress(ptr(args[0]));
                     const f = Process.enumerateRanges('rw-').find(range => range.base.equals(ptr(args[0])))
-                    const c = !r.file && r.size >= 0x20_0000 && r.size % 0x10_0000 == 0
+                    const c = !r.file && r.size >= 0x20_0000 && r.size < 0x1000_0000 && r.size % 0x10_0000 == 0
                     log(r, f, c)
                 } else if(name === 'search-pattern'){
                     if(jit && !jit.isNull()){
@@ -572,6 +617,9 @@ function init(){
                 } else if(name === 'execute-macro'){
                     const macro = macros.find(macro => macro.id === args[0]);
                     if(macro) executeMacro(macro.events);
+                } else if(name === 'dev-perf'){
+                    devPerf = !!args[0];
+                    perfAccum = 0; perfCount = 0; perfLast = Date.now();
                 }
             } catch(e){
                 log("[ERROR]", e);
@@ -927,6 +975,16 @@ function loop(){
         // if(cheats['skill-cooldown']){
         //     an.add(anOffset['skill-base']).writeS8(1);
         // }
+        if(devPerf){
+            perfAccum += delta;
+            perfCount += 1;
+            const now = Date.now();
+            if(now - perfLast >= 1000){
+                const fps = perfCount / ((now - perfLast) / 1000);
+                send(['perf', { fps: +fps.toFixed(1), entities: entityList.size }]);
+                perfAccum = 0; perfCount = 0; perfLast = now;
+            }
+        }
     } catch(e){
         // log(e);
     }
@@ -1729,7 +1787,15 @@ rpc.exports = {
         return Process.enumerateModules();
     }
 }
-
+function genRandom(length: number = 9): string {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    let result = '';
+    for (let i = 0; i < length; i++) {
+      const randIndex = Math.floor(Math.random() * chars.length);
+      result += chars[randIndex];
+    }
+    return result;
+}
 function getChainedPointer(_bs:NativePointer, iter:number[]):NativePointer{
     let pt = _bs;
     for(let offset of iter){
@@ -1761,13 +1827,30 @@ function qwordToHex(qword: Int64): string {
     const x = qword.toString(16)
     return x.match(/.{2}/g).reverse().join(' ')
 }
+function withWritable<T>(_ptr: NativePointer, fn: () => T): T {
+    let base: NativePointer = _ptr;
+    let size: number = Process.pageSize;
+    let originalProt: any = 'r-x';
+    try {
+        const range = Process.getRangeByAddress(_ptr);
+        base = range.base;
+        size = range.size;
+        originalProt = range.protection as any;
+    } catch (_) {
+        // Fallback to single page protection if range lookup fails
+    }
+    Memory.protect(base, size, 'rwx');
+    try {
+        return fn();
+    } finally {
+        Memory.protect(base, size, originalProt);
+    }
+}
 function forceWriteS32(_ptr:NativePointer, value:number){
-    Memory.protect(_ptr, Process.pageSize, 'rwx');
-    _ptr.writeS32(value);
-    Memory.protect(_ptr, Process.pageSize, isArm ? 'r-x' : 'r-x');
+    // Write 32-bit signed integer with safe protection handling
+    withWritable(_ptr, () => { _ptr.writeS32(value); });
 }
 function forceWriteFloat(_ptr:NativePointer, value:number){
-    Memory.protect(_ptr, Process.pageSize, 'rwx');
-    _ptr.writeFloat(value);
-    Memory.protect(_ptr, Process.pageSize, isArm ? 'r-x' : 'r-x');
+    // Write float with safe protection handling
+    withWritable(_ptr, () => { _ptr.writeFloat(value); });
 }

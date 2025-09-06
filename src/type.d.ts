@@ -24,6 +24,9 @@ interface DrawRect{
     downside:Point[];
     number:number;
     nickname:string;
+    hp:number;
+    barrier:number;
+    total:number;
     isTeam:boolean;
     isDead:boolean;
     isMark:boolean;
