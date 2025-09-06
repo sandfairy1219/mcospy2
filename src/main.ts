@@ -753,6 +753,18 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'プレイヤーを隠す',
         'zh':'隐藏玩家',
     },
+    'auto-end':{
+        'en':'Auto End',
+        'ko':'자동 종료',
+        'ja':'自動終了',
+        'zh':'自动结束',
+    },
+    'auto-end-type':{
+        'en':'Auto End Type',
+        'ko':'자동 종료 타입',
+        'ja':'自動終了タイプ',
+        'zh':'自动结束类型',
+    },
     'cooker-buff':{
         'en':'Cooker Buff',
         'ko':'쿠커 버프',
@@ -885,6 +897,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'すべてのアイテムロック解除',
         'zh':'解锁所有项目',
     },
+    'unlock-all-char': {
+        'en':'Unlock All Character',
+        'ko':'모든 캐릭터 잠금 해제',
+        'ja':'すべてのキャラクターロック解除',
+        'zh':'解锁所有角色',
+    },
     'char-id': {
         'en':'Character ID',
         'ko':'캐릭터 ID',
@@ -932,6 +950,30 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ko':'구매',
         'ja':'購入',
         'zh':'购买',
+    },
+    'create-clan': {
+        'en':'Create Clan',
+        'ko':'클랜 생성',
+        'ja':'クラン作成',
+        'zh':'创建公会',
+    },
+    'clanname': {
+        'en':'Clan Name',
+        'ko':'클랜 이름',
+        'ja':'クラン名',
+        'zh':'公会名称',
+    },
+    'change-nickname': {
+        'en':'Change Nickname',
+        'ko':'닉네임 변경',
+        'ja':'ニックネーム変更',
+        'zh':'更改昵称',
+    },
+    'create': {
+        'en':'Create',
+        'ko':'생성',
+        'ja':'作成',
+        'zh':'创建',
     },
     'server-exploit': {
         'en':'Exploit Server',
@@ -1400,11 +1442,12 @@ $_('receive-sl-coin').addEventListener('click', () => {ipcRenderer.send('receive
 $_('receive-sl-point').addEventListener('click', () => {ipcRenderer.send('receive-sl-point', parseInt($i('resource-hack-sl-point').value) || 0);});
 $_('unlock-sl-medal').addEventListener('click', () => {ipcRenderer.send('unlock-sl-medal');});
 $_('unlock-all-item').addEventListener('click', () => {ipcRenderer.send('unlock-all-item', parseInt($i('unlock-all-item-char-id').value) || 0);});
+$_('unlock-all-char').addEventListener('click', () => {ipcRenderer.send('unlock-all-char');});
 $_('kick-player').addEventListener('click', () => {ipcRenderer.send('kick-player', parseInt($i('kick-player-number').value) || 0);});
 $_('change-nickname').addEventListener('click', () => {ipcRenderer.send('change-nickname', $i('nickname-value').value || '');});
 $_('purchase-pass').addEventListener('click', () => {ipcRenderer.send('purchase-pass', parseInt($i('purchase-player-number').value) || 0, parseInt($i('purchase-item').value) || 1);});
-$_('server-exploit').addEventListener('click', () => {ipcRenderer.send('server-exploit');});
-
+// $_('server-exploit').addEventListener('click', () => {ipcRenderer.send('server-exploit');});
+$_('create-clan').addEventListener('click', () => {ipcRenderer.send('create-clan', $i('clanname-value').value || '');});
 
 updateExceptNumber();
 $_('except-number').addEventListener('change', updateExceptNumber);

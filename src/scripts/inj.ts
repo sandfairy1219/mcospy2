@@ -622,6 +622,11 @@ const globalOffsets: Record<string, OffsetInfo> = {
         str: "_ZN16SystemPacketSend12RequestLoginEiRKSsS1_",
         args: ["int", "ssize_t", "ssize_t"],
     },
+    onReceive: {
+        name: "onReceive",
+        str: "_ZN10LobbyScene9OnReceiveEiPKci",
+        args: ["int", "pointer", "int"],
+    },
     testDeleteAccount: {
         name: "testDeleteAccount",
         str: "_ZN16SystemPacketSend17TestDeleteAccountEv",
@@ -716,6 +721,11 @@ const globalOffsets: Record<string, OffsetInfo> = {
         name: "sendReqPassReward",
         str: "_ZN16SystemPacketSend17SendReqPassRewardEjjhhh",
         args: ["uint", "uint", "uchar", "uchar", "uchar"], // userid, season, pass tier, ?, slot
+    },
+    sendReqUserPassData: {
+        name: "sendReqUserPassData",
+        str: "_ZN16SystemPacketSend19SendReqUserPassDataEj",
+        args: ["uint"], // userid
     },
     sendKnockBack: {
         name: "sendKnockBack",
@@ -1032,7 +1042,7 @@ function isValidAddress(ptrAddr:NativePointer) {
     }
 }
 
-function genRandom(length: number = 9): string {
+function i_genRandom(length: number = 9): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
     let result = '';
     for (let i = 0; i < length; i++) {
@@ -1172,7 +1182,7 @@ const inj_main = async () => {
         }
     }
     medal = (id:number) => func(inGameOffsets.getMedal)(id);
-    clancr = (name:string = genRandom(), desc:string = "", mark:number = 0, flag:number = 1) => {
+    clancr = (name:string = i_genRandom(), desc:string = "", mark:number = 0, flag:number = 1) => {
         const npt = Memory.allocUtf8String(name);
         const dpt = Memory.allocUtf8String(desc);
         const nobj = Memory.alloc(Process.pageSize);

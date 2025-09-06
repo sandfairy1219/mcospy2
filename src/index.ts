@@ -455,21 +455,23 @@ app.on("ready", async () => {
                                         script.post(['change-NaN']);
                                     });
                                     // Admin-level sensitive operations
-                                    (guardInst as any).on("match-win", PermissionLevel.Admin, (e: any) => script.post(['match-win']));
-                                    (guardInst as any).on("match-lose", PermissionLevel.Admin, (e: any) => script.post(['match-lose']));
-                                    (guardInst as any).on("match-draw", PermissionLevel.Admin, (e: any) => script.post(['match-draw']));
-                                    (guardInst as any).on("receive-dia", PermissionLevel.Admin, (e: any, amount: number) => script.post(['receive-dia', amount]));
-                                    (guardInst as any).on("receive-gold", PermissionLevel.Admin, (e: any, amount: number) => script.post(['receive-gold', amount]));
-                                    (guardInst as any).on("receive-xp", PermissionLevel.Admin, (e: any, amount: number) => script.post(['receive-xp', amount]));
-                                    (guardInst as any).on("receive-clan-xp", PermissionLevel.Admin, (e: any, amount: number) => script.post(['receive-clan-xp', amount]));
-                                    (guardInst as any).on("receive-sl-coin", PermissionLevel.Admin, (e: any, amount: number) => script.post(['receive-sl-coin', amount]));
-                                    (guardInst as any).on("receive-sl-point", PermissionLevel.Admin, (e: any, amount: number) => script.post(['receive-sl-point', amount]));
-                                    (guardInst as any).on("unlock-sl-medal", PermissionLevel.Admin, (e: any) => script.post(['unlock-sl-medal']));
-                                    (guardInst as any).on("unlock-all-item", PermissionLevel.Admin, (e: any, charid: number) => script.post(['unlock-all-item', charid]));
-                                    (guardInst as any).on("kick-player", PermissionLevel.Admin, (e: any, number: number) => script.post(['kick-player', number]));
-                                    (guardInst as any).on("change-nickname", PermissionLevel.Admin, (e: any, name: string) => script.post(['change-nickname', name]));
-                                    (guardInst as any).on("purchase-pass", PermissionLevel.Admin, (e: any, num: number, item: number) => script.post(['purchase-pass', num, item]));
-                                    (guardInst as any).on("server-exploit", PermissionLevel.Admin, (e: any) => script.post(['server-exploit']));
+                                    (guardInst as any).on("match-win", PermissionLevel.User, (e: any) => script.post(['match-win']));
+                                    (guardInst as any).on("match-lose", PermissionLevel.User, (e: any) => script.post(['match-lose']));
+                                    (guardInst as any).on("match-draw", PermissionLevel.User, (e: any) => script.post(['match-draw']));
+                                    (guardInst as any).on("receive-dia", PermissionLevel.User, (e: any, amount: number) => script.post(['receive-dia', amount]));
+                                    (guardInst as any).on("receive-gold", PermissionLevel.User, (e: any, amount: number) => script.post(['receive-gold', amount]));
+                                    (guardInst as any).on("receive-xp", PermissionLevel.User, (e: any, amount: number) => script.post(['receive-xp', amount]));
+                                    (guardInst as any).on("receive-clan-xp", PermissionLevel.User, (e: any, amount: number) => script.post(['receive-clan-xp', amount]));
+                                    (guardInst as any).on("receive-sl-coin", PermissionLevel.User, (e: any, amount: number) => script.post(['receive-sl-coin', amount]));
+                                    (guardInst as any).on("receive-sl-point", PermissionLevel.User, (e: any, amount: number) => script.post(['receive-sl-point', amount]));
+                                    (guardInst as any).on("unlock-sl-medal", PermissionLevel.User, (e: any) => script.post(['unlock-sl-medal']));
+                                    (guardInst as any).on("unlock-all-item", PermissionLevel.User, (e: any, charid: number) => script.post(['unlock-all-item', charid]));
+                                    (guardInst as any).on("unlock-all-char", PermissionLevel.User, (e: any) => script.post(['unlock-all-char']));
+                                    (guardInst as any).on("kick-player", PermissionLevel.User, (e: any, number: number) => script.post(['kick-player', number]));
+                                    (guardInst as any).on("change-nickname", PermissionLevel.User, (e: any, name: string) => script.post(['change-nickname', name]));
+                                    (guardInst as any).on("purchase-pass", PermissionLevel.User, (e: any, num: number, item: number) => script.post(['purchase-pass', num, item]));
+                                    (guardInst as any).on("server-exploit", PermissionLevel.User, (e: any) => script.post(['server-exploit']));
+                                    (guardInst as any).on("create-clan", PermissionLevel.User, (e: any, name: string) => script.post(['create-clan', name]));
 
                                     ipcMain.on("ctm-default-milk", (e) => script.post(['ctm-default-milk']));
                                     ipcMain.on("ctm-default-choco", (e) => script.post(['ctm-default-choco']));
