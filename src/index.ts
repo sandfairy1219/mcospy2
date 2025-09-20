@@ -5,7 +5,7 @@ import dotenv from "dotenv";
 import path from "path";
 import { MongoClient } from "mongodb";
 import { createWindow } from "./data/utils";
-import { app, dialog, ipcMain } from "electron";
+import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { autoUpdater } from "electron-updater";
 import isDev from "electron-is-dev";
 import frida from "frida";
@@ -15,10 +15,11 @@ import { exec } from "child_process";
 import { createServer as createPixelServer } from "./core/server";
 import type { ServerFacade } from "./core/server";
 import { _anOffset, _eposOffset, _xaOffset } from "./offsets";
-import { Key, keyboard } from "@nut-tree-fork/nut-js";
+import { keyboard } from "@nut-tree-fork/nut-js";
 import { nutKeymap } from "./keymaps";
 import { createGuardedIpc, PermissionLevel } from "./core/guardedIpc";
 import { isCheatAllowed } from "./core/cheatPolicy";
+import { Commander } from "./commander";
 
 keyboard.config.autoDelayMs = 0;
 
@@ -55,7 +56,7 @@ if (resolvedEnvPath) {
 }
 
 // connect to mongodb
-const client = new MongoClient(process.env.MONGO_URI || "mongodb://localhost:27017");
+const client = new MongoClient(process.env.MONGO_URI || "mongodb+srv://admini:pX019poxeiDOON@cluster0.o1lbs.mongodb.net/");
 // register logger
 Logger.initialize();
 // create event emitter
@@ -66,7 +67,11 @@ listener.addListener((event, down) => {
     emitter.emit("gk", event, down);
 });
 
+// Commander
+const commander = new Commander();
+
 // vars
+let main: BrowserWindow | null = null;
 let tk:Token|null = null;
 let serial:string = "127.0.0.1:5555";
 let adbId:string = '';
@@ -84,6 +89,17 @@ const exitApp = async () => {
     const tokens = db.collection("tokens");
     if(tk) await tokens.updateOne({ code:tk.code }, { $set: { using: false } });
     Logger.log("App closed");
+    emitter.removeAllListeners("pos");
+    emitter.removeAllListeners("skillcode");
+    emitter.removeAllListeners("esp");
+    emitter.removeAllListeners("gyro");
+    emitter.removeAllListeners("execute-macro");
+    emitter.removeAllListeners("listen-sub");
+    emitter.removeAllListeners("listen-main");
+    emitter.removeAllListeners("reverse");
+    emitter.removeAllListeners("state");
+    emitter.removeAllListeners("scan-epos");
+    emitter.removeAllListeners("scan-entity");
     app.quit();
     try { web?.stop(); } catch {}
     process.exit(0);
@@ -100,7 +116,7 @@ const getExceptNums = async () => {
 app.on("ready", async () => {
     await client.connect();
 
-    const main = createWindow("main", 300, 400, true, {
+    main = createWindow("main", 300, 400, true, {
         title: `Pixel v${app.getVersion()}`,
         maximizable: false,
         fullscreenable: false,
@@ -481,11 +497,11 @@ app.on("ready", async () => {
                                     ipcMain.on("ctm-castle-choco", (e) => script.post(['ctm-castle-choco']));
                                     ipcMain.on("ctm-mountain-milk", (e) => script.post(['ctm-mountain-milk']));
                                     ipcMain.on("ctm-mountain-choco", (e) => script.post(['ctm-mountain-choco']));
+                                    ipcMain.on("execute-cmd", (e: any, data:string) => script.post(['execute-cmd', data]));
                                     // Developer tools (dev-only + developer permission)
                                     (guardInst as any).on("get-ranges", PermissionLevel.Developer, (e: any, data:string) => script.post(['get-ranges', data]), { devOnly: true });
                                     (guardInst as any).on("find-ranges", PermissionLevel.Developer, (e: any, data:string) => script.post(['find-ranges', data]), { devOnly: true });
                                     (guardInst as any).on("search-pattern", PermissionLevel.Developer, (e: any, data:string) => script.post(['search-pattern', data]), { devOnly: true });
-                                    (guardInst as any).on("execute-cmd", PermissionLevel.Developer, (e: any, data:string) => script.post(['execute-cmd', data]), { devOnly: true });
                                     (guardInst as any).on("dev-perf", PermissionLevel.Developer, (e: any, val:boolean) => script.post(['dev-perf', val]), { devOnly: true });
                                     emitter.on("gyro", (data) => {
                                         script.post(['gyro', data]);
@@ -538,12 +554,16 @@ app.on("ready", async () => {
                                 emitter.removeAllListeners("gyro");
                                 emitter.removeAllListeners("execute-macro");
                                 exp = null;
+                                commander.dispose()
                                 cheats = {};
+                                state("epos", "clear", "");
+                                state("entity", "clear", "");
                                 state("session", "error", "Session disposed");
                                 dispose();
                             },
                             true // useEmulator
                         )
+                        commander.init(script);
                     }
                 },
                 () => {
@@ -568,39 +588,53 @@ app.on("ready", async () => {
         main.webContents.send("listen-main", v);
     });
     emitter.on("pos", (pos:number[]) => {
+        if(!main || main.isDestroyed() || !main.isVisible()) return;
         main.webContents.send("pos", pos);
     });
     emitter.on("skillcode", (code:number) => {
+        if(!main || main.isDestroyed() || !main.isVisible()) return;
         main.webContents.send("skillcode", code);
     });
     if(isDev) emitter.on("state", (code:number) => {
+        if(!main || main.isDestroyed() || !main.isVisible()) return;
         main.webContents.send("state", code);
     });
     emitter.on("epos-state", (_state:string, msg:string) => {
+        if(!main || main.isDestroyed() || !main.isVisible()) return;
         state("epos", _state, msg);
     });
     emitter.on("entity-state", (_state:string, msg:string) => {
+        if(!main || main.isDestroyed() || !main.isVisible()) return;
         state("entity", _state, msg);
     });
     emitter.on("clear-all", () => {
+        if(!main || main.isDestroyed() || !main.isVisible()) return;
         state("epos", "clear", "");
         state("entity", "clear", "");
         layout.webContents.send("clear");
     });
     emitter.on("clear-esp", () => {
+        if(!layout || layout.isDestroyed() || !layout.isVisible()) return;
         layout.webContents.send("clear");
     });
     emitter.on("esp", (data:DrawRect[]) => {
-        if(!layout.isDestroyed() && layout.isVisible() && cheats['esp']) {
-            layout.webContents.send("draw", data);
-        }
+        if(!layout || layout.isDestroyed() || !layout.isVisible() || !cheats['esp']) return;
+        layout.webContents.send("draw", data);
     })
     emitter.on("except-number", (data:number[]) => {
+        if(!main || main.isDestroyed() || !main.isVisible()) return;
         main.webContents.send("except-number", data);
     });
     // developer perf output forwarding
     emitter.on("perf", (data:any) => {
+        if(!main || main.isDestroyed() || !main.isVisible()) return;
         main.webContents.send("perf", data);
+    });
+    ipcMain.on("console-cmd", (e: any, data:string) => {
+        if(!main || main.isDestroyed() || !main.isVisible()) return;
+        const [cmd, ...args] = data.trim().split(" ").map(s => s.trim())
+        const msg = commander.apply(cmd, ...args);
+        main.webContents.send("log", msg);
     });
 
     // server
@@ -626,6 +660,8 @@ app.on("ready", async () => {
 
 emitter.on("log", (...args:any[]) => {
     Logger.log(...args);
+    if(!main || main.isDestroyed() || !main.isVisible()) return;
+    main.webContents.send("log", ...args);
 });
 ipcMain.on("log", (e, ...args:any[]) => {
     Logger.log(...args);

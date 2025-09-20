@@ -1,6 +1,6 @@
 {
   "name": "pixel",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "milkchoco frida cheat tool",
   "main": "dist/index.js",
   "scripts": {
@@ -51,6 +51,11 @@
     "win": {
       "target": "nsis",
       "icon": "./public/favicon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "artifactName": "pixel-Setup-${version}.exe"
     },
     "directories": {
       "output": "build"
