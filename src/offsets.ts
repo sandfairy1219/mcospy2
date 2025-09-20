@@ -14,7 +14,7 @@ export const _xaOffset = {
     'no-recoil': {name: "_ZN6Recoil11ShakeCameraERKf", offset: 0x44},
     'no-clip': {name: "_ZN14UserMoveSystem6MoveAIERNS_13CollisionDataERN7cocos2d4Vec3ES4_fR9GameSceneR9UserInforf", offset: -0x4},
     'no-spread1': {name: "_ZN20CharStatusCalculator18GetAimSpreadMovingERK9UserInfor", offset: 0x10},
-    'no-spread2': {name: "_ZN20CharStatusCalculator20GetAimSpreadShootingERK9UserInfor ", offset: 0x10},
+    'no-spread2': {name: "_ZN20CharStatusCalculator20GetAimSpreadShootingERK9UserInfor", offset: 0x10},
     'no-reload': {name: "_ZN20CharStatusCalculator18GetReloadSpeedRateERK9UserInfor", offset: 0x10},
     'instant-respawn': {name: "_ZNK9GameScene14GetRespawnTimeEv", offset: 0x18},
     'body-one-kill': {name: "_ZN20CharStatusCalculator21GetBodyShotDamageRateERK9UserInfor", offset: 0x0},
@@ -104,16 +104,16 @@ export const _eposOffset = {
     'ox':0x1AC, // float
     'oy':0x1B0, // float
     'oz':0x1B4, // float
-    'lastkilled':0xE54, // int32
-    'chainedhit':0xE58, // byte
-    'skilled':0xE64, // int32
-    'curkda':0xE98, // float
-    'maxhp':0xEEC, // int32
-    'maxbarrier':0xEF0, // int32
-    'w1code':0xEA9, // byte
-    'w2code':0xEAA, // byte
-    'gcode':0xEAB, // byte
-    'bulletusedw1':0xEBE, // byte
-    'bulletusedw2':0xEBF, // byte
+    'lastkilled':0xE5C, // int32
+    'chainedhit':0xE60, // byte
+    'skilled':0xE6C, // int32
+    'curkda':0xEA0, // float
+    'maxhp':0xEF4, // int32
+    'maxbarrier':0xEF8, // int32
+    'w1code':0xEAE, // byte
+    'w2code':0xEB0, // byte
+    'gcode':0xEB2, // byte
+    'bulletusedw1':0xEB4, // byte
+    'bulletusedw2':0xEB6, // byte
     'pointer':0xF00, // pointer
 };

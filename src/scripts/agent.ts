@@ -116,13 +116,19 @@ let createClan: any = null;
 
 const log = (...args:any[]) => send(['log', ...args]);
 
+let found: boolean = false;
 const loadModule = setInterval(() => {
-    if(Module.getBaseAddress('libMyGame.so')) {
-        _libMyGame = Process.findModuleByName('libMyGame.so');
-        send(['Address.init', _libMyGame ? _libMyGame.base.toString() : 'null']);
-        init();
-        loop();
-        clearInterval(loadModule);
+    try {
+        if(Module.findBaseAddress('libMyGame.so') && !found) {
+            _libMyGame = Process.findModuleByName('libMyGame.so');
+            send(['Address.init', _libMyGame ? _libMyGame.base.toString() : 'null']);
+            clearInterval(loadModule);
+            init();
+            loop();
+            found = true;
+        }
+    } catch (error) {
+        console.log(error)
     }
 }, 500);
 // Java.perform(() => {
@@ -207,18 +213,23 @@ let assistSpeed = 0;
 let lastTime = Date.now();
 let shooting = false;
 function makeNFunc(symbol: string, retType: any, argTypes: any[]): any {
-    return new NativeFunction(Module.findExportByName('libMyGame.so', symbol), retType, argTypes);
+    try {
+        return new NativeFunction(Module.findExportByName('libMyGame.so', symbol), retType, argTypes);
+    } catch (error) {
+        console.log("[makeNFunc]: ", symbol, error)
+        return null;
+    }
 }
 function attachNFunc(symbol: string, callbacksOrProbe: InvocationListenerCallbacks | InstructionProbeCallback): void {
     Interceptor.attach(Module.findExportByName('libMyGame.so', symbol), callbacksOrProbe)
 }
 function init(){
-    let item = makeNFunc('_ZN16SystemPacketSend7BuyItemEhhhh', 'void', ['uchar', 'uchar', 'uchar', 'uchar']);
     try {
         attachNFunc('_ZN16SystemPacketSend12RequestLoginEiRKSsS1_', {
             onEnter(args) {
             },
         })
+        const item = makeNFunc('_ZN16SystemPacketSend7BuyItemEhhth', 'void', ['uchar', 'uchar', 'uchar', 'uchar']);
         setYaw = makeNFunc('_ZN5Cloud10CameraData15SetCameraAngleXEf', 'void', ['float']);
         setPitch = makeNFunc('_ZN5Cloud10CameraData15SetCameraAngleYEf', 'void', ['float']);
         endgame = makeNFunc('_ZN16SystemPacketSend17CheatForceEndGameENS_16ForceEndGameTypeE', 'void', ['pointer']);
@@ -612,6 +623,16 @@ function init(){
                 } else if(name === 'execute-cmd'){
                     console.log("[CMD]", args[0]);
                     eval(args[0]);
+                } else if(name === "hook"){
+                    cmdHookF(args[0]);
+                } else if(name === "unhook"){
+                    cmdUnhookAll();
+                } else if(name === "call"){
+                    cmdCallF(args[0], ...args.slice(1));
+                } else if(name === "read"){
+                    cmdReadF(args[0], args[1]);
+                } else if(name === "write"){
+                    cmdWriteF(args[0], args[1], args[2]);
                 } else if(name === 'gyro'){
                     gyro(args[0]);
                 } else if(name === 'execute-macro'){
@@ -620,16 +641,17 @@ function init(){
                 } else if(name === 'dev-perf'){
                     devPerf = !!args[0];
                     perfAccum = 0; perfCount = 0; perfLast = Date.now();
+                } else if(name === 'console-cmd'){
                 }
             } catch(e){
-                log("[ERROR]", e);
+                log("[API]", e, message);
             } finally {
                 recv(api)
             }
         }
         recv(api)
     } catch (e) {
-        log("[ERROR] Failed to initialize:", e);
+        log("[INIT] Failed to initialize:", e);
     }
 }
 
@@ -1853,4 +1875,456 @@ function forceWriteS32(_ptr:NativePointer, value:number){
 function forceWriteFloat(_ptr:NativePointer, value:number){
     // Write float with safe protection handling
     withWritable(_ptr, () => { _ptr.writeFloat(value); });
+}
+
+function popName(str: string) {
+    /* The name is in the format <length><str> */
+
+    let isLast = false;
+    let namestr = "";
+    let rlen = 0;
+    const ostr = str;
+    let isEntity = false;
+
+    let maxNames = 0;
+    while (!isLast && maxNames < 100) {
+
+        /* This is used for decoding names inside complex namespaces
+        Whenever we find an 'N' preceding a number, it's a prefix/namespace
+        */
+        isLast = str[0] != "N";
+
+        /* St means std:: in the mangled string 
+        This std:: check is for inside the name, not outside, 
+        unlike the one in the demangle function
+        */
+        if (str.substr(1, 2) === "St") {
+            namestr = namestr.concat("std::");
+            str = str.replace("St", "");
+            rlen++;
+        }
+
+        /* This is used for us to know we'll find an E in the end of this name
+        The E marks the final of our name
+        */
+        isEntity = isEntity || !isLast;
+
+        if (!isLast)
+            str = str.substr(1);
+
+        const res = /(\d*)/.exec(str);
+
+        const len = parseInt(res[0], 10);
+
+        rlen += res[0].length + len;
+        
+        const strstart = str.substr(res[0].length);
+        namestr = namestr.concat(strstart.substr(0, len));
+
+        if (!isLast) namestr = namestr.concat("::");
+        str = strstart.substr(len);
+        maxNames++;
+    }
+
+    if (isEntity)
+	rlen += 2; // Take out the "E", the entity end mark
+
+    return {name: namestr, str: ostr.substr(rlen)};
+}
+function popChar(str: string) {
+    return {ch: str[0], str: str.slice(1)};
+}
+function isMangled(name:string):boolean{
+    return name.startsWith('_Z');
+}
+function demangle(name:string):any{
+    if (!isMangled(name)) return name;
+    const encoding = name.substr(2, (name.indexOf('.') < 0) ? undefined : name.indexOf('.')-2);
+    let fname = popName(encoding);
+	let functionname = fname.name;
+	let types: any[] = [];
+    let template_count = 0;
+	let template_types: any[] = [];
+
+	// Process the types
+	let str = fname.str;
+	
+    let maxTypes = 0;
+	while (str.length > 0 && maxTypes < 100) {
+	    let process = popChar(str);
+
+	    /* The type info
+
+	       isBase -> is the type the built-in one in the mangler, represented with few letters?
+	       typeStr: the type name
+	       templateType: type info for the current template.
+
+	       The others are self descriptive
+	    */
+	    let typeInfo: any = {isBase: true, typeStr: "", isConst: false, numPtr: 0,
+			    isRValueRef: false, isRef: false, isRestrict: false,
+			    templateStart: false, templateEnd: false,
+			    isVolatile: false, templateType: null};
+
+	    /* Check if we have a qualifier (like const, ptr, ref... )*/
+	    var doQualifier = true;
+
+        let maxQualifiers = 0;
+	    while (doQualifier && maxQualifiers < 100) {
+            switch (process.ch) {
+            case 'R': typeInfo.isRef = true; process = popChar(process.str); break;
+            case 'O': typeInfo.isRValueRef = true; process = popChar(process.str); break;
+            case 'r': typeInfo.isRestrict = true; process = popChar(process.str); break;
+            case 'V': typeInfo.isVolatile = true; process = popChar(process.str); break;
+            case 'K': typeInfo.isConst = true; process = popChar(process.str); break;
+            case 'P': typeInfo.numPtr++; process = popChar(process.str); break;
+            default: doQualifier = false;
+            }
+            maxQualifiers++;
+	    }
+
+	    /* Get the type code. Process it */
+	    switch (process.ch) {
+	    case 'v': typeInfo.typeStr = "void"; break;
+	    case 'w': typeInfo.typeStr = "wchar_t"; break;
+	    case 'b': typeInfo.typeStr = "bool"; break;
+	    case 'c': typeInfo.typeStr = "char"; break;
+	    case 'a': typeInfo.typeStr = "signed char"; break;
+	    case 'h': typeInfo.typeStr = "unsigned char"; break;
+	    case 's': typeInfo.typeStr = "short"; break;
+	    case 't': typeInfo.typeStr = "unsigned short"; break;
+	    case 'i': typeInfo.typeStr = "int"; break;
+	    case 'S':
+		/* Abbreviated std:: types */
+		process = popChar(process.str);
+
+		switch (process.ch) {
+		case 't': {
+		    // It's a custom type name
+		    const tname = popName(process.str);
+		    typeInfo.typeStr = "std::".concat(tname.name);
+		    process.str = tname.str;
+		    break;
+		}
+		case 'a': typeInfo.typeStr = "std::allocator"; break;
+		case 'b': typeInfo.typeStr = "std::basic_string"; break;
+		case 's': typeInfo.typeStr = "std::basic_string<char, std::char_traits<char>, std::allocator<char>>"; break;
+		case 'i': typeInfo.typeStr = "std::basic_istream<char, std::char_traits<char>>"; break;
+		case 'o': typeInfo.typeStr = "std::basic_ostream<char, std::char_traits<char>>"; break;
+		case 'd': typeInfo.typeStr = "std::basic_iostream<char, std::char_traits<char>>"; break;
+		default:
+		    process.str = process.ch.concat(process.str);
+		    break;
+		}
+		
+		break;
+		
+	    case 'I':
+		// Template open bracket (<)
+		types[types.length-1].templateStart = true;
+		template_types.push(types[types.length-1]);
+		template_count++;
+		
+		break;
+	    case 'E':
+		// Template closing bracket (>)
+		if ((template_count <= 0)) {
+		    str = process.str;
+		    continue;
+		}
+		
+		typeInfo.templateEnd = true;
+
+		template_count--;
+		typeInfo.templateType = template_types[template_count];
+		template_types = template_types.slice(0, -1);
+		
+		break;
+				
+	    case 'j': typeInfo.typeStr = "unsigned int"; break;
+	    case 'l': typeInfo.typeStr = "long int"; break;
+	    case 'm': typeInfo.typeStr = "unsigned long int"; break;
+	    case 'x': typeInfo.typeStr = "long long int"; break;
+	    case 'y': typeInfo.typeStr = "unsigned long long int"; break;
+	    case 'n': typeInfo.typeStr = "__int128"; break;
+	    case 'o': typeInfo.typeStr = "unsigned __int128"; break;
+	    case 'f': typeInfo.typeStr = "float"; break;
+	    case 'd': typeInfo.typeStr = "double"; break;
+	    case 'e': typeInfo.typeStr = "long double"; break;
+	    case 'g': typeInfo.typeStr = "__float128"; break;
+	    case 'z': typeInfo.typeStr = "..."; break;
+
+		/* No type code. We have a type name instead */
+	    default: {
+		if (!isNaN(parseInt(process.ch, 10)) || process.ch == "N") {
+
+		    // It's a custom type name
+		    const tname = popName(process.ch.concat(process.str));
+		    typeInfo.typeStr = typeInfo.typeStr.concat(tname.name);
+		    process.str = tname.str;
+		}
+
+	    } break;
+	    }
+
+
+	    types.push(typeInfo);
+	    str = process.str;
+	    maxTypes++;
+	}
+
+	/* Create the string representation of the type */
+	const typelist = types.map((t) => {
+	    let typestr = "";
+	    if (t.isConst) typestr = typestr.concat("const ");
+	    if (t.isVolatile) typestr = typestr.concat("volatile ");
+	    
+	    typestr = typestr.concat(t.typeStr);
+
+	    if (t.templateStart) typestr = typestr.concat("<");
+	    if (t.templateEnd) typestr = typestr.concat(">");
+
+	    if (!t.templateStart) {
+		if (t.isRef) typestr = typestr.concat("&");
+		if (t.isRValueRef) typestr = typestr.concat("&&");
+		for (let i = 0; i < t.numPtr; i++) typestr = typestr.concat("*");
+		if (t.isRestrict) typestr = typestr.concat(" __restrict");
+	    }
+	    
+	    if (t.templateType) {		
+		if (t.templateType.isRef) typestr = typestr.concat("&");
+		if (t.templateType.isRValueRef) typestr = typestr.concat("&&");
+		for (let i = 0; i < t.templateType.numPtr; i++) typestr = typestr.concat("*");
+	    }
+	    
+	    return typestr;
+	});
+
+	/* Those replaces are an stupid shortcut to fix templates and make it fast
+	   Without that, we would need to complicate the code
+
+	   What it does is remove the commas where we would have the angle brackets
+	   for the templates
+	*/
+	
+	return {
+        name: functionname.concat("(" + typelist.join(', ') + ")")
+        .replaceAll("<, ", "<")
+        .replaceAll(", >", ">")
+        .replaceAll(", <", "<"),
+        functionname,
+        args: typelist
+    }
+}
+function argMap(arg:string): string {
+    switch(arg){
+        case "unsigned int": return "uint";
+        case "int": return "int";
+        case "unsigned long": return "uint64";
+        case "long": return "int64";
+        case "unsigned short": return "uint16";
+        case "short": return "int16";
+        case "unsigned char": return "uint8";
+        case "char": return "int8";
+        case "float": return "float";
+        case "double": return "double";
+        case "bool": return "bool";
+        case "void": return "void";
+        default: return "pointer";
+    }
+}
+function cmdCallF(str:string, ...args:any[]):any{
+    try {
+        const demangled = demangle(str);
+        const f = new NativeFunction(
+            _libMyGame.findExportByName(str),
+            "pointer",
+            demangled.args.map((arg: string) => argMap(arg))
+        );
+        args = args.map((arg, i) => {
+            switch(argMap(demangled.args[i])){
+                case "uint":
+                case "int":
+                case "uint64":
+                case "int64":
+                case "uint16":
+                case "int16":
+                case "uint8":
+                case "int8":
+                case "float":
+                case "double":
+                    return Number(arg);
+                case "bool":
+                case "pointer":
+                    return ptr(arg)
+                case "void":
+                    return null;
+                default:
+                    return arg;
+            }
+        }).filter(arg => arg !== null);
+        const ret = (f as any)(...args);
+        log(ret);
+        return ret;
+    } catch (error) {
+        console.error(error);
+        log(error);
+    }
+}
+function cmdArg(arg: string, args: NativePointer): string {
+    switch(arg){
+        case "uint":
+        case "int":
+        case "uint64":
+        case "int64":
+        case "uint16":
+        case "int16":
+        case "uint8":
+        case "int8":
+            return `[${arg}] ${args.toInt32()}`;
+        case "float":
+            return `[${arg}] ${args.readFloat()}`;
+        case "double":
+            return `[${arg}] ${args.readDouble()}`;
+        case "bool":
+            return `[${arg}] ${args.toInt32() === 1 ? "true" : "false"}`;
+        case "void":
+            return "";
+        default:
+            return `[${arg}] ${args.toString()}`;
+    }
+}
+function cmdHookF(str: string): void {
+    const demangled = demangle(str);
+    try {
+        Interceptor.attach(
+            _libMyGame.findExportByName(str),
+            {
+                onEnter: (args) => {
+                    log(`[+ ${demangled.functionname}]`);
+                for(let i = 0; i < demangled.args.length; i++){
+                    log(cmdArg(argMap(demangled.args[i]), args[i]));
+                }
+            },
+            onLeave: (retval) => {
+                log(`[- ${demangled.functionname}] -> ${retval.toString()}`);
+            }
+        }
+    )
+    } catch (error) {
+        console.error(error);
+        log(error);
+    }
+}
+function cmdUnhookAll(): void {
+    try {
+        Interceptor.detachAll();
+    } catch (error) {
+        console.error(error);
+        log(error);
+    }
+}
+function cmdReadF(str: string, type: string): void {
+    try {
+        const pt = ptr(str);
+        if(!pt) return log("null pointer");
+        if(pt.isNull()) return log("null pointer");
+        switch(type.toLowerCase()){
+            case "uint64":
+                log(pt.readU64());
+                break;
+            case "int64":
+                log(pt.readS64());
+                break;
+            case "uint16":
+                log(pt.readU16());
+                break;
+            case "int16":
+                log(pt.readS16());
+                break;
+            case "uint8":
+                log(pt.readU8());
+                break;
+            case "int8":
+                log(pt.readS8());
+                break;
+            case "uint":
+            case "uint32":
+                log(pt.readU32());
+                break;
+            case "int":
+            case "int32":
+                log(pt.readS32());
+                break;
+            case "float":
+                log(pt.readFloat());
+                break;
+            case "double":
+                log(pt.readDouble());
+                break;
+            case "bool":
+                log(pt.readU8() === 1 ? true : false);
+                break;
+            case "void":
+                break;
+            default:
+                log(pt.toString());
+                break;
+        }
+    } catch (error) {
+        console.error(error);
+        log(error);
+    }
+}
+function cmdWriteF(str: string, type: string, value: string): void {
+    try {
+        const pt = ptr(str);
+        if(!pt) return log("null pointer");
+        if(pt.isNull()) return log("null pointer");
+        switch(type.toLowerCase()){
+            case "uint64":
+                pt.writeU64(Number(value));
+                break;
+            case "int64":
+                pt.writeS64(Number(value));
+                break;
+            case "uint16":
+                pt.writeU16(Number(value));
+                break;
+            case "int16":
+                pt.writeS16(Number(value));
+                break;
+            case "uint8":
+                pt.writeU8(Number(value));
+                break;
+            case "int8":
+                pt.writeS8(Number(value));
+                break;
+            case "uint":
+            case "uint32":
+                pt.writeU32(Number(value));
+                break;
+            case "int":
+            case "int32":
+                pt.writeS32(Number(value));
+                break;
+            case "float":
+                pt.writeFloat(Number(value));
+                break;
+            case "double":
+                pt.writeDouble(Number(value));
+                break;
+            case "bool":
+                pt.writeU8(Number(value) === 1 ? 1 : 0);
+                break;
+            case "void":
+                break;
+            default:
+                pt.writePointer(ptr(value));
+                break;
+        }
+    } catch (error) {
+        console.error(error);
+        log(error);
+    }
 }

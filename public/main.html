@@ -44,6 +44,7 @@
             <button class="w-full selector" id="selector-server" data-lang="server"></button>
             <button class="w-full selector" id="selector-plugins" data-lang="plugins"></button>
             <button class="w-full selector hide" id="selector-dev-mode" data-lang="dev-mode"></button>
+            <button class="w-full selector hide" id="selector-console" data-lang="console"></button>
         </section>
         <section id="initialize" class="hide">
             <div>
@@ -730,6 +731,10 @@
                 </main>
                 <pre id="perf-out" class="text-xs"></pre>
             </details>
+        </section>
+        <section id="console" class="hide">
+            <div id="console-out"></div>
+            <input type="text" id="console-input">
         </section>
     </div>
     <script src="./renderer.js"></script>

@@ -75,6 +75,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'開発者モード',
         'zh':'开发者模式',
     },
+    'console':{
+        'en':'Console',
+        'ko':'콘솔',
+        'ja':'コンソール',
+        'zh':'控制台',
+    },
     'serial':{
         'en':'Serial',
         'ko':'시리얼',
@@ -1315,7 +1321,10 @@ ipcRenderer.on('token', (e, token:Token|string) => {
         $_('logerr').textContent = token;
     } else {
         localStorage.setItem('token', JSON.stringify(token.code));
-        if(token.perms.includes('admin') || token.perms.includes('developer')) $_('selector-dev-mode').classList.remove('hide');
+        if(token.perms.includes('admin') || token.perms.includes('developer')) {
+            $_('selector-dev-mode').classList.remove('hide');
+            $_('selector-console').classList.remove('hide');
+        }
         document.querySelectorAll('details[data-cheat]').forEach((el:HTMLElement) => el.classList.add('hide'));
         token.perms.forEach((perm:string) => {
             const _el = $c(perm);
@@ -1505,3 +1514,24 @@ $_('server-stop').addEventListener('click', () => {ipcRenderer.send('server-stop
 
 // Developer tools initialization (perf toggle and output)
 initDevTools(ipcRenderer);
+
+// console
+ipcRenderer.on('log', (e, ...args:any[]) => {
+    console.log(...args);
+    const line = document.createElement('p');
+    line.textContent = args.map(v => {
+        if(typeof v === 'string') return v;
+        if(typeof v === 'number') return v.toString();
+        if(typeof v === 'boolean') return v.toString();
+        return JSON.stringify(v);
+    }).join(' ');
+    $_('console-out').appendChild(line);
+    $_('console-out').scrollTo({top: $_('console-out').scrollHeight});
+});
+
+$i('console-input').addEventListener('keydown', (e:KeyboardEvent) => {
+    if(e.key === 'Enter'){
+        ipcRenderer.send('console-cmd', $i('console-input').value);
+        $i('console-input').value = '';
+    }
+});
