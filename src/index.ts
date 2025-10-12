@@ -88,7 +88,7 @@ let checker: NodeJS.Timeout | null = null;
 const exitApp = async () => {
     const db = client.db("sanabi");
     const tokens = db.collection("tokens");
-    if(tk) await tokens.updateOne({ code:tk.code }, { $set: { using: false } });
+    if(tk && !isDev) await tokens.updateOne({ code:tk.code }, { $set: { using: false } });
     Logger.log("App closed");
     emitter.removeAllListeners("pos");
     emitter.removeAllListeners("skillcode");
@@ -200,7 +200,7 @@ app.on("ready", async () => {
         else if(token.using) main.webContents.send("token", "Token already using");
         else {
             tk = token as unknown as Token;
-            await tokens.updateOne({ code: key }, { $set: { using:true } })
+            if(!isDev) await tokens.updateOne({ code: key }, { $set: { using:true } })
             main.webContents.send("token", token);
             checker = setInterval(async () => {
                 const doc = await client.db("sanabi").collection("tokens").findOne({ code: key });
@@ -482,6 +482,8 @@ app.on("ready", async () => {
                                     (guardInst as any).on("match-win", PermissionLevel.Power, (e: any) => script.post(['match-win']));
                                     (guardInst as any).on("match-lose", PermissionLevel.Power, (e: any) => script.post(['match-lose']));
                                     (guardInst as any).on("match-draw", PermissionLevel.Power, (e: any) => script.post(['match-draw']));
+                                    (guardInst as any).on("match-milk", PermissionLevel.Power, (e: any) => script.post(['match-milk']));
+                                    (guardInst as any).on("match-choco", PermissionLevel.Power, (e: any) => script.post(['match-choco']));
                                     (guardInst as any).on("receive-dia", PermissionLevel.Power, (e: any, amount: number) => script.post(['receive-dia', amount]));
                                     (guardInst as any).on("receive-gold", PermissionLevel.Power, (e: any, amount: number) => script.post(['receive-gold', amount]));
                                     (guardInst as any).on("receive-xp", PermissionLevel.Power, (e: any, amount: number) => script.post(['receive-xp', amount]));

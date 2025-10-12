@@ -723,11 +723,23 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'アンチフック',
         'zh':'反钩',
     },
-    'kick-all':{
-        'en':'Kick All',
-        'ko':'올 킥',
-        'ja':'全員キック',
-        'zh':'踢出所有人',
+    'kicker':{
+        'en':'Kicker',
+        'ko':'킥',
+        'ja':'キッカー',
+        'zh':'踢',
+    },
+    'auto-kick':{
+        'en':'Auto Kick',
+        'ko':'자동 킥',
+        'ja':'自動キック',
+        'zh':'自动踢',
+    },
+    'auto-kick-ignore':{
+        'en':'Auto Kick Ignore Marked',
+        'ko':'자동 킥 마크 무시',
+        'ja':'自動キックマーク無視',
+        'zh':'自动踢忽略标记',
     },
     'debuff': {
         'en':'Debuff',
@@ -842,6 +854,18 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ko':'무승부',
         'ja':'引き分け',
         'zh':'平局'
+    },
+    'milk-win':{
+        'en':'Milk Win',
+        'ko':'밀크 승리',
+        'ja':'ミルク優勝',
+        'zh':'牛奶获胜'
+    },
+    'choco-win':{
+        'en':'Choco Win',
+        'ko':'초코 승리',
+        'ja':'チョコレート優勝',
+        'zh':'巧克力获胜'
     },
     'resource-hack':{
         'en':'Resource Hack',
@@ -1325,7 +1349,7 @@ ipcRenderer.on('token', (e, token:Token|string) => {
             $_('selector-dev-mode').classList.remove('hide');
             $_('selector-console').classList.remove('hide');
         }
-        document.querySelectorAll('details[data-cheat]').forEach((el:HTMLElement) => el.classList.add('hide'));
+        if(!token.perms.includes('admin')) document.querySelectorAll('details[data-cheat]').forEach((el:HTMLElement) => el.classList.add('hide'));
         token.perms.forEach((perm:string) => {
             const _el = $c(perm);
             if(_el) _el.classList.remove('hide');
@@ -1443,6 +1467,8 @@ sel.addEventListener('change', blurCurrent);
 $_('match-win').addEventListener('click', () => {ipcRenderer.send('match-win');});
 $_('match-lose').addEventListener('click', () => {ipcRenderer.send('match-lose');});
 $_('match-draw').addEventListener('click', () => {ipcRenderer.send('match-draw');});
+$_('match-milk').addEventListener('click', () => {ipcRenderer.send('match-milk');});
+$_('match-choco').addEventListener('click', () => {ipcRenderer.send('match-choco');});
 $_('receive-dia').addEventListener('click', () => {ipcRenderer.send('receive-dia', parseInt($i('resource-hack-dia').value) || 0);});
 $_('receive-gold').addEventListener('click', () => {ipcRenderer.send('receive-gold', parseInt($i('resource-hack-gold').value) || 0);});
 $_('receive-xp').addEventListener('click', () => {ipcRenderer.send('receive-xp', parseInt($i('resource-hack-xp').value) || 0);});

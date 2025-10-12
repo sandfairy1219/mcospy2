@@ -83,6 +83,7 @@ let cheats:{[key:string]:boolean} = {};
 let keybinds:{[key:string]:string} = {};
 let config:{[key:string]:any} = {};
 let keymap:{[key:string]:boolean} = {};
+let wpdata:[] = [];
 let macros:Macro[] = [];
 
 let listenSub: boolean = false;
@@ -209,6 +210,40 @@ function getFilteredEntityList(exceptMark:boolean):NativePointer[]{
     })
 }
 
+function getFocusedEntity(): NativePointer[] {
+    if(!cambase) return [];
+    if(cambase.isNull()) return [];
+    const camX = cambase.add(0xc).readFloat();
+    const camY = cambase.add(0x10).readFloat();
+    const camZ = cambase.add(0x14).readFloat();
+    const yaw = cambase.add(0x4).readFloat();
+    const pitch = cambase.readFloat() + (+config['esp-pitch-offset'] || 0);
+    return getFilteredEntityList(false).filter(entity => {
+        const x = entity.add(eposOffset['x']).readFloat();
+        const y = entity.add(eposOffset['y']).readFloat();
+        const z = entity.add(eposOffset['z']).readFloat();
+        const list:Point[] = [
+            {x: x + sideSize, y: y + upSize, z: z + sideSize},
+            {x: x - sideSize, y: y + upSize, z: z + sideSize},
+            {x: x - sideSize, y: y + upSize, z: z - sideSize},
+            {x: x + sideSize, y: y + upSize, z: z - sideSize},
+            {x: x + sideSize, y: y + downSize, z: z + sideSize},
+            {x: x - sideSize, y: y + downSize, z: z + sideSize},
+            {x: x - sideSize, y: y + downSize, z: z - sideSize},
+            {x: x + sideSize, y: y + downSize, z: z - sideSize},
+        ].map(vec3 => calcESP(vec3, {x: camX, y: camY, z: camZ}, yaw, pitch, camFov)).filter(point => point);
+        const minX = Math.min(...list.map(point => point.x)), maxX = Math.max(...list.map(point => point.x));
+        const minY = Math.min(...list.map(point => point.y)), maxY = Math.max(...list.map(point => point.y));
+        return minX < 0 && maxX > 0 && minY < 0 && maxY > 0;
+    });
+}
+
+function saveWPData(pointer: NativePointer){
+    const n = pointer.add(eposOffset['number']).readS32();
+    const nick = pointer.add(eposOffset['nickname']).readCString();
+    send(['wp-data', wpdata]);
+}
+
 let assistSpeed = 0;
 let lastTime = Date.now();
 let shooting = false;
@@ -320,11 +355,13 @@ function init(){
                                 try{
                                     const pt = ptr(p);
                                     const myslot = epos.add(eposOffset['slot']).readU8() % 2;
-                                    if(cheats['kick-all']) {
+                                    if(cheats['kicker'] && config['auto-kick']) {
                                         let n = pt.readS32()
                                         let slot = pt.add(eposOffset['slot']).readU8() % 2
-                                        if(n > 0 && myslot != slot && !excepts.includes(n)){
-                                            purchaseT(n, 0);
+                                        if(n > 0 && myslot != slot){
+                                            if(!(config['auto-kick-ignore'] && excepts.includes(n))){
+                                                purchaseT(n, 0);
+                                            }
                                         }
                                     }
                                     const n = pt.add(eposOffset['nickname']).readCString();
@@ -374,6 +411,7 @@ function init(){
                     cheats = args[0];
                     keybinds = args[1];
                     config = args[2];
+                    wpdata = args[3];
                     excepts = (config['except-number'] as string || "").split(',').filter(v => v).map(v => parseInt(v) || 0).filter(v => v) || [];
                 // } else if(name === 'addr'){
                     // isArm = Process.arch.includes('arm');
@@ -492,45 +530,21 @@ function init(){
                     // }
                     // if(key === keybinds['clear-all'] && action === 'DOWN') clearAll();
                     if(key === keybinds['esp-mark'] && action === 'DOWN'){
-                        if(!cambase) return recv(api);
-                        if(cambase.isNull()) return recv(api);
-                        const camX = cambase.add(0xc).readFloat();
-                        const camY = cambase.add(0x10).readFloat();
-                        const camZ = cambase.add(0x14).readFloat();
-                        const yaw = cambase.add(0x4).readFloat();
-                        const pitch = cambase.readFloat() + (+config['esp-pitch-offset'] || 0);
-                        getFilteredEntityList(false).forEach(entity => {
-                            const x = entity.add(eposOffset['x']).readFloat();
-                            const y = entity.add(eposOffset['y']).readFloat();
-                            const z = entity.add(eposOffset['z']).readFloat();
-                            const number = entity.add(eposOffset['number']).readS32();
-                            const list:Point[] = [
-                                {x: x + sideSize, y: y + upSize, z: z + sideSize},
-                                {x: x - sideSize, y: y + upSize, z: z + sideSize},
-                                {x: x - sideSize, y: y + upSize, z: z - sideSize},
-                                {x: x + sideSize, y: y + upSize, z: z - sideSize},
-                                {x: x + sideSize, y: y + downSize, z: z + sideSize},
-                                {x: x - sideSize, y: y + downSize, z: z + sideSize},
-                                {x: x - sideSize, y: y + downSize, z: z - sideSize},
-                                {x: x + sideSize, y: y + downSize, z: z - sideSize},
-                            ].map(vec3 => calcESP(vec3, {x: camX, y: camY, z: camZ}, yaw, pitch, camFov)).filter(point => point);
-                            const minX = Math.min(...list.map(point => point.x)), maxX = Math.max(...list.map(point => point.x));
-                            const minY = Math.min(...list.map(point => point.y)), maxY = Math.max(...list.map(point => point.y));
-                            if(minX < 0 && maxX > 0 && minY < 0 && maxY > 0){
-                                if(excepts.includes(number)){
-                                    excepts = excepts.filter(n => n !== number);
-                                } else {
-                                    excepts.push(number);
-                                }
-                                send(['except-number', excepts]);
+                        const numbers = getFocusedEntity().map(entity => entity.add(eposOffset['number']).readS32());
+                        numbers.forEach(number => {
+                            if(excepts.includes(number)){
+                                excepts = excepts.filter(n => n !== number);
+                            } else {
+                                excepts.push(number);
                             }
                         });
-                        macros.forEach(macro => {
-                            if(keybinds[macro.id]){
-                                if(key === keybinds[macro.id] && action === 'DOWN'){
-                                    executeMacro(macro.events);
-                                }
-                            }
+                        send(['except-number', excepts]);
+                    }
+                    if(key === keybinds['kicker'] && action === 'DOWN'){
+                        const numbers = getFocusedEntity().map(entity => entity.add(eposOffset['number']).readS32())
+                        .filter(number => number > 0);
+                        numbers.forEach(number => {
+                            purchaseT(number, 0);
                         });
                     }
                     if(key === keybinds['infinite-jump'] && action === 'DOWN' && cheats['infinite-jump']){
@@ -542,6 +556,13 @@ function init(){
                         epos.add(eposOffset['fall']).writeS8(0);
                         epos.add(eposOffset['y']).writeFloat(y + 0.1);
                     }
+                    macros.forEach(macro => {
+                        if(keybinds[macro.id]){
+                            if(key === keybinds[macro.id] && action === 'DOWN'){
+                                executeMacro(macro.events);
+                            }
+                        }
+                    });
                 } else if(name === 'listen-sub'){
                     listenSub = args[0];
                 } else if(name === 'listen-main'){
@@ -566,6 +587,8 @@ function init(){
                     if(epos.isNull()) return recv(api);
                     endgame(ptr(1 - epos.add(eposOffset['slot']).readU8() % 2));
                 } else if(name === 'match-draw'){ endgame(ptr(3));
+                } else if(name === 'match-milk'){ endgame(ptr(0));
+                } else if(name === 'match-choco'){ endgame(ptr(1));
                 } else if(name === 'receive-dia'){ setDia(+args[0] || 0);
                 } else if(name === 'receive-gold'){ setGold(+args[0] || 0);
                 } else if(name === 'receive-xp'){ setXp(+args[0] || 0);

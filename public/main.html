@@ -437,8 +437,24 @@
             <details data-cheat="anti-hook">
                 <summary class="no" id="anti-hook" data-lang="anti-hook"></summary>
             </details>
-            <details data-cheat="kick-all">
-                <summary class="no" id="kick-all" data-lang="kick-all"></summary>
+            <details data-cheat="kicker">
+                <summary id="kicker" data-lang="kicker"></summary>
+                <main>
+                    <div data-lang="keybind"></div>
+                    <input type="text" id="key-kicker" class="keybind" data-lang-ph="keybind">
+                </main>
+                <main>
+                    <div data-lang="auto-kick"></div>
+                    <input class="config" type="checkbox" id="auto-kick">
+                </main>
+                <main>
+                    <div data-lang="auto-kick-ignore"></div>
+                    <input class="config" type="checkbox" id="auto-kick-ignore">
+                </main>
+                <main>
+                    <input type="text" id="kick-player-number" class="w-full text-center" data-lang-ph="user-id">
+                    <button class="w-full" id="kick-player" data-lang="kick"></button>
+                </main>
             </details>
             <!-- <details>
                 <summary id="freecam" data-lang="freecam"></summary>
@@ -522,6 +538,10 @@
                     <button class="w-full" id="match-lose" data-lang="lose"></button>
                     <button class="w-full" id="match-draw" data-lang="draw"></button>
                 </main>
+                <main>
+                    <button class="w-full" id="match-milk" data-lang="milk-win"></button>
+                    <button class="w-full" id="match-choco" data-lang="choco-win"></button>
+                </main>
             </details>
             <details data-cheat="resource-hack">
                 <summary data-lang="resource-hack"></summary>
@@ -562,10 +582,6 @@
             </details>
             <details data-cheat="utilities">
                 <summary data-lang="utilities"></summary>
-                <main>
-                    <input type="text" id="kick-player-number" class="w-full text-center" data-lang-ph="user-id">
-                    <button class="w-full" id="kick-player" data-lang="kick"></button>
-                </main>
                 <main>
                     <input type="text" id="nickname-value" class="w-full text-center" data-lang-ph="nickname">
                     <button class="w-full" id="change-nickname" data-lang="change"></button>
