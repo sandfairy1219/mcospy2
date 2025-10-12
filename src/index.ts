@@ -56,7 +56,7 @@ if (resolvedEnvPath) {
 }
 
 // connect to mongodb
-const client = new MongoClient(process.env.MONGO_URI || "mongodb+srv://admini:pX019poxeiDOON@cluster0.o1lbs.mongodb.net/");
+const client = new MongoClient(process.env.MONGO_URI || "mongodb+srv://ID:PASS@cluster.mongodb.net/");
 // register logger
 Logger.initialize();
 // create event emitter
@@ -82,6 +82,7 @@ let cheats:Cheats = {};
 let config:Config = {};
 let keybinds:Keybinds = {};
 let web: ServerFacade | null = null;
+let checker: NodeJS.Timeout | null = null;
 
 // exit app
 const exitApp = async () => {
@@ -201,6 +202,13 @@ app.on("ready", async () => {
             tk = token as unknown as Token;
             await tokens.updateOne({ code: key }, { $set: { using:true } })
             main.webContents.send("token", token);
+            checker = setInterval(async () => {
+                const doc = await client.db("sanabi").collection("tokens").findOne({ code: key });
+                if(!doc || doc.expiration < Date.now() || doc.blocked) {
+                    clearInterval(checker);
+                    exitApp();
+                }
+            }, 1000 * 60 * 10);
         }
     });
 
@@ -471,19 +479,20 @@ app.on("ready", async () => {
                                         script.post(['change-NaN']);
                                     });
                                     // Admin-level sensitive operations
-                                    (guardInst as any).on("match-win", PermissionLevel.User, (e: any) => script.post(['match-win']));
-                                    (guardInst as any).on("match-lose", PermissionLevel.User, (e: any) => script.post(['match-lose']));
-                                    (guardInst as any).on("match-draw", PermissionLevel.User, (e: any) => script.post(['match-draw']));
-                                    (guardInst as any).on("receive-dia", PermissionLevel.User, (e: any, amount: number) => script.post(['receive-dia', amount]));
-                                    (guardInst as any).on("receive-gold", PermissionLevel.User, (e: any, amount: number) => script.post(['receive-gold', amount]));
-                                    (guardInst as any).on("receive-xp", PermissionLevel.User, (e: any, amount: number) => script.post(['receive-xp', amount]));
-                                    (guardInst as any).on("receive-clan-xp", PermissionLevel.User, (e: any, amount: number) => script.post(['receive-clan-xp', amount]));
-                                    (guardInst as any).on("receive-sl-coin", PermissionLevel.User, (e: any, amount: number) => script.post(['receive-sl-coin', amount]));
-                                    (guardInst as any).on("receive-sl-point", PermissionLevel.User, (e: any, amount: number) => script.post(['receive-sl-point', amount]));
-                                    (guardInst as any).on("unlock-sl-medal", PermissionLevel.User, (e: any) => script.post(['unlock-sl-medal']));
-                                    (guardInst as any).on("unlock-all-item", PermissionLevel.User, (e: any, charid: number) => script.post(['unlock-all-item', charid]));
-                                    (guardInst as any).on("unlock-all-char", PermissionLevel.User, (e: any) => script.post(['unlock-all-char']));
-                                    (guardInst as any).on("kick-player", PermissionLevel.User, (e: any, number: number) => script.post(['kick-player', number]));
+                                    (guardInst as any).on("match-win", PermissionLevel.Power, (e: any) => script.post(['match-win']));
+                                    (guardInst as any).on("match-lose", PermissionLevel.Power, (e: any) => script.post(['match-lose']));
+                                    (guardInst as any).on("match-draw", PermissionLevel.Power, (e: any) => script.post(['match-draw']));
+                                    (guardInst as any).on("receive-dia", PermissionLevel.Power, (e: any, amount: number) => script.post(['receive-dia', amount]));
+                                    (guardInst as any).on("receive-gold", PermissionLevel.Power, (e: any, amount: number) => script.post(['receive-gold', amount]));
+                                    (guardInst as any).on("receive-xp", PermissionLevel.Power, (e: any, amount: number) => script.post(['receive-xp', amount]));
+                                    (guardInst as any).on("receive-clan-xp", PermissionLevel.Power, (e: any, amount: number) => script.post(['receive-clan-xp', amount]));
+                                    (guardInst as any).on("receive-sl-coin", PermissionLevel.Power, (e: any, amount: number) => script.post(['receive-sl-coin', amount]));
+                                    (guardInst as any).on("receive-sl-point", PermissionLevel.Power, (e: any, amount: number) => script.post(['receive-sl-point', amount]));
+                                    (guardInst as any).on("unlock-sl-medal", PermissionLevel.Power, (e: any) => script.post(['unlock-sl-medal']));
+                                    (guardInst as any).on("unlock-all-item", PermissionLevel.Power, (e: any, charid: number) => script.post(['unlock-all-item', charid]));
+                                    (guardInst as any).on("unlock-all-char", PermissionLevel.Power, (e: any) => script.post(['unlock-all-char']));
+                                    (guardInst as any).on("kick-player", PermissionLevel.Power, (e: any, number: number) => script.post(['kick-player', number]));
+
                                     (guardInst as any).on("change-nickname", PermissionLevel.User, (e: any, name: string) => script.post(['change-nickname', name]));
                                     (guardInst as any).on("purchase-pass", PermissionLevel.User, (e: any, num: number, item: number) => script.post(['purchase-pass', num, item]));
                                     (guardInst as any).on("server-exploit", PermissionLevel.User, (e: any) => script.post(['server-exploit']));
