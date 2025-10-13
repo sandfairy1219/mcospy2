@@ -1199,6 +1199,21 @@ for(const key in config){
         else _el.value = config[key];
     }
 }
+
+// world player data
+let wpdata:{[key:string]:WPData} = {};
+let wps = localStorage.getItem('wpdata');
+if(wps) wpdata = JSON.parse(wps);
+else localStorage.setItem('wpdata', JSON.stringify(wpdata));
+ipcRenderer.on("clear-wpdata", () => {
+    wpdata = {};
+    localStorage.setItem('wpdata', JSON.stringify(wpdata));
+});
+ipcRenderer.on('wp-data', (e, key:string, data:WPData) => {
+    wpdata[key] = data;
+    localStorage.setItem('wpdata', JSON.stringify(wpdata));
+});
+
 // mobile controller
 $_('mobile-controller').classList.toggle('hide', !config['plugin-server-mobile-controller']);
 const toggleCheat = (e:Event) => {
@@ -1313,7 +1328,7 @@ $$_('.config').forEach((el:HTMLElement) => {
     }
 });
 const bounds = localStorage.getItem('layout');
-ipcRenderer.send('init', keybinds, config, bounds ? JSON.parse(bounds) : null);
+ipcRenderer.send('init', keybinds, config, wpdata, bounds ? JSON.parse(bounds) : null);
 
 // auto updater
 ipcRenderer.on('update', () => {

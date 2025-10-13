@@ -13,7 +13,18 @@ interface Token{
 type Cheats = {[key:string]:boolean}
 type Config = {[key:string]:any}
 type Keybinds = {[key:string]:string}
-
+interface WPData{
+    nicks:{nick:string;date:number}[]
+    chars:{
+        [key:string]:{
+            exp:number;
+            totalkill:number;
+            totaldeath:number;
+            totalassist:number;
+            date:number;
+        }
+    }
+}
 interface Point{
     x:number;
     y:number;

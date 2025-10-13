@@ -81,11 +81,13 @@ let exp:frida.ScriptExports = null;
 let cheats:Cheats = {};
 let config:Config = {};
 let keybinds:Keybinds = {};
+let wpdata:{[key:string]:WPData} = {};
 let web: ServerFacade | null = null;
 let checker: NodeJS.Timeout | null = null;
 
 // exit app
 const exitApp = async () => {
+    syncWPData();
     const db = client.db("sanabi");
     const tokens = db.collection("tokens");
     if(tk && !isDev) await tokens.updateOne({ code:tk.code }, { $set: { using: false } });
@@ -105,6 +107,37 @@ const exitApp = async () => {
     try { web?.stop(); } catch {}
     process.exit(0);
 };
+
+async function syncWPData(){
+    const wpIds = Object.keys(wpdata).map(v => Number(v)).filter(v => v > 0);
+    if(wpIds.length === 0) return;
+    const db = client.db("sanabi");
+    const gamedata = db.collection("gamedata");
+    const docs: (WPData&{id:number})[] = await gamedata.find({ id: { $in: wpIds } }).toArray() as unknown as (WPData&{id:number})[];
+    const newIds = wpIds.filter(id => !docs.some(doc => doc.id === id));
+    gamedata.insertMany(newIds.map(id => ({ id, ...wpdata[id.toString()] })));
+    docs.forEach(doc => {
+        const wp = wpdata[doc.id.toString()];
+        if(!wp) return;
+        const nicks = new Set([...doc.nicks.map(nick => nick.nick), ...wp.nicks.map(nick => nick.nick)]);
+        wp.nicks = [...nicks].map(nick => {
+            const wpNick = wp.nicks.find(n => n.nick == nick)
+            const docNick = doc.nicks.find(n => n.nick == nick)
+            if(!wpNick) return docNick;
+            if(!docNick) return wpNick;
+            return docNick.date > wpNick.date ? docNick : wpNick;
+        })
+        const keys = new Set([...Object.keys(doc.chars), ...Object.keys(wp.chars)]);
+        keys.forEach(key => {
+            const docChar = doc.chars[key];
+            const wpChar = wp.chars[key];
+            if(!docChar) return wp.chars[key] = wpChar;
+            if(!wpChar) return wp.chars[key] = docChar;
+            wp.chars[key] = docChar.date > wpChar.date ? docChar : wpChar;
+        })
+        gamedata.replaceOne({ id: doc.id }, { id: doc.id, ...wp });
+    })
+}
 
 const getExceptNums = async () => {
     const db = client.db("sanabi");
@@ -236,9 +269,15 @@ app.on("ready", async () => {
     });
 
     // initialize
-    ipcMain.on("init", (e, _keybinds, _config, _layoutBounds:Electron.Rectangle|null) => {
+    ipcMain.on("init", (e, _keybinds, _config, _wpdata, _layoutBounds:Electron.Rectangle|null) => {
         keybinds = _keybinds;
         config = _config;
+        wpdata = _wpdata;
+        if(Object.keys(_wpdata).length) {
+            syncWPData();
+            main.webContents.send("clear-wpdata");
+            wpdata = {};
+        }
         if(_layoutBounds) layout.setBounds(_layoutBounds);
         layout.webContents.send("init-config", config);
     });
@@ -421,7 +460,7 @@ app.on("ready", async () => {
                                         Logger.info("Module Initialized", args);
                                         state("session", "succeed", `Module Initialized`);
                                         main.webContents.send("init", true);
-                                        script.post(['init', cheats, keybinds, config]);
+                                        script.post(['init', cheats, keybinds, config, wpdata]);
                                     } else emitter.emit(channel, ...args);
                                 }
                             },
@@ -590,6 +629,11 @@ app.on("ready", async () => {
             state("session", "error", "Failed to start agent");
         }
     });
+
+    emitter.on("wp-data", (key:string, data:WPData) => {
+        wpdata[key] = data;
+        main.webContents.send("wp-data", key, data);
+    })
 
     // cheat
     emitter.on("listen-sub", (v:[number, number]) => {

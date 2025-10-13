@@ -45,6 +45,7 @@
             <button class="w-full selector" id="selector-plugins" data-lang="plugins"></button>
             <button class="w-full selector hide" id="selector-dev-mode" data-lang="dev-mode"></button>
             <button class="w-full selector hide" id="selector-console" data-lang="console"></button>
+            <button class="w-full selector hide" id="selector-finder" data-lang="finder"></button>
         </section>
         <section id="initialize" class="hide">
             <div>
@@ -751,6 +752,19 @@
         <section id="console" class="hide">
             <div id="console-out"></div>
             <input type="text" id="console-input">
+        </section>
+        <section id="finder" class="hide">
+            <div>
+                <input class="w-full" type="text" id="wp" data-lang-ph="player">
+            </div>
+            <div>
+                <select name="" id="search-wp-type">
+                    <option value="number" data-lang="number"></option>
+                    <option value="nickname" data-lang="nickname"></option>
+                </select>
+                <button class="w-full" id="search-wp" data-lang="search"></button>
+            </div>
+            <div id="finder-out"></div>
         </section>
     </div>
     <script src="./renderer.js"></script>

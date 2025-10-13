@@ -65,6 +65,19 @@ interface MacroEvent{
     value: number;
 }
 
+interface WPData{
+    nicks:{nick:string;date:number}[]
+    chars:{
+        [key:string]:{
+            exp:number;
+            totalkill:number;
+            totaldeath:number;
+            totalassist:number;
+            date:number;
+        }
+    }
+}
+
 let isArm = false
 let _libMyGame:Module | null = null;
 let xa:NativePointer = null;
@@ -83,7 +96,7 @@ let cheats:{[key:string]:boolean} = {};
 let keybinds:{[key:string]:string} = {};
 let config:{[key:string]:any} = {};
 let keymap:{[key:string]:boolean} = {};
-let wpdata:[] = [];
+let wpdata:{[key:string]:WPData} = {};
 let macros:Macro[] = [];
 
 let listenSub: boolean = false;
@@ -239,9 +252,31 @@ function getFocusedEntity(): NativePointer[] {
 }
 
 function saveWPData(pointer: NativePointer){
-    const n = pointer.add(eposOffset['number']).readS32();
+    const n = pointer.add(eposOffset['number']).readS32().toString();
     const nick = pointer.add(eposOffset['nickname']).readCString();
-    send(['wp-data', wpdata]);
+    const zr1 = pointer.add(eposOffset['zr1']).readFloat();
+    const zr2 = pointer.add(eposOffset['zr2']).readFloat();
+    if(zr1 !== 0 || zr2 !== 0 || nick === "") return;
+    const char = pointer.add(eposOffset['char']).readU8().toString();
+    const exp = pointer.add(eposOffset['exp']).readS32();
+    const totalkill = pointer.add(eposOffset['totalkill']).readS32();
+    const totaldeath = pointer.add(eposOffset['totaldeath']).readS32();
+    const totalassist = pointer.add(eposOffset['totalassist']).readS32();
+    if(wpdata[n]){
+        const haveNick = wpdata[n].nicks.filter(nck => nck.nick === nick);
+        if(haveNick.length === 0){
+            wpdata[n].nicks.push({nick, date: Date.now()});
+        } else {
+            wpdata[n].nicks = wpdata[n].nicks.map(nck => nck.nick === nick ? {nick, date: Date.now()} : nck);
+        }
+        if(Number(char) > 0) wpdata[n].chars[char] = {exp, totalkill, totaldeath, totalassist, date: Date.now()};
+    } else {
+        wpdata[n] = {
+            nicks: [{nick, date: Date.now()}], 
+            chars: Number(char) > 0 ? {[char]: {exp, totalkill, totaldeath, totalassist, date: Date.now()}} : {}
+        };
+    }
+    send(['wp-data', n, wpdata[n]]);
 }
 
 let assistSpeed = 0;
@@ -345,6 +380,7 @@ function init(){
                 if(epos && !epos.isNull()){
                     let ts = ptr(retval.toString());
                     if(ts && !ts.isNull()){
+                        saveWPData(ts);
                         if(ts.toString() === epos.toString()){
                             if(cheats['skill-cooldown']){
                                 makeNFunc('_ZN16SystemPacketSend33CheatSetAllSkillCoolTimeOneSecondEb', 'void', ['bool'])(1);
