@@ -53,7 +53,7 @@
       "icon": "./public/favicon.ico"
     },
     "nsis": {
-      "oneClick": false,
+      "oneClick": true,
       "allowToChangeInstallationDirectory": true,
       "artifactName": "pixel-Setup-${version}.exe"
     },

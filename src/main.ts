@@ -81,6 +81,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'コンソール',
         'zh':'控制台',
     },
+    'finder':{
+        'en':'Finder',
+        'ko':'파인더',
+        'ja':'ファインダー',
+        'zh':'查找',
+    },
     'serial':{
         'en':'Serial',
         'ko':'시리얼',
@@ -1143,6 +1149,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         "ja": "ジャイロスコープ感度",
         "zh": "陀螺仪灵敏度"
     },
+    'search-player':{
+        'en':'Search Player',
+        'ko':'플레이어 검색',
+        'ja':'プレイヤー検索',
+        'zh':'搜索玩家',
+    },
 }
 
 function lng(la:string, str:string):string{
@@ -1363,6 +1375,7 @@ ipcRenderer.on('token', (e, token:Token|string) => {
         if(token.perms.includes('admin') || token.perms.includes('developer')) {
             $_('selector-dev-mode').classList.remove('hide');
             $_('selector-console').classList.remove('hide');
+            $_('selector-finder').classList.remove('hide');
         }
         if(!token.perms.includes('admin')) document.querySelectorAll('details[data-cheat]').forEach((el:HTMLElement) => el.classList.add('hide'));
         token.perms.forEach((perm:string) => {
@@ -1575,4 +1588,43 @@ $i('console-input').addEventListener('keydown', (e:KeyboardEvent) => {
         ipcRenderer.send('console-cmd', $i('console-input').value);
         $i('console-input').value = '';
     }
+});
+
+
+$i('search-wp').addEventListener('keydown', (e:KeyboardEvent) => {
+    if(e.key === 'Enter'){
+        if($i('search-wp').value){
+            $_('finder-out').innerHTML = 'searching...';
+            ipcRenderer.send('search-wp', $i('search-wp').value, $i('search-wp-type').value);
+        }
+    }
+});
+ipcRenderer.on('search-wp', (e, wps:(WPData&{id:number})[]) => {
+    const finderOut = $_('finder-out');
+    finderOut.innerHTML = '';
+    if(wps.length === 0){
+        finderOut.textContent = 'No results';
+        return;
+    }
+    wps.forEach(wp => {
+        const wpOut = document.createElement('details');
+        const summary = document.createElement('summary');
+        summary.textContent = `[${wp.id}] ${wp.nicks.sort((a, b) => b.date - a.date)[0].nick}`;
+        wpOut.appendChild(summary);
+        const nicksDiv = document.createElement('div');
+        nicksDiv.classList.add('nicks');
+        wp.nicks.forEach(nick => {
+            const nickDiv = document.createElement('div');
+            nickDiv.textContent = `${nick.nick} (${new Date(nick.date).toLocaleString()})`;
+            nicksDiv.appendChild(nickDiv);
+        });
+        wpOut.appendChild(nicksDiv);
+        Object.keys(wp.chars).forEach(char => {
+            const charWp = wp.chars[char];
+            const charDiv = document.createElement('div');
+            charDiv.textContent = `${char}: ${charWp.exp}XP ${charWp.totalkill}K ${charWp.totaldeath}D ${charWp.totalassist}A`;
+            wpOut.appendChild(charDiv);
+        });
+        finderOut.appendChild(wpOut);
+    });
 });

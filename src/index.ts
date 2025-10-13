@@ -692,6 +692,20 @@ app.on("ready", async () => {
         main.webContents.send("log", msg);
     });
 
+    ipcMain.on("search-wp", async (e, data:string, type:string) => {
+        if(!main || main.isDestroyed() || !main.isVisible()) return;
+        const db = client.db("sanabi");
+        const gamedata = db.collection("gamedata");
+        const wps = type === "number" ?
+            await gamedata.aggregate([
+                { $match: { $expr: { $regexMatch: { input: { $toString: "$id" }, regex: data } } } }
+            ]).toArray()
+            : await gamedata.find({
+                "nicks.nick": { $regex: data, $options: "i" }
+            }).toArray();
+        main.webContents.send("search-wp", wps);
+    })
+
     // server
     ipcMain.on("server-start", (e, port:number) => {
         web?.start(port || 3000);

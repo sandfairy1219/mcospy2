@@ -117,6 +117,15 @@ button#listen-main.listening{@apply bg-sky-400 hover:bg-sky-500;}
     max-width: 75%;
 }
 
+#finder-out{@apply w-full h-full overflow-auto flex flex-col;}
+#finder-out .nicks{@apply flex flex-col;}
+#finder-out .nicks div{@apply w-full;}
+
+#finder-out details{@apply w-full;}
+#finder-out details summary{@apply w-full hover:bg-neutral-300 cursor-pointer p-1 rounded-md flex justify-start items-center gap-1 select-none text-lg;}
+#finder-out details summary:not([open]):before{content: "▶";}
+#finder-out details summary[open]:before{content: "▼";}
+
 .state{@apply rounded-full w-3 h-3 bg-neutral-400;}
 .state.active{@apply bg-sky-400;}
 .state.succeed{@apply bg-green-400;}
