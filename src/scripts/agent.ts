@@ -251,12 +251,13 @@ function getFocusedEntity(): NativePointer[] {
     });
 }
 
+let updateWPData = false;
 function saveWPData(pointer: NativePointer){
     const n = pointer.add(eposOffset['number']).readS32().toString();
     const nick = pointer.add(eposOffset['nickname']).readCString();
     const zr1 = pointer.add(eposOffset['zr1']).readFloat();
     const zr2 = pointer.add(eposOffset['zr2']).readFloat();
-    if(zr1 !== 0 || zr2 !== 0 || nick === "") return;
+    if(zr1 !== 0 || zr2 !== 0 || nick === "" || n.startsWith("-")) return;
     const char = pointer.add(eposOffset['char']).readU8().toString();
     const exp = pointer.add(eposOffset['exp']).readS32();
     const totalkill = pointer.add(eposOffset['totalkill']).readS32();
@@ -276,8 +277,14 @@ function saveWPData(pointer: NativePointer){
             chars: Number(char) > 0 ? {[char]: {exp, totalkill, totaldeath, totalassist, date: Date.now()}} : {}
         };
     }
-    send(['wp-data', n, wpdata[n]]);
+    updateWPData = true;
 }
+setInterval(() => {
+    if(updateWPData){
+        updateWPData = false;
+        send(['wp-data', wpdata]);
+    }
+}, 1000);
 
 let assistSpeed = 0;
 let lastTime = Date.now();

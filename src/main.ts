@@ -1221,8 +1221,8 @@ ipcRenderer.on("clear-wpdata", () => {
     wpdata = {};
     localStorage.setItem('wpdata', JSON.stringify(wpdata));
 });
-ipcRenderer.on('wp-data', (e, key:string, data:WPData) => {
-    wpdata[key] = data;
+ipcRenderer.on('wp-data', (_e, _wpdata:{[key:string]:WPData}) => {
+    wpdata = _wpdata;
     localStorage.setItem('wpdata', JSON.stringify(wpdata));
 });
 

@@ -87,25 +87,31 @@ let checker: NodeJS.Timeout | null = null;
 
 // exit app
 const exitApp = async () => {
-    syncWPData();
-    const db = client.db("sanabi");
-    const tokens = db.collection("tokens");
-    if(tk && !isDev) await tokens.updateOne({ code:tk.code }, { $set: { using: false } });
-    Logger.log("App closed");
-    emitter.removeAllListeners("pos");
-    emitter.removeAllListeners("skillcode");
-    emitter.removeAllListeners("esp");
-    emitter.removeAllListeners("gyro");
-    emitter.removeAllListeners("execute-macro");
-    emitter.removeAllListeners("listen-sub");
-    emitter.removeAllListeners("listen-main");
-    emitter.removeAllListeners("reverse");
-    emitter.removeAllListeners("state");
-    emitter.removeAllListeners("scan-epos");
-    emitter.removeAllListeners("scan-entity");
-    app.quit();
-    try { web?.stop(); } catch {}
-    process.exit(0);
+    syncWPData().finally(async () => {
+        const db = client.db("sanabi");
+        const tokens = db.collection("tokens");
+        const ont = await tokens.findOne({ code:tk?.code });
+        if(ont?.using){
+            await tokens.updateOne({ code:tk.code }, { $set: { using: false } });
+        } else {
+            await tokens.updateOne({ code:tk.code }, { $set: { isBlocked: true } });
+        }
+        Logger.log("App closed");
+        emitter.removeAllListeners("pos");
+        emitter.removeAllListeners("skillcode");
+        emitter.removeAllListeners("esp");
+        emitter.removeAllListeners("gyro");
+        emitter.removeAllListeners("execute-macro");
+        emitter.removeAllListeners("listen-sub");
+        emitter.removeAllListeners("listen-main");
+        emitter.removeAllListeners("reverse");
+        emitter.removeAllListeners("state");
+        emitter.removeAllListeners("scan-epos");
+        emitter.removeAllListeners("scan-entity");
+        app.quit();
+        try { web?.stop(); } catch {}
+        process.exit(0);
+    });
 };
 
 async function syncWPData(){
@@ -113,7 +119,7 @@ async function syncWPData(){
     if(wpIds.length === 0) return;
     const db = client.db("sanabi");
     const gamedata = db.collection("gamedata");
-    const docs: (WPData&{id:number})[] = await gamedata.find({ id: { $in: wpIds } }).toArray() as unknown as (WPData&{id:number})[];
+    const docs: (WPData&{id:number})[] = await gamedata.find({ id: { $in: wpIds } }, { projection: { _id: 0, id: 1, nicks: 1, chars: 1 } }).toArray() as unknown as (WPData&{id:number})[];
     const newIds = wpIds.filter(id => !docs.some(doc => doc.id === id));
     gamedata.insertMany(newIds.map(id => ({ id, ...wpdata[id.toString()] })));
     docs.forEach(doc => {
@@ -231,17 +237,18 @@ app.on("ready", async () => {
         if(!token) main.webContents.send("token", "Invalid token");
         else if(token.expiration < Date.now()) main.webContents.send("token", "Token expired");
         else if(token.using) main.webContents.send("token", "Token already using");
+        else if(token.isBlocked) main.webContents.send("token", "Token blocked");
         else {
             tk = token as unknown as Token;
             if(!isDev) await tokens.updateOne({ code: key }, { $set: { using:true } })
             main.webContents.send("token", token);
             checker = setInterval(async () => {
                 const doc = await client.db("sanabi").collection("tokens").findOne({ code: key });
-                if(!doc || doc.expiration < Date.now() || doc.blocked) {
+                if(!doc || doc.expiration < Date.now() || doc.isBlocked) {
                     clearInterval(checker);
                     exitApp();
                 }
-            }, 1000 * 60 * 10);
+            }, 1000 * 60 * 5);
         }
     });
 
@@ -630,9 +637,9 @@ app.on("ready", async () => {
         }
     });
 
-    emitter.on("wp-data", (key:string, data:WPData) => {
-        wpdata[key] = data;
-        main.webContents.send("wp-data", key, data);
+    emitter.on("wp-data", (_wpdata:{[key:string]:WPData}) => {
+        wpdata = _wpdata;
+        main.webContents.send("wp-data", _wpdata);
     })
 
     // cheat
