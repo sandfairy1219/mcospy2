@@ -122,11 +122,18 @@ let setSLPoint: any = null;
 let unlockSLMedal: any = null;
 let unlockChar: any = null;
 let unlockAllChar: any = null;
+let buyClanGold: any = null;
+let getDailyReward: any = null;
 let purchaseP: any = null;
 let purchaseT: any = null;
 let changeNickname: any = null;
 let exploitServer: any = null;
 let createClan: any = null;
+let breakClan: any = null;
+let equip: any = null;
+
+let elec: any = null;
+let mago: any = null;
 
 const log = (...args:any[]) => send(['log', ...args]);
 
@@ -284,7 +291,7 @@ setInterval(() => {
         updateWPData = false;
         send(['wp-data', wpdata]);
     }
-}, 1000);
+}, 5 * 1000);
 
 let assistSpeed = 0;
 let lastTime = Date.now();
@@ -304,6 +311,9 @@ function init(){
     try {
         attachNFunc('_ZN16SystemPacketSend12RequestLoginEiRKSsS1_', {
             onEnter(args) {
+                const id = args[0].toUInt32();
+                const str1 = args[1].readPointer().readCString();
+                const str2 = args[2].readPointer().readCString();
             },
         })
         const item = makeNFunc('_ZN16SystemPacketSend7BuyItemEhhth', 'void', ['uchar', 'uchar', 'uchar', 'uchar']);
@@ -324,9 +334,10 @@ function init(){
         unlockChar = (charId: number) => {
             for(let i = 1; i <= 255; i++){item(charId, 0, i, 1)}
             for(let i = 1; i <= 255; i++){item(charId, 1, i, 1)}
-            for(let i = 1; i <= 255; i++){item(charId, 2, i, 1)}
-            for(let i = 1; i <= 255; i++){item(charId, 3, i, 1)}
-            for(let i = 1; i <= 255; i++){item(charId, 4, i, 1)}
+            for(let i = 1; i <= 384; i++){item(charId, 2, i, 1)}
+            for(let i = 1; i <= 384; i++){item(charId, 3, i, 1)}
+            for(let i = 1; i <= 384; i++){item(charId, 4, i, 1)}
+            for(let i = 1; i <= 32; i++){item(charId, 5, i, 90)}
             for(let i = 1; i <= 127; i++){item(charId, 6, i, 1)}
             for(let i = 1; i <= 127; i++){item(charId, 7, i, 1)}
         };
@@ -335,6 +346,8 @@ function init(){
                 makeNFunc('_ZN16SystemPacketSend12BuyCharacterEh', 'void', ['uchar'])(i);
             }
         };
+        buyClanGold = makeNFunc('_ZN16SystemPacketSend15BuyWithClanGoldEh', 'void', ['uchar']);
+        getDailyReward = makeNFunc('_ZN16SystemPacketSend17SendReqDailyBonusEh', 'void', ['uchar']);
         purchaseP = makeNFunc('_ZN16SystemPacketSend16SendPurchasePassEjh', 'void', ['uint', 'uchar']);
         purchaseT = makeNFunc('_ZN16SystemPacketSend20SendPurchasePassTierEjh', 'void', ['uint', 'uchar']);
         changeNickname = (name:string) => {
@@ -353,6 +366,10 @@ function init(){
             dobj.writePointer(dpt);
             makeNFunc('_ZN16SystemPacketSend10ClanCreateERKSsS1_hh', 'void', ["pointer", "pointer", "uchar", "uchar"])(nobj, dobj, mark, flag);
         }
+        breakClan = () => makeNFunc('_ZN16SystemPacketSend11ClanBreakupEv', 'void', []);
+        equip = makeNFunc('_ZN16SystemPacketSend5EquipEhht', 'void', ['uchar', 'uchar', 'uint16']);
+        elec = makeNFunc('_ZN16SystemPacketSend15BuffHitElectricERK9UserInforjj', 'void', ['pointer', 'uint', 'uint']);
+        mago = makeNFunc('_ZN16SystemPacketSend20DeBuffSkillMagoTotemEjj', 'void', ['uint', 'uint']);
         attachNFunc('_ZN5Cloud10CameraData24GetCameraUserInformationEv', {
             onLeave(retval) {
                 if(config['epos-number'] && config['epos-number'] != '0'){
@@ -590,6 +607,22 @@ function init(){
                             purchaseT(number, 0);
                         });
                     }
+                    if(key === keybinds['electric'] && action === 'DOWN' && cheats['electric']){
+                        if(!epos) return recv(api);
+                        if(epos.isNull()) return recv(api);
+                        const mynum = epos.add(eposOffset['number']).readS32();
+                        getFocusedEntity().forEach(entity => {
+                            elec(entity, mynum, mynum);
+                        });
+                    }
+                    if(key === keybinds['mago'] && action === 'DOWN' && cheats['mago']){
+                        if(!epos) return recv(api);
+                        if(epos.isNull()) return recv(api);
+                        const mynum = epos.add(eposOffset['number']).readS32();
+                        getFocusedEntity().forEach(entity => {
+                            mago(mynum, entity.add(eposOffset['number']).readS32());
+                        });
+                    }
                     if(key === keybinds['infinite-jump'] && action === 'DOWN' && cheats['infinite-jump']){
                         if(!epos) return recv(api);
                         if(epos.isNull()) return recv(api);
@@ -641,11 +674,24 @@ function init(){
                 } else if(name === 'unlock-sl-medal'){ unlockSLMedal();
                 } else if(name === 'unlock-all-item'){ unlockChar(+args[0] || 0);
                 } else if(name === 'unlock-all-char'){ unlockAllChar();
+                } else if(name === 'buy-clan-gold'){ 
+                    const amount = +args[0] || 1;
+                    for(let i = 0; i < amount; i++){
+                        buyClanGold(3);
+                    }
+                } else if(name === 'get-daily-reward'){ 
+                    const amount = +args[0] || 1;
+                    for(let i = 0; i < amount; i++){
+                        getDailyReward(0);
+                        getDailyReward(1);
+                    }
                 } else if(name === 'kick-player'){ purchaseT(+args[0] || 0, 0);
                 } else if(name === 'change-nickname'){ changeNickname(args[0] || 'no name');
                 } else if(name === 'purchase-pass'){ purchaseP(+args[0] || 0, +args[1] || 0);
                 } else if(name === 'server-exploit'){ exploitServer();
                 } else if(name === 'create-clan'){ createClan(args[0] || genRandom());
+                } else if(name === 'break-clan'){ breakClan();
+                } else if(name === 'equip-item'){ equip(+args[0] || 1, +args[1] || 0, +args[2] || 0);
                 } else if(name === 'ctm-default-milk'){ ctmDefaultMilk();
                 } else if(name === 'ctm-default-choco'){ ctmDefaultChoco();
                 } else if(name === 'ctm-desert-milk'){ ctmDesertMilk();
@@ -689,6 +735,8 @@ function init(){
                 } else if(name === 'execute-cmd'){
                     console.log("[CMD]", args[0]);
                     eval(args[0]);
+                } else if(name === 'search'){
+                    cmdSearchF(args[0]);
                 } else if(name === "hook"){
                     cmdHookF(args[0]);
                 } else if(name === "unhook"){
@@ -722,6 +770,7 @@ function init(){
 }
 
 let toggleDetector = makeNFunc('_ZN9GameScene21ToggleAbusingDetectorEb', 'void', ['bool']);
+let lastDebuffTime = Date.now();
 function loop(){
     const delta = Date.now() - lastTime;
     lastTime = Date.now();
@@ -1036,19 +1085,23 @@ function loop(){
                 epos.add(eposOffset['gc']).writeFloat(0);
             }
             if(cheats['debuff']){
-                if(!keybinds['debuff'] || keymap[keybinds['debuff']]){
+                if(
+                    (!keybinds['debuff'] || keymap[keybinds['debuff']]) &&
+                    Date.now() - lastDebuffTime > (+config['debuff-interval'] || 0.1) * 1000
+                ){
                     let ignoreExcepts = config['debuff-ignore'] || false;
-                    let electric = config['debuff-electric'] || false;
-                    let mago = config['debuff-mago'] || false;
+                    let delectric = config['debuff-electric'] || false;
+                    let dmago = config['debuff-mago'] || false;
                     let mynum = epos.add(eposOffset['number']).readS32();
                     getFilteredEntityList(ignoreExcepts)
                     .filter(entity => !isTeam(epos, entity))
                     .filter(entity => !isDead(entity))
                     .forEach(entity => {
                         let num = entity.add(eposOffset['number']).readS32();
-                        if(electric) makeNFunc('_ZN16SystemPacketSend15BuffHitElectricERK9UserInforjj', 'void', ['pointer', 'uint', 'uint'])(entity, mynum, mynum)
-                        if(mago) makeNFunc('_ZN16SystemPacketSend20DeBuffSkillMagoTotemEjj', 'void', ['uint', 'uint'])(mynum, num);
+                        if(delectric) elec(entity, mynum, mynum)
+                        if(dmago) mago(mynum, num);
                     });
+                    lastDebuffTime = Date.now();
                 }
             }
             if(cheats['hide-me']){
@@ -2004,182 +2057,187 @@ function isMangled(name:string):boolean{
     return name.startsWith('_Z');
 }
 function demangle(name:string):any{
-    if (!isMangled(name)) return name;
-    const encoding = name.substr(2, (name.indexOf('.') < 0) ? undefined : name.indexOf('.')-2);
-    let fname = popName(encoding);
-	let functionname = fname.name;
-	let types: any[] = [];
-    let template_count = 0;
-	let template_types: any[] = [];
-
-	// Process the types
-	let str = fname.str;
-	
-    let maxTypes = 0;
-	while (str.length > 0 && maxTypes < 100) {
-	    let process = popChar(str);
-
-	    /* The type info
-
-	       isBase -> is the type the built-in one in the mangler, represented with few letters?
-	       typeStr: the type name
-	       templateType: type info for the current template.
-
-	       The others are self descriptive
-	    */
-	    let typeInfo: any = {isBase: true, typeStr: "", isConst: false, numPtr: 0,
-			    isRValueRef: false, isRef: false, isRestrict: false,
-			    templateStart: false, templateEnd: false,
-			    isVolatile: false, templateType: null};
-
-	    /* Check if we have a qualifier (like const, ptr, ref... )*/
-	    var doQualifier = true;
-
-        let maxQualifiers = 0;
-	    while (doQualifier && maxQualifiers < 100) {
-            switch (process.ch) {
-            case 'R': typeInfo.isRef = true; process = popChar(process.str); break;
-            case 'O': typeInfo.isRValueRef = true; process = popChar(process.str); break;
-            case 'r': typeInfo.isRestrict = true; process = popChar(process.str); break;
-            case 'V': typeInfo.isVolatile = true; process = popChar(process.str); break;
-            case 'K': typeInfo.isConst = true; process = popChar(process.str); break;
-            case 'P': typeInfo.numPtr++; process = popChar(process.str); break;
-            default: doQualifier = false;
+    if (!isMangled(name)) return null;
+    try {
+        
+        const encoding = name.substr(2, (name.indexOf('.') < 0) ? undefined : name.indexOf('.')-2);
+        let fname = popName(encoding);
+        let functionname = fname.name;
+        let types: any[] = [];
+        let template_count = 0;
+        let template_types: any[] = [];
+    
+        // Process the types
+        let str = fname.str;
+        
+        let maxTypes = 0;
+        while (str.length > 0 && maxTypes < 20) {
+            let process = popChar(str);
+    
+            /* The type info
+    
+               isBase -> is the type the built-in one in the mangler, represented with few letters?
+               typeStr: the type name
+               templateType: type info for the current template.
+    
+               The others are self descriptive
+            */
+            let typeInfo: any = {isBase: true, typeStr: "", isConst: false, numPtr: 0,
+                    isRValueRef: false, isRef: false, isRestrict: false,
+                    templateStart: false, templateEnd: false,
+                    isVolatile: false, templateType: null};
+    
+            /* Check if we have a qualifier (like const, ptr, ref... )*/
+            var doQualifier = true;
+    
+            let maxQualifiers = 0;
+            while (doQualifier && maxQualifiers < 20) {
+                switch (process.ch) {
+                case 'R': typeInfo.isRef = true; process = popChar(process.str); break;
+                case 'O': typeInfo.isRValueRef = true; process = popChar(process.str); break;
+                case 'r': typeInfo.isRestrict = true; process = popChar(process.str); break;
+                case 'V': typeInfo.isVolatile = true; process = popChar(process.str); break;
+                case 'K': typeInfo.isConst = true; process = popChar(process.str); break;
+                case 'P': typeInfo.numPtr++; process = popChar(process.str); break;
+                default: doQualifier = false;
+                }
+                maxQualifiers++;
             }
-            maxQualifiers++;
-	    }
-
-	    /* Get the type code. Process it */
-	    switch (process.ch) {
-	    case 'v': typeInfo.typeStr = "void"; break;
-	    case 'w': typeInfo.typeStr = "wchar_t"; break;
-	    case 'b': typeInfo.typeStr = "bool"; break;
-	    case 'c': typeInfo.typeStr = "char"; break;
-	    case 'a': typeInfo.typeStr = "signed char"; break;
-	    case 'h': typeInfo.typeStr = "unsigned char"; break;
-	    case 's': typeInfo.typeStr = "short"; break;
-	    case 't': typeInfo.typeStr = "unsigned short"; break;
-	    case 'i': typeInfo.typeStr = "int"; break;
-	    case 'S':
-		/* Abbreviated std:: types */
-		process = popChar(process.str);
-
-		switch (process.ch) {
-		case 't': {
-		    // It's a custom type name
-		    const tname = popName(process.str);
-		    typeInfo.typeStr = "std::".concat(tname.name);
-		    process.str = tname.str;
-		    break;
-		}
-		case 'a': typeInfo.typeStr = "std::allocator"; break;
-		case 'b': typeInfo.typeStr = "std::basic_string"; break;
-		case 's': typeInfo.typeStr = "std::basic_string<char, std::char_traits<char>, std::allocator<char>>"; break;
-		case 'i': typeInfo.typeStr = "std::basic_istream<char, std::char_traits<char>>"; break;
-		case 'o': typeInfo.typeStr = "std::basic_ostream<char, std::char_traits<char>>"; break;
-		case 'd': typeInfo.typeStr = "std::basic_iostream<char, std::char_traits<char>>"; break;
-		default:
-		    process.str = process.ch.concat(process.str);
-		    break;
-		}
-		
-		break;
-		
-	    case 'I':
-		// Template open bracket (<)
-		types[types.length-1].templateStart = true;
-		template_types.push(types[types.length-1]);
-		template_count++;
-		
-		break;
-	    case 'E':
-		// Template closing bracket (>)
-		if ((template_count <= 0)) {
-		    str = process.str;
-		    continue;
-		}
-		
-		typeInfo.templateEnd = true;
-
-		template_count--;
-		typeInfo.templateType = template_types[template_count];
-		template_types = template_types.slice(0, -1);
-		
-		break;
-				
-	    case 'j': typeInfo.typeStr = "unsigned int"; break;
-	    case 'l': typeInfo.typeStr = "long int"; break;
-	    case 'm': typeInfo.typeStr = "unsigned long int"; break;
-	    case 'x': typeInfo.typeStr = "long long int"; break;
-	    case 'y': typeInfo.typeStr = "unsigned long long int"; break;
-	    case 'n': typeInfo.typeStr = "__int128"; break;
-	    case 'o': typeInfo.typeStr = "unsigned __int128"; break;
-	    case 'f': typeInfo.typeStr = "float"; break;
-	    case 'd': typeInfo.typeStr = "double"; break;
-	    case 'e': typeInfo.typeStr = "long double"; break;
-	    case 'g': typeInfo.typeStr = "__float128"; break;
-	    case 'z': typeInfo.typeStr = "..."; break;
-
-		/* No type code. We have a type name instead */
-	    default: {
-		if (!isNaN(parseInt(process.ch, 10)) || process.ch == "N") {
-
-		    // It's a custom type name
-		    const tname = popName(process.ch.concat(process.str));
-		    typeInfo.typeStr = typeInfo.typeStr.concat(tname.name);
-		    process.str = tname.str;
-		}
-
-	    } break;
-	    }
-
-
-	    types.push(typeInfo);
-	    str = process.str;
-	    maxTypes++;
-	}
-
-	/* Create the string representation of the type */
-	const typelist = types.map((t) => {
-	    let typestr = "";
-	    if (t.isConst) typestr = typestr.concat("const ");
-	    if (t.isVolatile) typestr = typestr.concat("volatile ");
-	    
-	    typestr = typestr.concat(t.typeStr);
-
-	    if (t.templateStart) typestr = typestr.concat("<");
-	    if (t.templateEnd) typestr = typestr.concat(">");
-
-	    if (!t.templateStart) {
-		if (t.isRef) typestr = typestr.concat("&");
-		if (t.isRValueRef) typestr = typestr.concat("&&");
-		for (let i = 0; i < t.numPtr; i++) typestr = typestr.concat("*");
-		if (t.isRestrict) typestr = typestr.concat(" __restrict");
-	    }
-	    
-	    if (t.templateType) {		
-		if (t.templateType.isRef) typestr = typestr.concat("&");
-		if (t.templateType.isRValueRef) typestr = typestr.concat("&&");
-		for (let i = 0; i < t.templateType.numPtr; i++) typestr = typestr.concat("*");
-	    }
-	    
-	    return typestr;
-	});
-
-	/* Those replaces are an stupid shortcut to fix templates and make it fast
-	   Without that, we would need to complicate the code
-
-	   What it does is remove the commas where we would have the angle brackets
-	   for the templates
-	*/
-	
-	return {
-        name: functionname.concat("(" + typelist.join(', ') + ")")
-        .replaceAll("<, ", "<")
-        .replaceAll(", >", ">")
-        .replaceAll(", <", "<"),
-        functionname,
-        args: typelist
+    
+            /* Get the type code. Process it */
+            switch (process.ch) {
+            case 'v': typeInfo.typeStr = "void"; break;
+            case 'w': typeInfo.typeStr = "wchar_t"; break;
+            case 'b': typeInfo.typeStr = "bool"; break;
+            case 'c': typeInfo.typeStr = "char"; break;
+            case 'a': typeInfo.typeStr = "signed char"; break;
+            case 'h': typeInfo.typeStr = "unsigned char"; break;
+            case 's': typeInfo.typeStr = "short"; break;
+            case 't': typeInfo.typeStr = "unsigned short"; break;
+            case 'i': typeInfo.typeStr = "int"; break;
+            case 'S':
+            /* Abbreviated std:: types */
+            process = popChar(process.str);
+    
+            switch (process.ch) {
+            case 't': {
+                // It's a custom type name
+                const tname = popName(process.str);
+                typeInfo.typeStr = "std::".concat(tname.name);
+                process.str = tname.str;
+                break;
+            }
+            case 'a': typeInfo.typeStr = "std::allocator"; break;
+            case 'b': typeInfo.typeStr = "std::basic_string"; break;
+            case 's': typeInfo.typeStr = "std::basic_string<char, std::char_traits<char>, std::allocator<char>>"; break;
+            case 'i': typeInfo.typeStr = "std::basic_istream<char, std::char_traits<char>>"; break;
+            case 'o': typeInfo.typeStr = "std::basic_ostream<char, std::char_traits<char>>"; break;
+            case 'd': typeInfo.typeStr = "std::basic_iostream<char, std::char_traits<char>>"; break;
+            default:
+                process.str = process.ch.concat(process.str);
+                break;
+            }
+            
+            break;
+            
+            case 'I':
+            // Template open bracket (<)
+            types[types.length-1].templateStart = true;
+            template_types.push(types[types.length-1]);
+            template_count++;
+            
+            break;
+            case 'E':
+            // Template closing bracket (>)
+            if ((template_count <= 0)) {
+                str = process.str;
+                continue;
+            }
+            
+            typeInfo.templateEnd = true;
+    
+            template_count--;
+            typeInfo.templateType = template_types[template_count];
+            template_types = template_types.slice(0, -1);
+            
+            break;
+                    
+            case 'j': typeInfo.typeStr = "unsigned int"; break;
+            case 'l': typeInfo.typeStr = "long int"; break;
+            case 'm': typeInfo.typeStr = "unsigned long int"; break;
+            case 'x': typeInfo.typeStr = "long long int"; break;
+            case 'y': typeInfo.typeStr = "unsigned long long int"; break;
+            case 'n': typeInfo.typeStr = "__int128"; break;
+            case 'o': typeInfo.typeStr = "unsigned __int128"; break;
+            case 'f': typeInfo.typeStr = "float"; break;
+            case 'd': typeInfo.typeStr = "double"; break;
+            case 'e': typeInfo.typeStr = "long double"; break;
+            case 'g': typeInfo.typeStr = "__float128"; break;
+            case 'z': typeInfo.typeStr = "..."; break;
+    
+            /* No type code. We have a type name instead */
+            default: {
+            if (!isNaN(parseInt(process.ch, 10)) || process.ch == "N") {
+    
+                // It's a custom type name
+                const tname = popName(process.ch.concat(process.str));
+                typeInfo.typeStr = typeInfo.typeStr.concat(tname.name);
+                process.str = tname.str;
+            }
+    
+            } break;
+            }
+    
+    
+            types.push(typeInfo);
+            str = process.str;
+            maxTypes++;
+        }
+    
+        /* Create the string representation of the type */
+        const typelist = types.map((t) => {
+            let typestr = "";
+            if (t.isConst) typestr = typestr.concat("const ");
+            if (t.isVolatile) typestr = typestr.concat("volatile ");
+            
+            typestr = typestr.concat(t.typeStr);
+    
+            if (t.templateStart) typestr = typestr.concat("<");
+            if (t.templateEnd) typestr = typestr.concat(">");
+    
+            if (!t.templateStart) {
+            if (t.isRef) typestr = typestr.concat("&");
+            if (t.isRValueRef) typestr = typestr.concat("&&");
+            for (let i = 0; i < t.numPtr; i++) typestr = typestr.concat("*");
+            if (t.isRestrict) typestr = typestr.concat(" __restrict");
+            }
+            
+            if (t.templateType) {		
+            if (t.templateType.isRef) typestr = typestr.concat("&");
+            if (t.templateType.isRValueRef) typestr = typestr.concat("&&");
+            for (let i = 0; i < t.templateType.numPtr; i++) typestr = typestr.concat("*");
+            }
+            
+            return typestr;
+        });
+    
+        /* Those replaces are an stupid shortcut to fix templates and make it fast
+           Without that, we would need to complicate the code
+    
+           What it does is remove the commas where we would have the angle brackets
+           for the templates
+        */
+        
+        return {
+            name: functionname.concat("(" + typelist.join(', ') + ")")
+            .replaceAll("<, ", "<")
+            .replaceAll(", >", ">")
+            .replaceAll(", <", "<"),
+            functionname,
+            args: typelist
+        }
+    } catch (error) {
+        return null;
     }
 }
 function argMap(arg:string): string {
@@ -2205,7 +2263,7 @@ function cmdCallF(str:string, ...args:any[]):any{
         const f = new NativeFunction(
             _libMyGame.findExportByName(str),
             "pointer",
-            demangled.args.map((arg: string) => argMap(arg))
+            demangled.args.map((arg: string) => argMap(arg)).filter((arg: string) => arg !== "void")
         );
         args = args.map((arg, i) => {
             switch(argMap(demangled.args[i])){
@@ -2259,6 +2317,17 @@ function cmdArg(arg: string, args: NativePointer): string {
         default:
             return `[${arg}] ${args.toString()}`;
     }
+}
+function cmdSearchF(str: string): void {
+    const exports = _libMyGame.enumerateExports();
+    const names = exports.map((exp) => {
+        // const demangled = demangle(exp.name);
+        // if(!demangled) return null;
+        // return demangled.name;
+        return exp.name;
+    }).filter(name => name !== null);
+    const filtered = names.filter(name => name.toLowerCase().includes(str.toLowerCase()));
+    log(filtered.join("\n"));
 }
 function cmdHookF(str: string): void {
     const demangled = demangle(str);

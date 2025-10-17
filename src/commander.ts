@@ -40,6 +40,13 @@ export class Commander {
         }
     }
 
+    search(str: string): string {
+        if(!this.script) return "script not initialized";
+        if(!str) return "need at least one argument";
+        this.script.post(["search", str]);
+        return `searched ${str}`;
+    }
+
     rem(tar: string, ...args: string[]): string {
         if(!tar) return "need at least one argument";
         switch (tar) {

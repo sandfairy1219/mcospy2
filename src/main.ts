@@ -753,6 +753,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'デバフ',
         'zh':'减益效果',
     },
+    'debuff-interval': {
+        'en':'Debuff Interval',
+        'ko':'디버프 간격',
+        'ja':'デバフ間隔',
+        'zh':'减益效果间隔',
+    },
     'debuff-ignore': {
         'en':'Ignore Marked',
         'ko':'마크 무시',
@@ -776,6 +782,18 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ko':'플레이어 숨기기',
         'ja':'プレイヤーを隠す',
         'zh':'隐藏玩家',
+    },
+    'electric':{
+        'en':'Electric',
+        'ko':'일렉',
+        'ja':'電気',
+        'zh':'电击',
+    },
+    'mago':{
+        'en':'Mago',
+        'ko':'마고',
+        'ja':'マゴ',
+        'zh':'马戈',
     },
     'auto-end':{
         'en':'Auto End',
@@ -923,21 +941,45 @@ const lan:{[key:string]:{[key:string]:string}} = {
     },
     'unlock-sl-medal': {
         'en':'Unlock SL Medal',
-        'ko':'슽리 메달 잠금 해제',
+        'ko':'슽리 메달 해금',
         'ja':'SLメダルロック解除',
         'zh':'解锁SL勋章',
     },
     'unlock-all-item': {
         'en':'Unlock All Item',
-        'ko':'모든 아이템 잠금 해제',
+        'ko':'모든 템 해금',
         'ja':'すべてのアイテムロック解除',
         'zh':'解锁所有项目',
     },
     'unlock-all-char': {
         'en':'Unlock All Character',
-        'ko':'모든 캐릭터 잠금 해제',
+        'ko':'모든 캐릭 해금',
         'ja':'すべてのキャラクターロック解除',
         'zh':'解锁所有角色',
+    },
+    'buy-clan-gold': {
+        'en':'Buy Clan Gold',
+        'ko':'클코 구매',
+        'ja':'クランゴールド購入',
+        'zh':'购买公会金币',
+    },
+    'get-daily-reward': {
+        'en':'Get Daily',
+        'ko':'일일 보상 획득',
+        'ja':'日日報酬獲得',
+        'zh':'获取每日奖励',
+    },
+    'buy-item': {
+        'en':'Buy',
+        'ko':'구매',
+        'ja':'購入',
+        'zh':'购买',
+    },
+    'repeat-count': {
+        'en':'Repeat Count',
+        'ko':'반복 횟수',
+        'ja':'繰り返し回数',
+        'zh':'重复次数',
     },
     'char-id': {
         'en':'Character ID',
@@ -992,6 +1034,24 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ko':'클랜 생성',
         'ja':'クラン作成',
         'zh':'创建公会',
+    },
+    'break-clan': {
+        'en':'Break Clan',
+        'ko':'클랜 해체',
+        'ja':'クラン解散',
+        'zh':'解散公会',
+    },
+    'equip-spyra': {
+        'en':'Equip Spyra',
+        'ko':'스피라 장착',
+        'ja':'スパイラ装備',
+        'zh':'装备斯皮拉',
+    },
+    'equip-mh9': {
+        'en':'Equip MH9',
+        'ko':'MH9 장착',
+        'ja':'MH9装備',
+        'zh':'装备MH9',
     },
     'clanname': {
         'en':'Clan Name',
@@ -1377,6 +1437,7 @@ ipcRenderer.on('token', (e, token:Token|string) => {
             $_('selector-console').classList.remove('hide');
             $_('selector-finder').classList.remove('hide');
         }
+        if(token.perms.includes('finder')) $_('selector-finder').classList.remove('hide');
         if(!token.perms.includes('admin')) document.querySelectorAll('details[data-cheat]').forEach((el:HTMLElement) => el.classList.add('hide'));
         token.perms.forEach((perm:string) => {
             const _el = $c(perm);
@@ -1506,11 +1567,18 @@ $_('receive-sl-point').addEventListener('click', () => {ipcRenderer.send('receiv
 $_('unlock-sl-medal').addEventListener('click', () => {ipcRenderer.send('unlock-sl-medal');});
 $_('unlock-all-item').addEventListener('click', () => {ipcRenderer.send('unlock-all-item', parseInt($i('unlock-all-item-char-id').value) || 0);});
 $_('unlock-all-char').addEventListener('click', () => {ipcRenderer.send('unlock-all-char');});
+$_('get-daily-reward').addEventListener('click', () => {ipcRenderer.send('get-daily-reward', parseInt($i('get-daily-reward-repeat').value) || 1);});
+
 $_('kick-player').addEventListener('click', () => {ipcRenderer.send('kick-player', parseInt($i('kick-player-number').value) || 0);});
 $_('change-nickname').addEventListener('click', () => {ipcRenderer.send('change-nickname', $i('nickname-value').value || '');});
 $_('purchase-pass').addEventListener('click', () => {ipcRenderer.send('purchase-pass', parseInt($i('purchase-player-number').value) || 0, parseInt($i('purchase-item').value) || 1);});
 // $_('server-exploit').addEventListener('click', () => {ipcRenderer.send('server-exploit');});
 $_('create-clan').addEventListener('click', () => {ipcRenderer.send('create-clan', $i('clanname-value').value || '');});
+$_('break-clan').addEventListener('click', () => {ipcRenderer.send('break-clan');});
+$_('buy-clan-gold').addEventListener('click', () => {ipcRenderer.send('buy-clan-gold', parseInt($i('buy-clan-gold-repeat').value) || 1);});
+// equip
+$_('equip-spyra').addEventListener('click', () => {ipcRenderer.send('equip-item', parseInt($i('equip-char-number').value) || 1, 0, 24);});
+$_('equip-mh9').addEventListener('click', () => {ipcRenderer.send('equip-item', parseInt($i('equip-char-number').value) || 1, 1, 15);});
 
 updateExceptNumber();
 $_('except-number').addEventListener('change', updateExceptNumber);

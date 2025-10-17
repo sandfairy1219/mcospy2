@@ -101,7 +101,7 @@ button:disabled, input:disabled, select:disabled, textarea:disabled{@apply opaci
     transition: transform 0.3s ease;
 }
 #app > section > details[open] > summary::before{transform: rotate(90deg);}
-#app > section main {@apply flex items-center justify-between mb-0.5;}
+#app > section main {@apply flex items-center justify-between mb-0.5 gap-0.5;}
 #app > section > details > input {@apply w-20;}
 
 button#listen-sub.listening,

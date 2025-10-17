@@ -91,10 +91,12 @@ const exitApp = async () => {
         const db = client.db("sanabi");
         const tokens = db.collection("tokens");
         const ont = await tokens.findOne({ code:tk?.code });
-        if(ont?.using){
-            await tokens.updateOne({ code:tk.code }, { $set: { using: false } });
-        } else {
-            await tokens.updateOne({ code:tk.code }, { $set: { isBlocked: true } });
+        if(ont){
+            if(ont.using){
+                await tokens.updateOne({ code:tk.code }, { $set: { using: false } });
+            } else if(!isDev) {
+                await tokens.updateOne({ code:tk.code }, { $set: { isBlocked: true } });
+            }
         }
         Logger.log("App closed");
         emitter.removeAllListeners("pos");
@@ -121,7 +123,7 @@ async function syncWPData(){
     const gamedata = db.collection("gamedata");
     const docs: (WPData&{id:number})[] = await gamedata.find({ id: { $in: wpIds } }, { projection: { _id: 0, id: 1, nicks: 1, chars: 1 } }).toArray() as unknown as (WPData&{id:number})[];
     const newIds = wpIds.filter(id => !docs.some(doc => doc.id === id));
-    gamedata.insertMany(newIds.map(id => ({ id, ...wpdata[id.toString()] })));
+    if(newIds.length > 0) gamedata.insertMany(newIds.map(id => ({ id, ...wpdata[id.toString()] })));
     docs.forEach(doc => {
         const wp = wpdata[doc.id.toString()];
         if(!wp) return;
@@ -235,12 +237,12 @@ app.on("ready", async () => {
         const tokens = db.collection("tokens");
         const token = await tokens.findOne({ code: key });
         if(!token) main.webContents.send("token", "Invalid token");
-        else if(token.expiration < Date.now()) main.webContents.send("token", "Token expired");
-        else if(token.using) main.webContents.send("token", "Token already using");
-        else if(token.isBlocked) main.webContents.send("token", "Token blocked");
+        else if(!isDev && token.expiration < Date.now()) main.webContents.send("token", "Token expired");
+        else if(!isDev && token.using) main.webContents.send("token", "Token already using");
+        else if(!isDev && token.isBlocked) main.webContents.send("token", "Token blocked");
         else {
             tk = token as unknown as Token;
-            if(!isDev) await tokens.updateOne({ code: key }, { $set: { using:true } })
+            if(!isDev) await tokens.updateOne({ code: key }, { $set: { using:true, isBlocked:false } })
             main.webContents.send("token", token);
             checker = setInterval(async () => {
                 const doc = await client.db("sanabi").collection("tokens").findOne({ code: key });
@@ -281,9 +283,10 @@ app.on("ready", async () => {
         config = _config;
         wpdata = _wpdata;
         if(Object.keys(_wpdata).length) {
-            syncWPData();
-            main.webContents.send("clear-wpdata");
-            wpdata = {};
+            syncWPData().finally(() => {
+                main.webContents.send("clear-wpdata");
+                wpdata = {};
+            });
         }
         if(_layoutBounds) layout.setBounds(_layoutBounds);
         layout.webContents.send("init-config", config);
@@ -539,12 +542,17 @@ app.on("ready", async () => {
                                     (guardInst as any).on("unlock-sl-medal", PermissionLevel.Power, (e: any) => script.post(['unlock-sl-medal']));
                                     (guardInst as any).on("unlock-all-item", PermissionLevel.Power, (e: any, charid: number) => script.post(['unlock-all-item', charid]));
                                     (guardInst as any).on("unlock-all-char", PermissionLevel.Power, (e: any) => script.post(['unlock-all-char']));
+                                    (guardInst as any).on("get-daily-reward", PermissionLevel.Power, (e: any, repeat: number) => script.post(['get-daily-reward', repeat]));
+                                    
                                     (guardInst as any).on("kick-player", PermissionLevel.Power, (e: any, number: number) => script.post(['kick-player', number]));
 
                                     (guardInst as any).on("change-nickname", PermissionLevel.User, (e: any, name: string) => script.post(['change-nickname', name]));
                                     (guardInst as any).on("purchase-pass", PermissionLevel.User, (e: any, num: number, item: number) => script.post(['purchase-pass', num, item]));
                                     (guardInst as any).on("server-exploit", PermissionLevel.User, (e: any) => script.post(['server-exploit']));
                                     (guardInst as any).on("create-clan", PermissionLevel.User, (e: any, name: string) => script.post(['create-clan', name]));
+                                    (guardInst as any).on("break-clan", PermissionLevel.User, (e: any) => script.post(['break-clan']));
+                                    (guardInst as any).on("buy-clan-gold", PermissionLevel.User, (e: any, amount: number) => script.post(['buy-clan-gold', amount]));
+                                    (guardInst as any).on("equip-item", PermissionLevel.User, (e: any, char: number, slot: number, number: number) => script.post(['equip-item', char, slot, number]));
 
                                     ipcMain.on("ctm-default-milk", (e) => script.post(['ctm-default-milk']));
                                     ipcMain.on("ctm-default-choco", (e) => script.post(['ctm-default-choco']));
@@ -601,10 +609,15 @@ app.on("ready", async () => {
                                 ipcMain.removeAllListeners("receive-sl-point");
                                 ipcMain.removeAllListeners("unlock-sl-medal");
                                 ipcMain.removeAllListeners("unlock-all-item");
+                                ipcMain.removeAllListeners("get-daily-reward");
                                 ipcMain.removeAllListeners("kick-player");
                                 ipcMain.removeAllListeners("change-nickname");
                                 ipcMain.removeAllListeners("purchase-pass");
                                 ipcMain.removeAllListeners("server-exploit");
+                                ipcMain.removeAllListeners("create-clan");
+                                ipcMain.removeAllListeners("break-clan");
+                                ipcMain.removeAllListeners("buy-clan-gold");
+                                ipcMain.removeAllListeners("equip-item");
                                 ipcMain.removeAllListeners("get-ranges");
                                 ipcMain.removeAllListeners("find-ranges");
                                 ipcMain.removeAllListeners("execute-cmd");
@@ -638,15 +651,18 @@ app.on("ready", async () => {
     });
 
     emitter.on("wp-data", (_wpdata:{[key:string]:WPData}) => {
+        if(!main || main.isDestroyed() || !main.isVisible()) return;
         wpdata = _wpdata;
         main.webContents.send("wp-data", _wpdata);
     })
 
     // cheat
     emitter.on("listen-sub", (v:[number, number]) => {
+        if(!main || main.isDestroyed() || !main.isVisible()) return;
         main.webContents.send("listen-sub", v);
     })
     emitter.on("listen-main", (v:[number, number]) => {
+        if(!main || main.isDestroyed() || !main.isVisible()) return;
         main.webContents.send("listen-main", v);
     });
     emitter.on("pos", (pos:number[]) => {

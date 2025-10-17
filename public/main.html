@@ -43,9 +43,9 @@
             <button class="w-full selector" id="selector-settings" data-lang="settings"></button>
             <button class="w-full selector" id="selector-server" data-lang="server"></button>
             <button class="w-full selector" id="selector-plugins" data-lang="plugins"></button>
+            <button class="w-full selector hide" id="selector-finder" data-lang="finder"></button>
             <button class="w-full selector hide" id="selector-dev-mode" data-lang="dev-mode"></button>
             <button class="w-full selector hide" id="selector-console" data-lang="console"></button>
-            <button class="w-full selector hide" id="selector-finder" data-lang="finder"></button>
         </section>
         <section id="initialize" class="hide">
             <div>
@@ -481,6 +481,10 @@
                     <input type="text" id="key-debuff" class="keybind" data-lang-ph="keybind">
                 </main>
                 <main>
+                    <div data-lang="debuff-interval"></div>
+                    <input type="number" id="debuff-interval" class="config" min="0" max="10" value="0.1">
+                </main>
+                <main>
                     <div data-lang="debuff-ignore"></div>
                     <input class="config" type="checkbox" id="debuff-ignore">
                 </main>
@@ -491,6 +495,20 @@
                 <main>
                     <div data-lang="debuff-mago"></div>
                     <input class="config" type="checkbox" id="debuff-mago">
+                </main>
+            </details>
+            <details data-cheat="electric">
+                <summary id="electric" data-lang="electric"></summary>
+                <main>
+                    <div data-lang="keybind"></div>
+                    <input type="text" id="key-electric" class="keybind" data-lang-ph="keybind">
+                </main>
+            </details>
+            <details data-cheat="mago">
+                <summary id="mago" data-lang="mago"></summary>
+                <main>
+                    <div data-lang="keybind"></div>
+                    <input type="text" id="key-mago" class="keybind" data-lang-ph="keybind">
                 </main>
             </details>
             <details data-cheat="hide-me">
@@ -580,6 +598,10 @@
                 <main>
                     <button class="w-full" id="unlock-all-char" data-lang="unlock-all-char"></button>
                 </main>
+                <main>
+                    <input type="text" id="get-daily-reward-repeat" class="w-full text-center" data-lang-ph="repeat-count">
+                    <button class="w-full" id="get-daily-reward" data-lang="get-daily-reward"></button>
+                </main>
             </details>
             <details data-cheat="utilities">
                 <summary data-lang="utilities"></summary>
@@ -598,6 +620,18 @@
                 <main>
                     <input type="text" id="clanname-value" class="w-full text-center" data-lang-ph="clanname">
                     <button class="w-full" id="create-clan" data-lang="create"></button>
+                </main>
+                <main>
+                    <button class="w-full" id="break-clan" data-lang="break-clan"></button>
+                </main>
+                <main>
+                    <input type="text" id="buy-clan-gold-repeat" class="w-full text-center" data-lang-ph="repeat-count">
+                    <button class="w-full" id="buy-clan-gold" data-lang="buy-clan-gold"></button>
+                </main>
+                <main>
+                    <input type="text" id="equip-char-number" class="w-full text-center" data-lang-ph="char-id">
+                    <button class="w-full" id="equip-spyra" data-lang="equip-spyra"></button>
+                    <button class="w-full" id="equip-mh9" data-lang="equip-mh9"></button>
                 </main>
                 <!-- <main>
                     <button class="w-full" id="server-exploit" data-lang="server-exploit"></button>
@@ -711,6 +745,18 @@
                 </main>
             </details>
         </section>
+        <section id="finder" class="hide overflow-hidden">
+            <div>
+                <input class="w-full" type="text" id="search-wp" data-lang-ph="search-player">
+            </div>
+            <div>
+                <select name="" id="search-wp-type" class="w-full">
+                    <option value="number" data-lang="number"></option>
+                    <option value="nickname" data-lang="nickname"></option>
+                </select>
+            </div>
+            <div id="finder-out"></div>
+        </section>
         <section id="dev-mode" class="hide">
             <details>
                 <summary data-lang="cmd"></summary>
@@ -752,18 +798,6 @@
         <section id="console" class="hide">
             <div id="console-out"></div>
             <input type="text" id="console-input">
-        </section>
-        <section id="finder" class="hide overflow-hidden">
-            <div>
-                <input class="w-full" type="text" id="search-wp" data-lang-ph="search-player">
-            </div>
-            <div>
-                <select name="" id="search-wp-type" class="w-full">
-                    <option value="number" data-lang="number"></option>
-                    <option value="nickname" data-lang="nickname"></option>
-                </select>
-            </div>
-            <div id="finder-out"></div>
         </section>
     </div>
     <script src="./renderer.js"></script>

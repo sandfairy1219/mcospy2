@@ -186,8 +186,8 @@ const buyOffsets: Record<string, OffsetInfo> = {
     },
     buyItem: {
         name: "buyItem",
-        str: "_ZN16SystemPacketSend7BuyItemEhhhh",
-        args: ["uchar", "uchar", "uchar", "uchar"], // character, slot, itemid, count (grenade)
+        str: "_ZN16SystemPacketSend7BuyItemEhhth",
+        args: ["uchar", "uchar", "uint16", "uchar"], // character, slot, itemid, count (grenade)
     },
     buyRandomOption: {
         name: "buyRandomOption",
