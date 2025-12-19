@@ -4,6 +4,7 @@ import { GlobalKeyboardListener, IGlobalKeyEvent } from "node-global-key-listene
 import dotenv from "dotenv";
 import path from "path";
 import { MongoClient } from "mongodb";
+
 import { createWindow } from "./data/utils";
 import { app, BrowserWindow, dialog, ipcMain } from "electron";
 import { autoUpdater } from "electron-updater";
@@ -55,8 +56,15 @@ if (resolvedEnvPath) {
     dotenv.config();
 }
 
-// connect to mongodb
-const client = new MongoClient(process.env.MONGO_URI || "mongodb+srv://ID:PASS@cluster.mongodb.net/");
+// resolve MongoDB uri safely
+const mongoUri = (process.env.MONGO_URI || "").trim();
+const defaultMongoUri = "mongodb://127.0.0.1:27017/?appName=pixel";
+if (!mongoUri) {
+    Logger.error("MongoDB connection string (MONGO_URI) is missing. Please set it in your .env file.");
+}
+// connect to mongodb (mutable for fallback)
+let client = new MongoClient(mongoUri || defaultMongoUri);
+
 // register logger
 Logger.initialize();
 // create event emitter
@@ -156,7 +164,31 @@ const getExceptNums = async () => {
 
 // main app events
 app.on("ready", async () => {
-    await client.connect();
+    // connect with fallback if SRV lookup fails
+    const connectWithFallback = async () => {
+        try {
+            await client.connect();
+            return;
+        } catch (err: any) {
+            const message = String(err?.message || err);
+            const isSrvDnsError = mongoUri.startsWith("mongodb+srv://") && message.includes("querySrv ENOTFOUND");
+            if (isSrvDnsError) {
+                Logger.warn("SRV lookup failed for MongoDB; falling back to localhost", err);
+                client = new MongoClient(defaultMongoUri);
+                await client.connect();
+                return;
+            }
+            throw err;
+        }
+    };
+
+    try {
+        await connectWithFallback();
+    } catch (err) {
+        Logger.error("Failed to connect to MongoDB", err);
+        dialog.showErrorBox("Database Error", "Failed to connect to MongoDB. Please check MONGO_URI in your .env file.");
+        return app.quit();
+    }
 
     main = createWindow("main", 300, 400, true, {
         title: `Pixel v${app.getVersion()}`,

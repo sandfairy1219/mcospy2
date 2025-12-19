@@ -133,3 +133,5 @@ dist
 public/output.css
 public/scripts/
 build/
+src-tauri/gen/
+src-tauri/target/
