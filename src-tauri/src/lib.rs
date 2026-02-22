@@ -4,6 +4,9 @@ use tauri::{Manager, State};
 
 struct WsPort(Mutex<u16>);
 
+// Keep sidecar alive by storing its handle in managed state
+struct SidecarHandle(Mutex<Option<Box<dyn std::any::Any + Send>>>);
+
 #[derive(Serialize)]
 struct LayoutBounds {
     x: i32,
@@ -69,6 +72,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .manage(WsPort(Mutex::new(ws_port)))
+        .manage(SidecarHandle(Mutex::new(None)))
         .setup(move |app| {
             // Create layout window (hidden by default)
             let _layout = tauri::WebviewWindowBuilder::new(
@@ -87,6 +91,15 @@ pub fn run() {
 
             // Spawn bridge process
             let port_str = ws_port.to_string();
+            let resource_dir = app.path().resource_dir().ok();
+            let frida_binding_path = resource_dir
+                .as_ref()
+                .map(|p| p.join("frida_binding.node"))
+                .and_then(|p| p.to_str().map(|s| s.to_string()));
+            let agent_path = resource_dir
+                .as_ref()
+                .map(|p| p.join("agent.js"))
+                .and_then(|p| p.to_str().map(|s| s.to_string()));
 
             if cfg!(debug_assertions) {
                 // Dev mode: spawn node process directly
@@ -103,15 +116,28 @@ pub fn run() {
                         );
                         let handle = app.handle().clone();
                         let port_str = port_str.clone();
+                        let frida_binding_path = frida_binding_path.clone();
+                        let agent_path = agent_path.clone();
                         tauri::async_runtime::spawn(async move {
                             use tauri_plugin_shell::ShellExt;
                             match handle.shell().sidecar("bridge") {
-                                Ok(cmd) => match cmd.args(["--ws-port", &port_str]).spawn() {
-                                    Ok((_rx, _child)) => {
-                                        println!("Sidecar started on port {}", port_str)
+                                Ok(cmd) => {
+                                    let mut args = vec!["--ws-port".to_string(), port_str.clone()];
+                                    if let Some(path) = frida_binding_path.clone() {
+                                        args.push("--frida-binding".to_string());
+                                        args.push(path);
                                     }
-                                    Err(err) => eprintln!("Failed to spawn sidecar: {}", err),
-                                },
+                                    if let Some(path) = agent_path {
+                                        args.push("--agent-path".to_string());
+                                        args.push(path);
+                                    }
+                                    match cmd.args(args).spawn() {
+                                        Ok((_rx, _child)) => {
+                                            println!("Sidecar started on port {}", port_str)
+                                        }
+                                        Err(err) => eprintln!("Failed to spawn sidecar: {}", err),
+                                    }
+                                }
                                 Err(err) => eprintln!("Failed to create sidecar command: {}", err),
                             }
                         });
@@ -120,13 +146,35 @@ pub fn run() {
             } else {
                 // Production: spawn sidecar binary via shell plugin
                 let handle = app.handle().clone();
+                let frida_binding_path = frida_binding_path.clone();
+                let agent_path = agent_path.clone();
                 tauri::async_runtime::spawn(async move {
                     use tauri_plugin_shell::ShellExt;
                     match handle.shell().sidecar("bridge") {
-                        Ok(cmd) => match cmd.args(["--ws-port", &port_str]).spawn() {
-                            Ok((_rx, _child)) => println!("Sidecar started on port {}", port_str),
-                            Err(e) => eprintln!("Failed to spawn sidecar: {}", e),
-                        },
+                        Ok(cmd) => {
+                            let mut args = vec!["--ws-port".to_string(), port_str.clone()];
+                            if let Some(path) = frida_binding_path {
+                                args.push("--frida-binding".to_string());
+                                args.push(path);
+                            }
+                            if let Some(path) = agent_path {
+                                args.push("--agent-path".to_string());
+                                args.push(path);
+                            }
+                            println!("Spawning sidecar with args: {:?}", args);
+                            match cmd.args(args).spawn() {
+                                Ok((rx, child)) => {
+                                    println!("Sidecar started on port {}", port_str);
+                                    // Store child handle in managed state to keep sidecar alive
+                                    {
+                                        let state = handle.state::<SidecarHandle>();
+                                        let mut guard = state.0.lock().unwrap();
+                                        *guard = Some(Box::new((rx, child)));
+                                    }
+                                }
+                                Err(e) => eprintln!("Failed to spawn sidecar: {}", e),
+                            }
+                        }
                         Err(e) => eprintln!("Failed to create sidecar command: {}", e),
                     }
                 });

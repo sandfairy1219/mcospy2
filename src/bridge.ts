@@ -1,24 +1,51 @@
 // Sidecar bridge - Node.js backend process for Tauri
 // Communicates with frontend via WebSocket
 
+import { writeFileSync, appendFileSync } from "fs";
+import pathMod from "path";
+const _logFile = pathMod.join(pathMod.dirname(process.execPath), "bridge-debug.log");
+function debugLog(msg: string) {
+    try { appendFileSync(_logFile, `[${new Date().toISOString()}] ${msg}\n`); } catch {}
+}
+debugLog(`Bridge starting. execPath=${process.execPath} cwd=${process.cwd()} argv=${JSON.stringify(process.argv)}`);
+
 import EventEmitter from "events";
 import { GlobalKeyboardListener, IGlobalKeyEvent } from "node-global-key-listener";
 import dotenv from "dotenv";
 import path from "path";
 import { WebSocketServer, WebSocket } from "ws";
 
-import frida from "frida";
+import type * as Frida from "frida";
 import { existsSync, readFileSync } from "fs";
 import { adb, attachProcess, checkFridaPerm, connectFrida, connectAdbDevice, executeProcess, fileExist, fileName, getArch, getUrl, startFrida } from "./data/frida";
 import { exec } from "child_process";
 import { createServer as createPixelServer } from "./core/server";
 import type { ServerFacade } from "./core/server";
 import { _anOffset, _eposOffset, _xaOffset } from "./offsets";
-import { keyboard } from "@nut-tree-fork/nut-js";
 import { nutKeymap } from "./keymaps";
 import { Commander } from "./commander";
 
-keyboard.config.autoDelayMs = 0;
+type NutKeyboard = {
+    config: { autoDelayMs: number };
+    pressKey: (key: number) => void | Promise<void>;
+    releaseKey: (key: number) => void | Promise<void>;
+};
+
+type NutModule = {
+    keyboard: NutKeyboard;
+    Key: Record<string, number>;
+};
+
+let keyboard: NutKeyboard | null = null;
+let nutKeys: Record<string, number> | null = null;
+try {
+    const nut = require("@nut-tree-fork/nut-js") as NutModule;
+    keyboard = nut.keyboard;
+    nutKeys = nut.Key;
+    keyboard.config.autoDelayMs = 0;
+} catch (err) {
+    console.warn("nut-js disabled: native lib unavailable", err);
+}
 
 // Parse CLI args
 const args = process.argv.slice(2);
@@ -29,31 +56,47 @@ if (portIdx !== -1 && args[portIdx + 1]) {
 }
 const isDev = args.includes('--dev') || process.env.NODE_ENV === 'development';
 
+const agentPathIdx = args.indexOf('--agent-path');
+const explicitAgentPath = (agentPathIdx !== -1 && args[agentPathIdx + 1]) ? args[agentPathIdx + 1] : null;
+
 const process_name = 'com.gameparadiso.milkchoco';
 const frida_version = '16.4.10';
 
-// Resolve agent path (check multiple possible locations)
-const agentCandidates = [
-    path.join(__dirname, './../public/scripts/', 'agent.js'),   // dev
-    path.join(__dirname, './../../public/scripts/', 'agent.js'), // packaged
-    path.join(process.cwd(), 'public/scripts/', 'agent.js'),    // cwd fallback
-];
-const agentPath = agentCandidates.find(p => existsSync(p));
-if (!agentPath) {
-    console.error("Failed to open agent file");
-    process.exit(1);
-}
+// Lazy-load agent script (only needed when attaching to a process)
+let _agentScript: string | null = null;
+function getAgentScript(): string {
+    if (_agentScript !== null) return _agentScript;
 
-// Read agent script and strip everything up to the sentinel line "cut"
-const rawAgentScript = readFileSync(agentPath, 'utf8').toString();
-let agentScript = rawAgentScript;
-const cutIdx1 = rawAgentScript.indexOf('"cut";');
-const cutIdx2 = cutIdx1 < 0 ? rawAgentScript.indexOf("'cut';") : cutIdx1;
-const marker = cutIdx1 < 0 ? "'cut';" : '"cut";';
-if (cutIdx2 >= 0) {
-    agentScript = rawAgentScript.slice(cutIdx2 + marker.length);
-} else {
-    console.warn('Agent sentinel "cut" not found; using full agent script as fallback');
+    const agentCandidates = [
+        explicitAgentPath,                                            // explicit CLI arg
+        path.join(__dirname, 'scripts', 'agent.js'),                   // pkg snapshot (dist/scripts/)
+        path.join(__dirname, './../public/scripts/', 'agent.js'),     // dev
+        path.join(__dirname, './../../public/scripts/', 'agent.js'),   // packaged
+        path.join(process.cwd(), 'public/scripts/', 'agent.js'),      // cwd fallback
+        path.join(path.dirname(process.execPath), 'resources', 'agent.js'),            // Tauri resource (flat)
+        path.join(path.dirname(process.execPath), 'resources', 'scripts', 'agent.js'), // Tauri resource (nested)
+        path.join(path.dirname(process.execPath), 'resources', 'public', 'scripts', 'agent.js'), // Tauri resource (public/scripts)
+        path.join(path.dirname(process.execPath), 'scripts', 'agent.js'),              // next to exe
+        path.join(path.dirname(process.execPath), '..', 'resources', 'agent.js'),      // NSIS layout
+        path.join(path.dirname(process.execPath), '..', 'resources', 'public', 'scripts', 'agent.js'), // NSIS public/scripts
+    ].filter((p): p is string => Boolean(p));
+
+    const agentPath = agentCandidates.find(p => existsSync(p));
+    if (!agentPath) {
+        throw new Error("Failed to open agent file. Searched: " + agentCandidates.join(", "));
+    }
+
+    const rawAgentScript = readFileSync(agentPath, 'utf8').toString();
+    _agentScript = rawAgentScript;
+    const cutIdx1 = rawAgentScript.indexOf('"cut";');
+    const cutIdx2 = cutIdx1 < 0 ? rawAgentScript.indexOf("'cut';") : cutIdx1;
+    const marker = cutIdx1 < 0 ? "'cut';" : '"cut";';
+    if (cutIdx2 >= 0) {
+        _agentScript = rawAgentScript.slice(cutIdx2 + marker.length);
+    } else {
+        console.warn('Agent sentinel "cut" not found; using full agent script as fallback');
+    }
+    return _agentScript;
 }
 
 // Load env
@@ -114,9 +157,9 @@ const commander = new Commander();
 // State
 let serial: string = "127.0.0.1:5555";
 let adbId: string = '';
-let fridaDevice: frida.Device = null;
+let fridaDevice: Frida.Device = null;
 let cookie: string = '';
-let exp: frida.ScriptExports = null;
+let exp: Frida.ScriptExports = null;
 let cheats: Cheats = {};
 let config: Config = {};
 let keybinds: Keybinds = {};
@@ -124,8 +167,10 @@ let wpdata: { [key: string]: WPData } = {};
 let web: ServerFacade | null = null;
 
 // WebSocket server
+debugLog(`Starting WebSocket server on port ${wsPort}`);
 const wss = new WebSocketServer({ port: wsPort });
 let clients: Set<WebSocket> = new Set();
+debugLog(`WebSocket server created on port ${wsPort}`);
 
 // Message router (replaces Electron's ipcMain)
 interface MessageRouter {
@@ -270,8 +315,8 @@ async function main() {
             await _main(onip);
         } catch (err) {
             console.error("ADB error", err);
-            state("adb", "pending", "Server error");
-            await _main(onip);
+            const msg = err instanceof Error ? err.message : String(err);
+            state("adb", "error", `ADB server start failed: ${msg}`);
         }
     });
 
@@ -337,7 +382,7 @@ async function main() {
                         });
                     });
                 }, 100)`,
-                (message: frida.Message, data: Buffer) => {
+                (message: Frida.Message, data: Buffer) => {
                     if (message.type === 'send') {
                         cookie = message.payload;
                         state("session", "succeed", "Cookie received");
@@ -376,16 +421,19 @@ async function main() {
                         return result;
                     };
                 });`.replace("return result", `return '${cookie.trim()}'`),
-                async (message: frida.Message, data: Buffer) => {
+                async (message: Frida.Message, data: Buffer) => {
                     if (message.type === 'send') {
                         state("session", "active", "Xigncode Bypassed");
+                        try {
+                        const agentSrc = getAgentScript();
+                        debugLog(`Agent script loaded (${agentSrc.length} chars), attaching to pid ${bpPid}`);
                         const [dispose, script] = await attachProcess(bpPid, fridaDevice,
-                            agentScript
+                            agentSrc
                                 .replace("/*xaOffset*/", JSON.stringify(_xaOffset))
                                 .replace("/*anOffset*/", JSON.stringify(_anOffset))
                                 .replace("/*eposOffset*/", JSON.stringify(_eposOffset))
                             ,
-                            (message: frida.Message, data: Buffer) => {
+                            (message: Frida.Message, data: Buffer) => {
                                 if (message.type === 'send') {
                                     const [channel, ...args] = [...message.payload];
                                     if (channel == 'Address.init') {
@@ -548,6 +596,11 @@ async function main() {
                             true // useEmulator
                         )
                         commander.init(script);
+                        } catch (err) {
+                            console.error("Agent attach error:", err);
+                            debugLog(`Agent attach error: ${err}`);
+                            state("session", "error", `Agent attach failed: ${err}`);
+                        }
                     }
                 },
                 () => {
@@ -628,9 +681,12 @@ async function main() {
         adb.shell(adbId, `input tap ${x} ${y}`);
     })
     emitter.on("sendkey", async (keyName: string) => {
-        if (nutKeymap[keyName]) {
-            keyboard.pressKey(nutKeymap[keyName]);
-            keyboard.releaseKey(nutKeymap[keyName]);
+        if (keyboard && nutKeys && nutKeymap[keyName]) {
+            const keyCode = nutKeys[nutKeymap[keyName]];
+            if (keyCode !== undefined) {
+                keyboard.pressKey(keyCode);
+                keyboard.releaseKey(keyCode);
+            }
         }
     })
 

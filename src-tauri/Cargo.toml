@@ -1,6 +1,7 @@
 [package]
 name = "mcospy"
 version = "1.0.0"
+authors = ["sandfairy1219"]
 description = "MilkChoco Frida cheat tool"
 edition = "2021"
 

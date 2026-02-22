@@ -35,12 +35,16 @@
     "externalBin": [
       "binaries/bridge"
     ],
+    "resources": [
+      "frida_binding.node",
+      "agent.js"
+    ],
     "windows": {
       "nsis": {
         "installerIcon": "icons/icon.ico"
       }
     },
-    "publisher": "necpition205"
+    "publisher": "sandfairy1219"
   },
   "plugins": {
     "shell": {

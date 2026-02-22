@@ -7,8 +7,10 @@
     "dev": "npx tauri dev",
     "dev:sidecar": "node dist/bridge.js --dev --ws-port 27015",
     "watch": "concurrently \"tsc -w\" \"npx tailwindcss -i ./public/global.css -o ./public/output.css --watch\" \"tsc -w --project tsconfig.scripts.json\"",
+    "prepare:frida-binding": "node scripts/prepare-frida-binding.cjs",
+    "prepare:agent-resource": "node scripts/prepare-agent-resource.cjs",
     "build": "tsc && npx tailwindcss -i ./public/global.css -o ./public/output.css --minify && tsc --project tsconfig.scripts.json && npx esbuild dist/main.js --bundle --outfile=public/renderer.js --platform=browser --format=iife && npx esbuild dist/layout.js --bundle --outfile=public/layout.bundle.js --platform=browser --format=iife",
-    "build:sidecar": "npx pkg dist/bridge.js -t node18-win-x64 -o src-tauri/binaries/bridge-x86_64-pc-windows-msvc.exe",
+    "build:sidecar": "npm run prepare:frida-binding && npm run prepare:agent-resource && node -e \"require('fs').mkdirSync('dist/scripts',{recursive:true});require('fs').copyFileSync('public/scripts/agent.js','dist/scripts/agent.js')\" && npx pkg dist/bridge.js -t node18-win-x64 -o src-tauri/binaries/bridge-x86_64-pc-windows-msvc.exe",
     "dist": "npm run build && npm run build:sidecar && npx tauri build",
     "clean:win": "rd /s /q dist && rd /s /q build && del public/output.css /q",
     "clean:linux": "rm -rf dist build public/output.css",
@@ -17,7 +19,7 @@
     "attach": "frida -UN com.gameparadiso.milkchoco -l public/scripts/inj.js"
   },
   "keywords": [],
-  "author": "",
+  "author": "sandfairy1219",
   "license": "ISC",
   "dependencies": {
     "@nut-tree-fork/nut-js": "^4.2.6",
@@ -49,8 +51,14 @@
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3"
   },
+  "pkg": {
+    "assets": [
+      "public/scripts/agent.js",
+      "dist/scripts/agent.js"
+    ]
+  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/necpition205/pixel.git"
+    "url": "https://github.com/sandfairy1219/mypixel.git"
   }
 }
