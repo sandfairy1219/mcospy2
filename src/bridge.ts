@@ -69,7 +69,7 @@ if (resolvedEnvPath) {
 }
 
 // Read version from package.json
-let appVersion = '2.2.0';
+let appVersion = '1.0.0';
 try {
     const pkgCandidates = [
         path.resolve(__dirname, '..', 'package.json'),

@@ -92,9 +92,12 @@ canvas{
 }
 
 /* ===== Buttons ===== */
-button, input, select, textarea{@apply rounded-lg p-2 disabled:cursor-not-allowed disabled:opacity-50;}
+button, input, select, textarea{@apply rounded-lg disabled:cursor-not-allowed disabled:opacity-50;}
+button{@apply p-2;}
 
 input, select, textarea{
+    padding: 10px 14px;
+    font-size: 0.95rem;
     background: white;
     border: 2px solid #bdc3c7;
     color: #2c3e50;

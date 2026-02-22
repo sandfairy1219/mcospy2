@@ -1,8 +1,8 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicegui/nicegui/tauri/tauri.conf.json",
-  "productName": "pixel",
-  "version": "2.2.0",
-  "identifier": "com.necpition205.pixel",
+  "productName": "mcospy",
+  "version": "1.0.0",
+  "identifier": "com.sandfairy1219.mcospy",
   "build": {
     "frontendDist": "../public",
     "beforeDevCommand": "",
@@ -12,7 +12,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Pixel v2.2.0",
+        "title": "mcospy v1.0.0",
         "url": "main.html",
         "width": 300,
         "height": 400,

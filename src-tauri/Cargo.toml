@@ -1,11 +1,11 @@
 [package]
-name = "pixel"
-version = "2.2.0"
+name = "mcospy"
+version = "1.0.0"
 description = "MilkChoco Frida cheat tool"
 edition = "2021"
 
 [lib]
-name = "pixel_lib"
+name = "mcospy_lib"
 crate-type = ["lib", "cdylib", "staticlib"]
 
 [build-dependencies]

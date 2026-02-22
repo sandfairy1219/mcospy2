@@ -1,6 +1,6 @@
 {
   "identifier": "default",
-  "description": "Default capabilities for Pixel app",
+  "description": "Default capabilities for mcospy app",
   "windows": ["main", "layout"],
   "permissions": [
     "core:default",

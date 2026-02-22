@@ -78,6 +78,8 @@
             <div>
                 <button class="w-full" id="start-server" data-lang="start-server"></button>
                 <button class="w-full" id="download-server" data-lang="download-server"></button>
+            </div>
+            <div>
                 <button class="w-full" id="upload-server" data-lang="upload-server"></button>
             </div>
             <button id="connect-frida" data-lang="connect-frida"></button>
@@ -514,7 +516,7 @@
             <details data-cheat="hide-me">
                 <summary class="no" id="hide-me" data-lang="hide-me"></summary>
             </details>
-            <details data-cheat="auto-end">
+            <!-- <details data-cheat="auto-end">
                 <summary id="auto-end" data-lang="auto-end"></summary>
                 <main>
                     <div data-lang="auto-end-type"></div>
@@ -524,7 +526,7 @@
                         <option value="2">Draw</option>
                     </select>
                 </main>
-            </details>
+            </details> -->
             <!-- <details data-cheat="cooker-buff">
                 <summary class="no" id="cooker-buff" data-lang="cooker-buff"></summary>
             </details> -->
@@ -534,6 +536,8 @@
                     <input class="w-full text-center" type="text" id="pos-x" placeholder="X">
                     <input class="w-full text-center" type="text" id="pos-y" placeholder="Y">
                     <input class="w-full text-center" type="text" id="pos-z" placeholder="Z">
+                </main>
+                <main>
                     <button class="w-full" id="pos-reverse" data-lang="reverse"></button>
                 </main>
                 <main>
@@ -549,7 +553,7 @@
                 <button class="w-full" id="change-NaN" data-lang="change-NaN"></button>
                 <!-- <button class="w-full" id="change-ads-reward" data-lang="change-ads-reward"></button> -->
             </details>
-            <details data-cheat="match-maker">
+            <!-- <details data-cheat="match-maker">
                 <summary data-lang="match-maker"></summary>
                 <div class="w-full" data-lang="match-end"></div>
                 <main>
@@ -561,10 +565,10 @@
                     <button class="w-full" id="match-milk" data-lang="milk-win"></button>
                     <button class="w-full" id="match-choco" data-lang="choco-win"></button>
                 </main>
-            </details>
+            </details> -->
             <details data-cheat="resource-hack">
                 <summary data-lang="resource-hack"></summary>
-                <main>
+                <!-- <main>
                     <input type="text" id="resource-hack-dia" class="w-full text-center" data-lang-ph="dia">
                     <button class="w-full" id="receive-dia" data-lang="receive"></button>
                 </main>
@@ -597,7 +601,7 @@
                 </main>
                 <main>
                     <button class="w-full" id="unlock-all-char" data-lang="unlock-all-char"></button>
-                </main>
+                </main> -->
                 <main>
                     <input type="text" id="get-daily-reward-repeat" class="w-full text-center" data-lang-ph="repeat-count">
                     <button class="w-full" id="get-daily-reward" data-lang="get-daily-reward"></button>
@@ -611,10 +615,12 @@
                 </main>
                 <main>
                     <input type="text" id="purchase-player-number" class="w-full text-center" data-lang-ph="user-id">
-                    <select name="purchase-item" id="purchase-item" value="0">
+                    <select name="purchase-item" id="purchase-item" class="w-full" value="0">
                         <option value="1" data-lang="vip-pass"></option>
                         <option value="2" data-lang="hero-pass"></option>
                     </select>
+                </main>
+                <main>
                     <button class="w-full" id="purchase-pass" data-lang="purchase"></button>
                 </main>
                 <main>
@@ -660,10 +666,10 @@
                     <button class="w-full" id="ctm-mountain-choco" data-lang="choco"></button>
                 </main>
             </details> -->
-            <details>
+            <!-- <details>
                 <summary data-lang="macro"></summary>
                 <div id="macro-list"></div>
-            </details>
+            </details> -->
         </section>
         <section id="macros" class="hide">
             <input type="text" data-lang-ph="search" id="search-macro" class="w-full">

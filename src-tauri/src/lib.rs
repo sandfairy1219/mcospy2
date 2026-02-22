@@ -82,6 +82,7 @@ pub fn run() {
             .transparent(true)
             .visible(false)
             .resizable(true)
+            .maximizable(false)
             .build()?;
 
             // Spawn bridge process

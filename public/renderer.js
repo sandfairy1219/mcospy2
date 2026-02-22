@@ -998,48 +998,6 @@
       yel.addEventListener("change", blurCurrent);
       zel.addEventListener("change", blurCurrent);
       sel.addEventListener("change", blurCurrent);
-      (0, dom_1.$_)("match-win").addEventListener("click", () => {
-        (0, ipc_1.send)("match-win");
-      });
-      (0, dom_1.$_)("match-lose").addEventListener("click", () => {
-        (0, ipc_1.send)("match-lose");
-      });
-      (0, dom_1.$_)("match-draw").addEventListener("click", () => {
-        (0, ipc_1.send)("match-draw");
-      });
-      (0, dom_1.$_)("match-milk").addEventListener("click", () => {
-        (0, ipc_1.send)("match-milk");
-      });
-      (0, dom_1.$_)("match-choco").addEventListener("click", () => {
-        (0, ipc_1.send)("match-choco");
-      });
-      (0, dom_1.$_)("receive-dia").addEventListener("click", () => {
-        (0, ipc_1.send)("receive-dia", parseInt((0, dom_1.$i)("resource-hack-dia").value) || 0);
-      });
-      (0, dom_1.$_)("receive-gold").addEventListener("click", () => {
-        (0, ipc_1.send)("receive-gold", parseInt((0, dom_1.$i)("resource-hack-gold").value) || 0);
-      });
-      (0, dom_1.$_)("receive-xp").addEventListener("click", () => {
-        (0, ipc_1.send)("receive-xp", parseInt((0, dom_1.$i)("resource-hack-xp").value) || 0);
-      });
-      (0, dom_1.$_)("receive-clan-xp").addEventListener("click", () => {
-        (0, ipc_1.send)("receive-clan-xp", parseInt((0, dom_1.$i)("resource-hack-clan-xp").value) || 0);
-      });
-      (0, dom_1.$_)("receive-sl-coin").addEventListener("click", () => {
-        (0, ipc_1.send)("receive-sl-coin", parseInt((0, dom_1.$i)("resource-hack-sl-coin").value) || 0);
-      });
-      (0, dom_1.$_)("receive-sl-point").addEventListener("click", () => {
-        (0, ipc_1.send)("receive-sl-point", parseInt((0, dom_1.$i)("resource-hack-sl-point").value) || 0);
-      });
-      (0, dom_1.$_)("unlock-sl-medal").addEventListener("click", () => {
-        (0, ipc_1.send)("unlock-sl-medal");
-      });
-      (0, dom_1.$_)("unlock-all-item").addEventListener("click", () => {
-        (0, ipc_1.send)("unlock-all-item", parseInt((0, dom_1.$i)("unlock-all-item-char-id").value) || 0);
-      });
-      (0, dom_1.$_)("unlock-all-char").addEventListener("click", () => {
-        (0, ipc_1.send)("unlock-all-char");
-      });
       (0, dom_1.$_)("get-daily-reward").addEventListener("click", () => {
         (0, ipc_1.send)("get-daily-reward", parseInt((0, dom_1.$i)("get-daily-reward-repeat").value) || 1);
       });
