@@ -9,12 +9,14 @@
 }
 
 html, body{
-    font-family: 'Poppins', sans-serif;
-    font-weight: bold;
-    background-color: #f9f9f9;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-weight: 600;
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    color: #333;
     width: 100vw;
     height: 100vh;
     overflow: hidden;
+    line-height: 1.6;
 }
 
 .hide{
@@ -30,32 +32,42 @@ canvas{
     height: 100vh;
 }
 
+/* ===== Language Selector ===== */
 #lang{
     position: fixed;
     top: 0;
     right: 0;
     z-index: 1000;
-    padding: 1vh 2vw;
-    background-color: #f9f9f9;
-    border-radius: 0 0 0 10px;
+    padding: 8px 16px;
+    background: rgba(255,255,255,0.95);
+    border-radius: 0 0 0 12px;
+    border: none;
+    font-weight: 600;
+    color: #2c3e50;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
+/* ===== Back Button ===== */
 #back{
     position: fixed;
     bottom: 0;
     left: 0;
     z-index: 1000;
-    padding: 1vh 3vw;
-    background-color: #f9f9f9;
-    border: 1px solid #aaa;
-    border-radius: 0 10px 0 0;
-    color: #000;
-    transition: background-color 0.3s ease;
+    padding: 10px 20px;
+    background: rgba(255,255,255,0.95) !important;
+    border: none !important;
+    border-radius: 0 12px 0 0;
+    color: #2c3e50 !important;
+    box-shadow: 0 -2px 8px rgba(0,0,0,0.15);
+    transition: all 0.3s ease;
+    font-size: 1.1rem;
 }
 #back:hover{
-    background-color: #eee;
+    background: rgba(255,255,255,1) !important;
+    transform: translateY(-2px);
 }
 
+/* ===== Pages ===== */
 .page{
     display: flex;
     flex-direction: column;
@@ -68,81 +80,225 @@ canvas{
 #login{
     @apply select-none;
     gap: 10vh;
+    color: white;
 }
 
 #login > div.form{width: 70vw;}
 
+/* ===== Main App ===== */
 #app{
-    @apply overflow-y-auto gap-1 p-1;
+    @apply overflow-y-auto gap-2 p-3;
     justify-content: flex-start;
 }
 
-button, input, select, textarea{@apply rounded-md p-1 disabled:cursor-not-allowed disabled:opacity-50;}
-input, select, textarea{@apply bg-neutral-200 border border-neutral-300 hover:bg-neutral-300 focus:outline-none;}
-button{@apply cursor-pointer bg-neutral-950 hover:bg-neutral-900 border-none text-neutral-50;}
-button:disabled, input:disabled, select:disabled, textarea:disabled{@apply opacity-50 cursor-not-allowed;}
+/* ===== Buttons ===== */
+button, input, select, textarea{@apply rounded-lg p-2 disabled:cursor-not-allowed disabled:opacity-50;}
 
+input, select, textarea{
+    background: white;
+    border: 2px solid #bdc3c7;
+    color: #2c3e50;
+    font-weight: 500;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+input:hover, select:hover, textarea:hover{
+    border-color: #3498db;
+}
+input:focus, select:focus, textarea:focus{
+    outline: none;
+    border-color: #3498db;
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+}
+
+button{
+    cursor: pointer;
+    border: none;
+    background: linear-gradient(135deg, #3498db, #2980b9);
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    transition: all 0.3s ease;
+    font-size: 0.85rem;
+}
+button:hover{
+    background: linear-gradient(135deg, #2980b9, #1f618d);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+button:active{
+    transform: translateY(0);
+}
+button:disabled, input:disabled, select:disabled, textarea:disabled{@apply opacity-50 cursor-not-allowed;}
+button:disabled:hover{
+    transform: none;
+    box-shadow: none;
+}
+
+/* ===== Scrollbar ===== */
 ::-webkit-scrollbar{width: 8px;}
-::-webkit-scrollbar-thumb{@apply bg-[#0002] hover:bg-[#0003] active:bg-[#0004] rounded-md;}
+::-webkit-scrollbar-thumb{
+    background: rgba(255,255,255,0.3);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover{background: rgba(255,255,255,0.5);}
+::-webkit-scrollbar-thumb:active{background: rgba(255,255,255,0.6);}
 ::-webkit-scrollbar-track{background-color: transparent;}
 
-#app > section {@apply w-full flex flex-col items-center gap-1;}
-#app > section .log {@apply text-sm text-neutral-500;}
-#app > section div {@apply flex items-center gap-1;}
+/* ===== Selector Buttons (Tab Navigation) ===== */
+#app > section#selector{
+    display: flex;
+    flex-direction: row !important;
+    flex-wrap: wrap;
+    gap: 4px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 12px;
+    padding: 4px;
+}
+#app > section#selector > button.selector{
+    flex: 1;
+    min-width: fit-content;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    background: transparent;
+    color: rgba(255,255,255,0.7);
+    text-transform: none;
+    letter-spacing: 0;
+    box-shadow: none;
+    transition: all 0.2s ease;
+}
+#app > section#selector > button.selector:hover{
+    background: rgba(255,255,255,0.15);
+    color: white;
+    transform: none;
+    box-shadow: none;
+}
+#app > section#selector > button.selector.active,
+#app > section#selector > button.selector:focus{
+    background: white;
+    color: #2c3e50;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* ===== Sections (Card Style) ===== */
+#app > section:not(#selector) {
+    @apply w-full flex flex-col items-center gap-2;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+#app > section .log {@apply text-sm; color: #7f8c8d;}
+#app > section div {@apply flex items-center gap-2;}
 #app > section > div > button{@apply w-full h-full;}
 #app > section > *, #app > section > details > *, #macro-list, #macros-list > main {@apply w-full;}
 #app > section > details, #macro-list, #macros-list {@apply flex flex-col;}
-#app > section > details > summary {@apply w-full hover:bg-neutral-300 cursor-pointer p-1 rounded-md flex justify-start items-center gap-1 select-none text-lg;}
+
+/* ===== Accordion (Details/Summary) ===== */
+#app > section > details{
+    background: white;
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+    overflow: hidden;
+    margin-bottom: 4px;
+}
+
+#app > section > details > summary {
+    @apply w-full cursor-pointer select-none;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    padding: 12px 16px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2c3e50;
+    background: #f8f9fa;
+    transition: background 0.2s ease;
+    list-style: none;
+}
+#app > section > details > summary::-webkit-details-marker{display: none;}
+
+#app > section > details > summary:hover{
+    background: #eef6fd;
+}
+
 #app > section > details > summary > [type="checkbox"] {@apply text-base;}
 #app > section > details > summary:not(.no):before{content: "▶";}
 #app > section > details > summary.no:before{content: "●";}
 #app > section > details > summary:before{
     display: inline-block;
     transition: transform 0.3s ease;
+    font-size: 0.7rem;
+    color: #95a5a6;
 }
 #app > section > details[open] > summary::before{transform: rotate(90deg);}
-#app > section main {@apply flex items-center justify-between mb-0.5 gap-0.5;}
+
+/* Accordion Body */
+#app > section > details > main,
+#app > section > details > div,
+#app > section > details > button,
+#app > section > details > input,
+#app > section > details > select{
+    border-top: 1px solid #e9ecef;
+}
+
+#app > section main {
+    @apply flex items-center justify-between gap-2;
+    padding: 8px 16px;
+}
 #app > section > details > input {@apply w-20;}
 
-button#listen-sub.listening,
-button#listen-main.listening{@apply bg-sky-400 hover:bg-sky-500;}
-
-#app > section#console{@apply w-full h-full flex flex-col gap-1 overflow-hidden;}
-#console-out{
-    @apply flex flex-col items-center gap-1 overflow-y-auto w-full h-full bg-neutral-900 p-1 rounded-md;
+/* ===== Status Indicators ===== */
+.state{
+    @apply rounded-full w-3 h-3;
+    background-color: #95a5a6;
+    transition: all 0.3s ease;
 }
-#console-out > p{@apply w-full text-sm text-neutral-300 font-mono;}
-#console-input{
-    @apply bg-transparent hover:bg-transparent border-neutral-200 font-mono;
-    max-width: 75%;
+.state.active{
+    background-color: #3498db;
+    box-shadow: 0 0 10px rgba(52, 152, 219, 0.5);
+}
+.state.succeed{
+    background-color: #27ae60;
+    box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+}
+.state.error{
+    background-color: #e74c3c;
+    box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+}
+.state.pending{
+    background-color: #f39c12;
+    box-shadow: 0 0 10px rgba(243, 156, 18, 0.5);
 }
 
-#finder-out{@apply w-full h-full overflow-auto flex flex-col;}
-#finder-out .nicks{@apply flex flex-col;}
-#finder-out .nicks div{@apply w-full;}
-
-#finder-out details{@apply w-full;}
-#finder-out details summary{@apply w-full hover:bg-neutral-300 cursor-pointer p-1 rounded-md flex justify-start items-center gap-1 select-none text-lg;}
-#finder-out details summary:not([open]):before{content: "▶";}
-#finder-out details summary[open]:before{content: "▼";}
-
-.state{@apply rounded-full w-3 h-3 bg-neutral-400;}
-.state.active{@apply bg-sky-400;}
-.state.succeed{@apply bg-green-400;}
-.state.error{@apply bg-red-400;}
-.state.pending{@apply bg-yellow-400;}
-
-.keybind{@apply text-sm text-neutral-700 bg-neutral-100 text-center;}
+/* ===== Keybind Inputs ===== */
+.keybind{
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #2c3e50;
+    background: #f8f9fa;
+    text-transform: uppercase;
+    max-width: 80px;
+}
 .keybind:not(.min){@apply w-24;}
 
+/* ===== Toggle Switch (Checkbox) ===== */
 [type="checkbox"] {
     appearance: none;
     position: relative;
-    border: max(2px, 0.1em) solid gray;
+    border: max(2px, 0.1em) solid #bdc3c7;
     border-radius: 1.25em;
     width: 2.25em;
     height: 1.25em;
     transition: background-color 0.3s ease, border-color 0.3s ease;
+    cursor: pointer;
+    background: #bdc3c7;
 }
 
 [type="checkbox"]::before {
@@ -154,31 +310,131 @@ button#listen-main.listening{@apply bg-sky-400 hover:bg-sky-500;}
     height: 1em;
     border-radius: 50%;
     transform: scale(0.8);
-    background-color: gray;
+    background-color: white;
     transition: background-color 0.3s ease, left 0.3s ease;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
 }
 
 [type="checkbox"]:checked {
-    background-color: skyblue;
-    border-color: skyblue;
+    background-color: #27ae60;
+    border-color: #27ae60;
 }
 
 [type="checkbox"]:checked::before {
     background-color: white;
     left: 1em;
 }
-  
+
 [type="checkbox"]:disabled {
     border-color: lightgray;
     opacity: 0.5;
     cursor: not-allowed;
 }
-  
+
 [type="checkbox"]:disabled:before {
     background-color: lightgray;
 }
 
 [type="checkbox"]:focus-visible {
     outline-offset: max(2px, 0.1em);
-    outline: max(2px, 0.1em) solid skyblue;
+    outline: max(2px, 0.1em) solid #3498db;
+}
+
+/* ===== Listen Buttons ===== */
+button#listen-sub.listening,
+button#listen-main.listening{
+    background: linear-gradient(135deg, #f39c12, #e67e22) !important;
+}
+button#listen-sub.listening:hover,
+button#listen-main.listening:hover{
+    background: linear-gradient(135deg, #e67e22, #d35400) !important;
+}
+
+/* ===== Console ===== */
+#app > section#console{@apply w-full h-full flex flex-col gap-1 overflow-hidden;}
+#console-out{
+    @apply flex flex-col items-center gap-1 overflow-y-auto w-full h-full p-3 rounded-lg;
+    background: #2c3e50;
+    color: #ecf0f1;
+    font-family: 'Consolas', 'Monaco', monospace;
+}
+#console-out > p{@apply w-full text-sm font-mono; color: #ecf0f1;}
+#console-input{
+    @apply font-mono rounded-lg;
+    background: #34495e;
+    color: #ecf0f1;
+    border: 2px solid #4a6785;
+    max-width: 75%;
+}
+#console-input:hover{
+    border-color: #3498db;
+    background: #34495e;
+}
+
+/* ===== Finder ===== */
+#finder-out{@apply w-full h-full overflow-auto flex flex-col;}
+#finder-out .nicks{@apply flex flex-col;}
+#finder-out .nicks div{@apply w-full;}
+
+#finder-out details{@apply w-full;}
+#finder-out details summary{
+    @apply w-full cursor-pointer select-none flex items-center gap-2 rounded-lg text-lg;
+    padding: 8px 12px;
+    color: #2c3e50;
+    transition: background 0.2s ease;
+}
+#finder-out details summary:hover{background: #eef6fd;}
+#finder-out details summary:not([open]):before{content: "▶";}
+#finder-out details summary[open]:before{content: "▼";}
+
+/* ===== Update Bar ===== */
+.bar{
+    overflow: hidden;
+}
+.prg{
+    transition: width 0.3s ease;
+}
+
+/* ===== Login Form Inputs ===== */
+#login input{
+    background: rgba(255,255,255,0.15);
+    border: 2px solid rgba(255,255,255,0.3);
+    color: white;
+    backdrop-filter: blur(10px);
+}
+#login input::placeholder{
+    color: rgba(255,255,255,0.6);
+}
+#login input:focus{
+    border-color: rgba(255,255,255,0.6);
+    box-shadow: 0 0 0 3px rgba(255,255,255,0.15);
+}
+#login button{
+    background: linear-gradient(135deg, #27ae60, #229954);
+}
+#login button:hover{
+    background: linear-gradient(135deg, #229954, #1e8449);
+}
+#login p#logerr{
+    color: #ff6b6b;
+    text-shadow: 0 0 10px rgba(255,107,107,0.5);
+}
+#login p#updp{
+    color: rgba(255,255,255,0.9);
+}
+
+/* ===== Macro Apply Button ===== */
+.macro-apply{
+    background: linear-gradient(135deg, #27ae60, #229954) !important;
+}
+.macro-apply:hover{
+    background: linear-gradient(135deg, #229954, #1e8449) !important;
+}
+
+/* ===== Progress Bar ===== */
+#updbar{
+    background: rgba(255,255,255,0.2) !important;
+}
+#updprg{
+    background: linear-gradient(135deg, #3498db, #2980b9) !important;
 }
