@@ -135,3 +135,6 @@ public/scripts/
 build/
 src-tauri/gen/
 src-tauri/target/
+
+#ai models
+.claude

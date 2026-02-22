@@ -1,25 +1,37 @@
-import { ipcRenderer } from "electron"
+import { connect, send, listen } from "./ipc";
 
 const canvas = document.getElementById("canvas") as HTMLCanvasElement;
 const ctx = canvas.getContext("2d") as CanvasRenderingContext2D;
 
-let configg:Config = ipcRenderer.sendSync("get-config");
-ipcRenderer.on("init-config", (event, config:Config) => {configg = config;});
+// Tauri API - uses window.__TAURI_INTERNALS__ provided by Tauri runtime
+const tauriInvoke = (cmd: string, args?: any): Promise<any> => {
+    const internals = (window as any).__TAURI_INTERNALS__;
+    if (internals && internals.invoke) {
+        return internals.invoke(cmd, args);
+    }
+    return Promise.reject(new Error('Tauri runtime not available'));
+};
+
+let configg: Config = {};
+
+// Request config from sidecar once connected
+listen("get-config-response", (config: Config) => { configg = config; });
+listen("init-config", (config: Config) => { configg = config; });
 
 canvas.style.borderColor = configg['esp-color'] || 'red';
 
-ipcRenderer.on("config", (event, id:string, value:any) => {
+listen("config", (id: string, value: any) => {
     configg[id] = value;
-    if(id === 'esp-color') {
+    if (id === 'esp-color') {
         canvas.style.borderColor = value;
     };
 });
 
-ipcRenderer.on("clear", (event) => {
+listen("clear", () => {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 });
 
-ipcRenderer.on("draw", (event, data:DrawRect[]) => {
+listen("draw", (data: DrawRect[]) => {
     const halfWidth = canvas.width / 2;
     const halfHeight = canvas.height / 2;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -35,9 +47,9 @@ ipcRenderer.on("draw", (event, data:DrawRect[]) => {
     for (const rect of data) {
         const value = (
             rect.isDead ? configg['esp-dead-color'] :
-            rect.isMark ? configg['esp-mark-color'] :
-            rect.isTeam ? configg['esp-team-color'] :
-            configg['esp-color']) || 'red';
+                rect.isMark ? configg['esp-mark-color'] :
+                    rect.isTeam ? configg['esp-team-color'] :
+                        configg['esp-color']) || 'red';
         ctx.fillStyle = value;
         ctx.strokeStyle = value;
         const upside = rect.upside.map(point => ({ x: halfWidth + point.x * halfWidth, y: halfHeight + point.y * halfHeight }));
@@ -46,13 +58,13 @@ ipcRenderer.on("draw", (event, data:DrawRect[]) => {
         const Ys = [...upside.map(point => point.y), ...downside.map(point => point.y)];
         const minX = Math.min(...Xs), maxX = Math.max(...Xs), minY = Math.min(...Ys), maxY = Math.max(...Ys);
         const barHeight = showBar ? 10 : 0;
-        if(showTag) {
+        if (showTag) {
             const onNumber = tagType === 'number' || tagType === 'both'
             const onNickname = tagType === 'nickname' || tagType === 'both'
             const tagText = `${onNumber ? `[${rect.number}]` : ""} ${onNickname ? rect.nickname : ""}`;
             ctx.fillText(tagText, minX + (maxX - minX) / 2, minY - barHeight);
         }
-        if(showBar) {
+        if (showBar) {
             const hpPerc = rect.hp / rect.total;
             const barPerc = rect.barrier / rect.total;
             const barWidth = maxX - minX;
@@ -66,11 +78,11 @@ ipcRenderer.on("draw", (event, data:DrawRect[]) => {
             ctx.globalAlpha = 1;
         }
         ctx.beginPath();
-        if(tracer){
+        if (tracer) {
             ctx.moveTo(canvas.width / 2, 0);
             ctx.lineTo(minX + (maxX - minX) / 2, minY);
         }
-        if(threed){
+        if (threed) {
             const lastUpIdx = upside.length - 1;
             ctx.moveTo(upside[lastUpIdx].x, upside[lastUpIdx].y);
             for (const point of upside) {
@@ -100,7 +112,30 @@ ipcRenderer.on("draw", (event, data:DrawRect[]) => {
 const resize = () => {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    ipcRenderer.send("resize-layout");
 };
 resize();
 window.addEventListener("resize", resize);
+
+// Connect to sidecar WebSocket
+async function initLayout() {
+    try {
+        const port = await tauriInvoke('get_ws_port');
+        let retries = 0;
+        const tryConnect = async () => {
+            try {
+                await connect(port);
+                send('get-config');
+            } catch (e) {
+                if (retries < 10) {
+                    retries++;
+                    setTimeout(tryConnect, 500 * retries);
+                }
+            }
+        };
+        await tryConnect();
+    } catch (e) {
+        console.error('Layout: Failed to get WS port:', e);
+    }
+}
+
+initLayout();

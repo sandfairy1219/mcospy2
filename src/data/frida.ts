@@ -1,5 +1,4 @@
 import { Client } from "adb-ts"
-import Logger from "electron-log"
 import * as frida from "frida"
 
 export const adb = new Client({})
@@ -9,7 +8,7 @@ export const fileNameFB = (version:string, arch:string) => `frida-server-${versi
 export const fileName = (version:string, arch:string) => `frida-server-${version}-android-${arch}`
 export const getArch = async (id:string):Promise<string> => {
     if(id === '') {
-        Logger.error('[*] ADB not connected')
+        console.error('[*] ADB not connected')
         return ''
     }
     const os = await adb.shell(id, 'getprop ro.product.cpu.abi')
@@ -27,7 +26,7 @@ export const getArch = async (id:string):Promise<string> => {
 
 export const startFrida = async (id:string, filename:string, onCrashed:() => void):Promise<boolean> => {
     if(id === '') {
-        Logger.error('[*] ADB not connected');
+        console.error('[*] ADB not connected');
         return false;
     }
     try{
@@ -35,12 +34,11 @@ export const startFrida = async (id:string, filename:string, onCrashed:() => voi
         server.then(onCrashed)
         return true
     } catch (err) {
-        Logger.error(`[*] Failed to start frida server`)
+        console.error(`[*] Failed to start frida server`)
         return false
     }
 }
 
-// Backward compatibility export (to be removed after refactor)
 export const connectFrida = async (serial:string, onCrashed:() => void, onConnected:(d:frida.Device) => void) => {
     const devc = await frida.getDevice(serial);
     if(devc) {
@@ -58,7 +56,7 @@ export const connectFrida = async (serial:string, onCrashed:() => void, onConnec
     }
     const tar = await deviceManager.addRemoteDevice(serial)
     if (!tar) {
-        Logger.error(`[*] Frida device not connected to ${serial}`)
+        console.error(`[*] Frida device not connected to ${serial}`)
         onConnected(null)
     }
     deviceManager.added.connect(async () => {
@@ -68,7 +66,6 @@ export const connectFrida = async (serial:string, onCrashed:() => void, onConnec
     })
 }
 
-// Backward compatibility export (to be removed after refactor)
 export const conenctFrida = connectFrida;
 
 export const connectAdbDevice = async (serial:string):Promise<string> => {
@@ -77,7 +74,7 @@ export const connectAdbDevice = async (serial:string):Promise<string> => {
     } catch (_) {};
     const result = await adb.connect(serial);
     if (!result) {
-        Logger.error('[*] Failed to connect to adb server')
+        console.error('[*] Failed to connect to adb server')
         return ''
     }
     return result
@@ -85,14 +82,14 @@ export const connectAdbDevice = async (serial:string):Promise<string> => {
 
 export const fileExist = async (id:string, version:string):Promise<string> => {
     if(id === '') {
-        Logger.error('[*] ADB not connected');
+        console.error('[*] ADB not connected');
         return '';
     }
     const files = await adb.readDir(id, '/data/local/tmp');
     const arch = await getArch(id);
     const file = files.find(file => ["frida", "frida-server", fileName(version, arch), fileNameFB(version, arch)].includes(file.name))
     if (!file) {
-        Logger.error('[*] Frida server not found')
+        console.error('[*] Frida server not found')
         return ""
     }
     return file.name
@@ -100,7 +97,7 @@ export const fileExist = async (id:string, version:string):Promise<string> => {
 
 export const checkFridaPerm = async (id:string, filename:string):Promise<boolean> => {
     if(id === '') {
-        Logger.error('[*] ADB not connected');
+        console.error('[*] ADB not connected');
         return false;
     }
     const permissions = await adb.shell(id, `ls -l /data/local/tmp/${filename}`)
@@ -109,7 +106,7 @@ export const checkFridaPerm = async (id:string, filename:string):Promise<boolean
             const chmod = await adb.shell(id, `su -c "chmod 777 /data/local/tmp/${filename}"`)
             return true
         } catch (err) {
-            Logger.error(`[*] Failed to change permissions: ${err}`)
+            console.error(`[*] Failed to change permissions: ${err}`)
             return false
         }
     } else {
@@ -132,12 +129,12 @@ export const executeProcess = async (
 ]> => {
     const pid = await device.spawn([process])
     const session = await device.attach(pid, { realm: useEmulator ? frida.Realm.Emulated : frida.Realm.Native })
-    Logger.info(`[*] Process attached`)
+    console.info(`[*] Process attached`)
     const script = await session.createScript(_script)
     await script.load()
     await session.resume()
     await device.resume(pid)
-    Logger.info(`[*] Session resumed`)
+    console.info(`[*] Session resumed`)
     attachCallback()
     script.message.connect(recieveCallback)
     session.detached.connect(disposeCallback)
@@ -162,7 +159,7 @@ export const attachProcess = async (
     frida.Script
 ]> => {
     if (!pid) {
-        Logger.error(`[*] Process not found`)
+        console.error(`[*] Process not found`)
         return [async () => {}, null]
     }
     const session = await device.attach(pid, { realm: useEmulator ? frida.Realm.Emulated : frida.Realm.Native })

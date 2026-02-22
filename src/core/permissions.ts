@@ -1,5 +1,3 @@
-import isDev from "electron-is-dev";
-
 export enum PermissionLevel {
   Guest = 0,
   User = 1,
@@ -26,10 +24,15 @@ export function getPermissionLevel(token: TokenLike): PermissionLevel {
 
 export function hasPermission(token: TokenLike, required: PermissionLevel): boolean {
   const level = getPermissionLevel(token);
-  if (required === PermissionLevel.Developer) return isDev && level >= PermissionLevel.Developer;
+  if (required === PermissionLevel.Developer) return isDeveloperMode() && level >= PermissionLevel.Developer;
   return level >= required;
 }
 
+let _devMode = false;
+export function setDeveloperMode(dev: boolean): void {
+  _devMode = dev;
+}
+
 export function isDeveloperMode(): boolean {
-  return isDev;
+  return _devMode;
 }

@@ -2,15 +2,17 @@
   "name": "pixel",
   "version": "2.2.0",
   "description": "milkchoco frida cheat tool",
-  "main": "dist/index.js",
+  "main": "dist/bridge.js",
   "scripts": {
-    "start": "electron .",
-    "dist": "electron-builder",
+    "dev": "npx tauri dev",
+    "dev:sidecar": "node dist/bridge.js --dev --ws-port 27015",
     "watch": "concurrently \"tsc -w\" \"npx tailwindcss -i ./public/global.css -o ./public/output.css --watch\" \"tsc -w --project tsconfig.scripts.json\"",
-    "build": "tsc && npx tailwindcss -i ./public/global.css -o ./public/output.css --minify && tsc --project tsconfig.scripts.json",
+    "build": "tsc && npx tailwindcss -i ./public/global.css -o ./public/output.css --minify && tsc --project tsconfig.scripts.json && npx esbuild dist/main.js --bundle --outfile=public/renderer.js --platform=browser --format=iife && npx esbuild dist/layout.js --bundle --outfile=public/layout.bundle.js --platform=browser --format=iife",
+    "build:sidecar": "npx pkg dist/bridge.js -t node18-win-x64 -o src-tauri/binaries/bridge-x86_64-pc-windows-msvc.exe",
+    "dist": "npm run build && npm run build:sidecar && npx tauri build",
     "clean:win": "rd /s /q dist && rd /s /q build && del public/output.css /q",
     "clean:linux": "rm -rf dist build public/output.css",
-    "download:binding": "start https://github.com/frida/frida/releases/download/16.4.10/frida-v16.4.10-electron-v125-win32-x64.tar.gz",
+    "download:binding": "start https://github.com/frida/frida/releases/download/16.4.10/frida-v16.4.10-node-v127-win32-x64.tar.gz",
     "spawn": "frida -Uf com.gameparadiso.milkchoco -l public/scripts/inj.js",
     "attach": "frida -UN com.gameparadiso.milkchoco -l public/scripts/inj.js"
   },
@@ -19,70 +21,33 @@
   "license": "ISC",
   "dependencies": {
     "@nut-tree-fork/nut-js": "^4.2.6",
+    "@tauri-apps/api": "^2",
+    "@tauri-apps/plugin-dialog": "^2",
+    "@tauri-apps/plugin-shell": "^2",
     "adb-ts": "^6.2.0",
     "dotenv": "^17.2.3",
-    "electron-is-dev": "^2.0.0",
-    "electron-log": "^5.4.0",
-    "electron-updater": "^6.6.2",
     "express": "^5.1.0",
     "frida": "^16.4.10",
-    "mongodb": "^6.20.0",
     "node-global-key-listener": "^0.3.0",
-    "socket.io": "^4.8.1"
+    "socket.io": "^4.8.1",
+    "ws": "^8.18.0"
   },
   "devDependencies": {
+    "@tauri-apps/cli": "^2",
     "@types/express": "^5.0.2",
     "@types/frida-gum": "^18.8.2",
     "@types/node": "^22.15.29",
+    "@types/ws": "^8.5.13",
     "autoprefixer": "^10.4.21",
     "concurrently": "^9.1.2",
     "cross-env": "^7.0.3",
-    "electron": "^31.4.0",
-    "electron-builder": "^25.0.5",
+    "esbuild": "^0.24.0",
     "frida-compile": "^18.0.0",
+    "pkg": "^5.8.1",
     "postcss": "^8.5.6",
     "postcss-loader": "^8.1.1",
     "tailwindcss": "^3.4.17",
     "typescript": "^5.8.3"
-  },
-  "build": {
-    "appId": "com.necpition205.pixel",
-    "productName": "pixel",
-    "win": {
-      "target": "nsis",
-      "icon": "./public/favicon.ico"
-    },
-    "nsis": {
-      "oneClick": true,
-      "artifactName": "pixel-Setup-${version}.exe"
-    },
-    "directories": {
-      "output": "build"
-    },
-    "files": [
-      "dist/**/*",
-      "public/**/*"
-    ],
-    "extraResources": [
-      {
-        "from": "./public",
-        "to": "./public",
-        "filter": [
-          "**/*",
-          "!global.css",
-          "!main.html",
-          "!layout.html"
-        ]
-      }
-    ],
-    "publish": [
-      {
-        "provider": "github",
-        "private": true,
-        "owner": "necpition205",
-        "repo": "pixel"
-      }
-    ]
   },
   "repository": {
     "type": "git",

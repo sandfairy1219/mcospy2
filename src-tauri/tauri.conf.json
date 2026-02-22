@@ -1,0 +1,50 @@
+{
+  "$schema": "https://raw.githubusercontent.com/nicegui/nicegui/tauri/tauri.conf.json",
+  "productName": "pixel",
+  "version": "2.2.0",
+  "identifier": "com.necpition205.pixel",
+  "build": {
+    "frontendDist": "../public",
+    "beforeDevCommand": "",
+    "beforeBuildCommand": ""
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Pixel v2.2.0",
+        "url": "main.html",
+        "width": 300,
+        "height": 400,
+        "resizable": true,
+        "maximizable": false,
+        "fullscreen": false,
+        "decorations": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "nsis",
+    "icon": [
+      "icons/icon.ico"
+    ],
+    "externalBin": [
+      "binaries/bridge"
+    ],
+    "windows": {
+      "nsis": {
+        "installerIcon": "icons/icon.ico"
+      }
+    },
+    "publisher": "necpition205"
+  },
+  "plugins": {
+    "shell": {
+      "open": true
+    }
+  }
+}
