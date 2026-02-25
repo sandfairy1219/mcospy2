@@ -1,4 +1,4 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use tauri::{Manager, State};
 
@@ -7,7 +7,7 @@ struct WsPort(Mutex<u16>);
 // Keep sidecar alive by storing its handle in managed state
 struct SidecarHandle(Mutex<Option<Box<dyn std::any::Any + Send>>>);
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 struct LayoutBounds {
     x: i32,
     y: i32,
@@ -38,6 +38,14 @@ fn lock_layout(app: tauri::AppHandle, lock: bool) {
         let _ = layout.set_ignore_cursor_events(lock);
         // Note: Tauri v2 doesn't have direct set_movable/set_resizable equivalents
         // The ignore_cursor_events effectively prevents interaction when locked
+    }
+}
+
+#[tauri::command]
+fn restore_layout_bounds(app: tauri::AppHandle, bounds: LayoutBounds) {
+    if let Some(layout) = app.get_webview_window("layout") {
+        let _ = layout.set_position(tauri::PhysicalPosition::new(bounds.x, bounds.y));
+        let _ = layout.set_size(tauri::PhysicalSize::new(bounds.width, bounds.height));
     }
 }
 
@@ -187,6 +195,7 @@ pub fn run() {
             show_layout,
             lock_layout,
             resize_layout,
+            restore_layout_bounds,
         ])
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {

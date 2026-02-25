@@ -763,8 +763,15 @@ listen('except-number', (val:number[]) => {
 })
 
 // Layout control via Tauri commands
-$_('show-layout').addEventListener('change', () => {
-    tauriInvoke('show_layout', { show: $i('show-layout').checked });
+$_('show-layout').addEventListener('change', async () => {
+    const show = $i('show-layout').checked;
+    if (show) {
+        const saved = localStorage.getItem('layout');
+        if (saved) {
+            await tauriInvoke('restore_layout_bounds', { bounds: JSON.parse(saved) });
+        }
+    }
+    tauriInvoke('show_layout', { show });
 });
 $_('lock-layout').addEventListener('change', () => {
     tauriInvoke('lock_layout', { lock: $i('lock-layout').checked });

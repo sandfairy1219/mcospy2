@@ -1035,8 +1035,15 @@
         (0, dom_1.$i)("except-number").value = val.join(",");
         (0, dom_1.$i)("except-number").dispatchEvent(new Event("change"));
       });
-      (0, dom_1.$_)("show-layout").addEventListener("change", () => {
-        tauriInvoke("show_layout", { show: (0, dom_1.$i)("show-layout").checked });
+      (0, dom_1.$_)("show-layout").addEventListener("change", async () => {
+        const show = (0, dom_1.$i)("show-layout").checked;
+        if (show) {
+          const saved = localStorage.getItem("layout");
+          if (saved) {
+            await tauriInvoke("restore_layout_bounds", { bounds: JSON.parse(saved) });
+          }
+        }
+        tauriInvoke("show_layout", { show });
       });
       (0, dom_1.$_)("lock-layout").addEventListener("change", () => {
         tauriInvoke("lock_layout", { lock: (0, dom_1.$i)("lock-layout").checked });
