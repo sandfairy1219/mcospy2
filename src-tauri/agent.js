@@ -571,7 +571,11 @@ function init() {
                 else if (name === 'keyevent') {
                     const key = args[0];
                     const action = args[1];
-                    keymap = args[2];
+                    if (action === 'DOWN')
+                        keymap[key] = true;
+                    else if (action === 'UP')
+                        delete keymap[key];
+                    log("[KEYEVENT]", key, action, JSON.stringify(keymap));
                     if (key === keybinds['reverse'] && action === 'DOWN')
                         reverse();
                     // if(key === keybinds['scan-epos'] && action === 'DOWN') {
@@ -1324,7 +1328,7 @@ function loop() {
         }
     }
     catch (e) {
-        // log(e);
+        log("[LOOP]", e);
     }
     setTimeout(loop, 1000 / (config['frame'] || 60));
 }

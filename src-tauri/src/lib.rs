@@ -116,7 +116,12 @@ pub fn run() {
                     .args(["../dist/bridge.js", "--dev", "--ws-port", &port_str])
                     .spawn()
                 {
-                    Ok(_) => println!("Bridge started on port {}", port_str),
+                    Ok(child) => {
+                        println!("Bridge started on port {}", port_str);
+                        let state = app.state::<SidecarHandle>();
+                        let mut guard = state.0.lock().unwrap();
+                        *guard = Some(Box::new(child));
+                    }
                     Err(e) => {
                         eprintln!(
                             "Failed to spawn node bridge: {}. Falling back to sidecar binary.",
@@ -200,6 +205,15 @@ pub fn run() {
         .on_window_event(|window, event| {
             if let tauri::WindowEvent::CloseRequested { .. } = event {
                 if window.label() == "main" {
+                    // Kill bridge process before exiting
+                    let state = window.app_handle().state::<SidecarHandle>();
+                    if let Ok(mut guard) = state.0.lock() {
+                        if let Some(handle) = guard.take() {
+                            if let Ok(mut child) = handle.downcast::<std::process::Child>() {
+                                let _ = child.kill();
+                            }
+                        }
+                    }
                     // When main window is closed, exit the entire app
                     window.app_handle().exit(0);
                 }
