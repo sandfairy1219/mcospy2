@@ -90,6 +90,27 @@
             <button id="start-agent" data-lang="start-agent"></button>
         </section>
         <section id="cheats" class="hide">
+            <details data-cheat="cheat-settings">
+                <summary data-lang="cheat-settings"></summary>
+                <main>
+                    <select id="preset-list" class="w-full"></select>
+                </main>
+                <main>
+                    <input type="text" id="preset-name" class="w-full text-center" data-lang-ph="preset-name">
+                </main>
+                <main>
+                    <button class="w-full" id="preset-save" data-lang="preset-save"></button>
+                    <button class="w-full" id="preset-load" data-lang="preset-load"></button>
+                    <button class="w-full" id="preset-delete" data-lang="preset-delete"></button>
+                </main>
+                <main>
+                    <button class="w-full" id="preset-export" data-lang="preset-export"></button>
+                    <button class="w-full" id="preset-import" data-lang="preset-import"></button>
+                </main>
+                <main>
+                    <button class="w-full" id="cheat-reset-all" data-lang="cheat-reset-all"></button>
+                </main>
+            </details>
             <div>
                 <input class="config w-full" type="text" id="epos-number" data-lang-ph="epos-number">
             </div>
@@ -350,7 +371,23 @@
                 <summary class="no" id="no-recoil" data-lang="no-recoil"></summary>
             </details>
             <details data-cheat="no-spread">
-                <summary class="no" id="no-spread" data-lang="no-spread"></summary>
+                <summary id="no-spread" data-lang="no-spread"></summary>
+                <main>
+                    <div data-lang="no-spread-moving"></div>
+                    <input class="config" type="checkbox" id="no-spread-moving" checked>
+                </main>
+                <main>
+                    <div data-lang="no-spread-shooting"></div>
+                    <input class="config" type="checkbox" id="no-spread-shooting" checked>
+                </main>
+                <main>
+                    <div data-lang="no-spread-idle"></div>
+                    <input class="config" type="checkbox" id="no-spread-idle" checked>
+                </main>
+                <main>
+                    <div data-lang="no-spread-jump"></div>
+                    <input class="config" type="checkbox" id="no-spread-jump" checked>
+                </main>
             </details>
             <details data-cheat="infinite-ammo">
                 <summary class="no" id="infinite-ammo" data-lang="infinite-ammo"></summary>
@@ -530,6 +567,13 @@
             <!-- <details data-cheat="cooker-buff">
                 <summary class="no" id="cooker-buff" data-lang="cooker-buff"></summary>
             </details> -->
+            <details data-cheat="exp-boost">
+                <summary id="exp-boost" data-lang="exp-boost"></summary>
+                <main>
+                    <div data-lang="exp-boost-multiplier"></div>
+                    <input class="config" type="number" id="exp-boost-multiplier" min="1" max="31" value="30">
+                </main>
+            </details>
             <details data-cheat="changer">
                 <summary data-lang="changer"></summary>
                 <main>
@@ -606,6 +650,9 @@
                     <input type="text" id="get-daily-reward-repeat" class="w-full text-center" data-lang-ph="repeat-count">
                     <button class="w-full" id="get-daily-reward" data-lang="get-daily-reward"></button>
                 </main>
+                <main>
+                    <button class="w-full" id="request-br-reward" data-lang="request-br-reward"></button>
+                </main>
             </details>
             <details data-cheat="utilities">
                 <summary data-lang="utilities"></summary>
@@ -642,6 +689,10 @@
                 <!-- <main>
                     <button class="w-full" id="server-exploit" data-lang="server-exploit"></button>
                 </main> -->
+                <main>
+                    <button class="w-full" id="claim-supply-1" data-lang="claim-supply-1"></button>
+                    <button class="w-full" id="claim-supply-2" data-lang="claim-supply-2"></button>
+                </main>
             </details>
             <!-- <details data-cheat="ctm">
                 <summary data-lang="ctm"></summary>
@@ -694,6 +745,13 @@
                 <main>
                     <div data-lang="frame"></div>
                     <input class="config" type="number" id="frame" min="1" max="120" value="60">
+                </main>
+            </details>
+            <details>
+                <summary data-lang="stress-test"></summary>
+                <main>
+                    <div data-lang="mute-logging"></div>
+                    <input class="config" type="checkbox" id="mute-logging">
                 </main>
             </details>
         </section>

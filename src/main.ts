@@ -388,6 +388,7 @@ const lan:{[key:string]:{[key:string]:string}} = {
     'unlock-all-char': { 'en':'Unlock All Character', 'ko':'모든 캐릭 해금', 'ja':'すべてのキャラクターロック解除', 'zh':'解锁所有角色', },
     'buy-clan-gold': { 'en':'Buy Clan Gold', 'ko':'클코 구매', 'ja':'クランゴールド購入', 'zh':'购买公会金币', },
     'get-daily-reward': { 'en':'Get Daily', 'ko':'일일 보상 획득', 'ja':'日日報酬獲得', 'zh':'获取每日奖励', },
+    'request-br-reward': { 'en':'BR Reward', 'ko':'배틀로얄 보상', 'ja':'バトルロイヤル報酬', 'zh':'大逃杀奖励', },
     'buy-item': { 'en':'Buy', 'ko':'구매', 'ja':'購入', 'zh':'购买', },
     'repeat-count': { 'en':'Repeat Count', 'ko':'반복 횟수', 'ja':'繰り返し回数', 'zh':'重复次数', },
     'char-id': { 'en':'Character ID', 'ko':'캐릭터 ID', 'ja':'キャラクターID', 'zh':'角色ID', },
@@ -406,6 +407,8 @@ const lan:{[key:string]:{[key:string]:string}} = {
     'change-nickname': { 'en':'Change Nickname', 'ko':'닉네임 변경', 'ja':'ニックネーム変更', 'zh':'更改昵称', },
     'create': { 'en':'Create', 'ko':'생성', 'ja':'作成', 'zh':'创建', },
     'server-exploit': { 'en':'Exploit Server', 'ko':'서버 폭파', 'ja':'サーバーフォールト', 'zh':'服务器破坏', },
+    'claim-supply-1': { 'en':'Claim Supply 1', 'ko':'보급품1 수령', 'ja':'補給品1受取', 'zh':'领取补给1', },
+    'claim-supply-2': { 'en':'Claim Supply 2', 'ko':'보급품2 수령', 'ja':'補給品2受取', 'zh':'领取补给2', },
     'ctm':{ 'en':'Capture The Milk', 'ko':'우유 뺏기', 'ja':'ミルクを取る', 'zh':'抢奶', },
     'milk':{ 'en':'Milk', 'ko':'밀크', 'ja':'ミルク', 'zh':'牛奶', },
     'choco':{ 'en':'Choco', 'ko':'초코', 'ja':'チョコ', 'zh':'巧克力', },
@@ -429,6 +432,50 @@ const lan:{[key:string]:{[key:string]:string}} = {
     "gyro-scope-invert":{ "en": "Gyro Scope Invert", "ko": "자이로 스코프 반전", "ja": "ジャイロスコープ反転", "zh": "陀螺仪反转" },
     "gyro-scope-sensitivity": { "en": "Gyro Scope Sensitivity", "ko": "자이로 스코프 감도", "ja": "ジャイロスコープ感度", "zh": "陀螺仪灵敏度" },
     'search-player':{ 'en':'Search Player', 'ko':'플레이어 검색', 'ja':'プレイヤー検索', 'zh':'搜索玩家', },
+    'cheat-settings':{ 'en':'Presets', 'ko':'프리셋', 'ja':'プリセット', 'zh':'预设', },
+    // info start
+    'info-aimbot':{ 'en':'Auto-aim at enemies', 'ko':'적에게 자동 조준', 'ja':'敵に自動照準', 'zh':'自动瞄准敌人', },
+    'info-aim-assist':{ 'en':'Smooth aim correction toward enemies', 'ko':'적 방향으로 부드럽게 조준 보정', 'ja':'敵方向へスムーズな照準補正', 'zh':'平滑瞄准修正', },
+    'info-esp':{ 'en':'See enemy positions through walls', 'ko':'벽 너머 적 위치 표시', 'ja':'壁越しに敵の位置を表示', 'zh':'透视墙壁显示敌人位置', },
+    'info-blackhole':{ 'en':'Pull enemies to a single point', 'ko':'적을 한 지점으로 끌어모음', 'ja':'敵を一点に引き寄せる', 'zh':'将敌人拉到一个点', },
+    'info-shoot-speed':{ 'en':'Increase firing rate', 'ko':'발사 속도 증가', 'ja':'発射速度を上げる', 'zh':'提高射击速度', },
+    'info-no-recoil':{ 'en':'Remove weapon recoil', 'ko':'무기 반동 제거', 'ja':'武器の反動を除去', 'zh':'消除武器后座力', },
+    'info-no-spread':{ 'en':'Remove bullet spread', 'ko':'탄 퍼짐 제거', 'ja':'弾の拡散を除去', 'zh':'消除子弹散布', },
+    'no-spread-moving':{ 'en':'Moving', 'ko':'이동', 'ja':'移動中', 'zh':'移动', },
+    'no-spread-shooting':{ 'en':'Shooting', 'ko':'사격', 'ja':'射撃中', 'zh':'射击', },
+    'no-spread-idle':{ 'en':'Idle', 'ko':'대기', 'ja':'待機中', 'zh':'待机', },
+    'no-spread-jump':{ 'en':'Jump', 'ko':'점프', 'ja':'ジャンプ中', 'zh':'跳跃', },
+    'info-infinite-ammo':{ 'en':'Unlimited ammunition', 'ko':'무제한 탄약', 'ja':'無制限の弾薬', 'zh':'无限弹药', },
+    'info-no-timer':{ 'en':'Remove reload/grenade/respawn timers', 'ko':'재장전/수류탄/부활 타이머 제거', 'ja':'リロード/グレネード/リスポーンタイマー除去', 'zh':'移除装弹/手雷/重生计时器', },
+    'info-skill-cooldown':{ 'en':'Remove skill cooldown', 'ko':'스킬 쿨타임 제거', 'ja':'スキルクールダウン除去', 'zh':'消除技能冷却', },
+    'info-no-clip':{ 'en':'Walk through walls', 'ko':'벽 통과', 'ja':'壁をすり抜ける', 'zh':'穿墙', },
+    'info-fly':{ 'en':'Fly freely in any direction', 'ko':'자유 비행', 'ja':'自由に飛行', 'zh':'自由飞行', },
+    'info-move-speed':{ 'en':'Change movement speed', 'ko':'이동 속도 변경', 'ja':'移動速度を変更', 'zh':'更改移动速度', },
+    'info-infinite-jump':{ 'en':'Jump unlimited times in air', 'ko':'공중에서 무한 점프', 'ja':'空中で無限ジャンプ', 'zh':'空中无限跳跃', },
+    'info-upskill':{ 'en':'Boost skill power', 'ko':'스킬 위력 강화', 'ja':'スキルパワー強化', 'zh':'提升技能威力', },
+    'info-grenade':{ 'en':'Instant grenade throw', 'ko':'즉시 수류탄 투척', 'ja':'即時グレネード投擲', 'zh':'即时投掷手雷', },
+    'info-anti-hook':{ 'en':'Prevent hook-based detection', 'ko':'후크 기반 탐지 방지', 'ja':'フックベースの検出を防止', 'zh':'防止钩子检测', },
+    'info-kicker':{ 'en':'Kick players from the match', 'ko':'플레이어를 매치에서 킥', 'ja':'プレイヤーをマッチからキック', 'zh':'将玩家踢出比赛', },
+    'info-one-kill':{ 'en':'Kill enemies in one hit', 'ko':'적을 한 방에 처치', 'ja':'敵を一撃で倒す', 'zh':'一击杀敌', },
+    'info-skill-damage':{ 'en':'Increase skill damage', 'ko':'스킬 데미지 증가', 'ja':'スキルダメージ増加', 'zh':'增加技能伤害', },
+    'info-debuff':{ 'en':'Apply debuffs to enemies', 'ko':'적에게 디버프 적용', 'ja':'敵にデバフを付与', 'zh':'对敌人施加减益', },
+    'info-electric':{ 'en':'Apply electric effect to enemies', 'ko':'적에게 전기 효과 적용', 'ja':'敵に電気効果を付与', 'zh':'对敌人施加电击效果', },
+    'info-mago':{ 'en':'Apply mago effect to enemies', 'ko':'적에게 마고 효과 적용', 'ja':'敵にマゴ効果を付与', 'zh':'对敌人施加马戈效果', },
+    'info-hide-me':{ 'en':'Make yourself invisible to others', 'ko':'다른 플레이어에게 투명화', 'ja':'他のプレイヤーから透明化', 'zh':'对其他玩家隐身', },
+    'info-changer':{ 'en':'Modify position, skill code, etc.', 'ko':'위치, 스킬코드 등 변경', 'ja':'位置、スキルコードなどを変更', 'zh':'修改位置、技能代码等', },
+    'info-resource-hack':{ 'en':'Obtain resources and rewards', 'ko':'자원 및 보상 획득', 'ja':'リソースと報酬を取得', 'zh':'获取资源和奖励', },
+    'info-utilities':{ 'en':'Nickname, clan, item utilities', 'ko':'닉네임, 클랜, 아이템 유틸', 'ja':'ニックネーム、クラン、アイテムユーティリティ', 'zh':'昵称、公会、物品工具', },
+    'info-cheat-settings':{ 'en':'Save/load cheat presets', 'ko':'치트 프리셋 저장/불러오기', 'ja':'チートプリセットの保存/読み込み', 'zh':'保存/加载作弊预设', },
+    'preset-name':{ 'en':'Preset Name', 'ko':'프리셋 이름', 'ja':'プリセット名', 'zh':'预设名称', },
+    'preset-save':{ 'en':'Save', 'ko':'저장', 'ja':'保存', 'zh':'保存', },
+    'preset-load':{ 'en':'Load', 'ko':'불러오기', 'ja':'読み込み', 'zh':'加载', },
+    'preset-delete':{ 'en':'Delete', 'ko':'삭제', 'ja':'削除', 'zh':'删除', },
+    'preset-export':{ 'en':'Export', 'ko':'내보내기', 'ja':'エクスポート', 'zh':'导出', },
+    'preset-import':{ 'en':'Import', 'ko':'가져오기', 'ja':'インポート', 'zh':'导入', },
+    'cheat-reset-all':{ 'en':'Reset All', 'ko':'전체 초기화', 'ja':'全てリセット', 'zh':'全部重置', },
+    'exp-boost':{ 'en':'EXP Boost', 'ko':'경험치 부스트', 'ja':'経験値ブースト', 'zh':'经验值加成', },
+    'exp-boost-multiplier':{ 'en':'Multiplier', 'ko':'배율', 'ja':'倍率', 'zh':'倍率', },
+    'info-exp-boost':{ 'en':'Multiply EXP gain (1-31x)', 'ko':'경험치 획득량 증가 (1-31배)', 'ja':'経験値獲得量増加（1-31倍）', 'zh':'增加经验值获取量（1-31倍）', },
 }
 
 function lng(la:string, str:string):string{
@@ -549,9 +596,21 @@ const updateLang = () => {
     });
     $$_('*[data-lang]').forEach((el:HTMLElement) => {
         if(el.tagName === "SUMMARY" && el.id) {
+            const cheatId = el.getAttribute('data-lang');
+            const infoKey = `info-${cheatId}`;
+            const infoText = lan[infoKey] ? lng(lang, infoKey) : '';
             el.innerHTML = `
                 <input type="checkbox" class="toggle" id="toggle-${el.id}">
-                <p>${lng(lang, el.getAttribute('data-lang'))}</p>
+                <p>${lng(lang, cheatId)}</p>
+                ${infoText ? `<span class="info-icon" data-tooltip="${infoText}">i</span>` : ''}
+            `;
+        } else if(el.tagName === "SUMMARY" && !el.id) {
+            const cheatId = el.getAttribute('data-lang');
+            const infoKey = `info-${cheatId}`;
+            const infoText = lan[infoKey] ? lng(lang, infoKey) : '';
+            el.innerHTML = `
+                ${lng(lang, cheatId)}
+                ${infoText ? `<span class="info-icon" data-tooltip="${infoText}">i</span>` : ''}
             `;
         } else el.textContent = lng(lang, el.getAttribute('data-lang'));
     });
@@ -735,6 +794,7 @@ sel.addEventListener('change', blurCurrent);
 // $_('unlock-all-item').addEventListener('click', () => {send('unlock-all-item', parseInt($i('unlock-all-item-char-id').value) || 0);});
 // $_('unlock-all-char').addEventListener('click', () => {send('unlock-all-char');});
 $_('get-daily-reward').addEventListener('click', () => {send('get-daily-reward', parseInt($i('get-daily-reward-repeat').value) || 1);});
+$_('request-br-reward').addEventListener('click', () => {send('request-br-reward');});
 
 $_('kick-player').addEventListener('click', () => {send('kick-player', parseInt($i('kick-player-number').value) || 0);});
 $_('change-nickname').addEventListener('click', () => {send('change-nickname', $i('nickname-value').value || '');});
@@ -745,6 +805,8 @@ $_('buy-clan-gold').addEventListener('click', () => {send('buy-clan-gold', parse
 // equip
 $_('equip-spyra').addEventListener('click', () => {send('equip-item', parseInt($i('equip-char-number').value) || 1, 0, 24);});
 $_('equip-mh9').addEventListener('click', () => {send('equip-item', parseInt($i('equip-char-number').value) || 1, 1, 15);});
+$_('claim-supply-1').addEventListener('click', () => {send('claim-supply', 1, 30);});
+$_('claim-supply-2').addEventListener('click', () => {send('claim-supply', 2, 30);});
 
 updateExceptNumber();
 $_('except-number').addEventListener('change', updateExceptNumber);
@@ -777,8 +839,9 @@ $_('lock-layout').addEventListener('change', () => {
     tauriInvoke('lock_layout', { lock: $i('lock-layout').checked });
 });
 
-// Periodically save layout bounds
+// Periodically save layout bounds (only when visible)
 setInterval(async () => {
+    if (!$i('show-layout').checked) return;
     try {
         const bounds = await tauriInvoke('resize_layout');
         if (bounds) localStorage.setItem('layout', JSON.stringify(bounds));
@@ -869,6 +932,180 @@ listen('search-wp', (wps:(WPData&{id:number})[]) => {
         });
         finderOut.appendChild(wpOut);
     });
+});
+
+// Cheat settings: presets
+type Preset = { config: {[key:string]:any}, keybinds: {[key:string]:string}, cheats: {[key:string]:boolean} };
+let presets:{[name:string]:Preset} = {};
+const presetStore = localStorage.getItem('presets');
+if(presetStore) presets = JSON.parse(presetStore);
+
+function updatePresetList(){
+    const sel = $_('preset-list') as HTMLSelectElement;
+    sel.innerHTML = '';
+    for(const name of Object.keys(presets)){
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        sel.appendChild(opt);
+    }
+}
+updatePresetList();
+
+$_('preset-save').addEventListener('click', () => {
+    const name = $i('preset-name').value.trim();
+    if(!name) return;
+    presets[name] = {
+        config: {...config},
+        keybinds: {...keybinds},
+        cheats: {...cheats},
+    };
+    localStorage.setItem('presets', JSON.stringify(presets));
+    updatePresetList();
+    ($_ ('preset-list') as HTMLSelectElement).value = name;
+});
+
+$_('preset-load').addEventListener('click', () => {
+    const sel = $_('preset-list') as HTMLSelectElement;
+    const name = sel.value;
+    if(!name || !presets[name]) return;
+    const preset = presets[name];
+    // restore config
+    for(const key in preset.config){
+        config[key] = preset.config[key];
+        const el = $_(key);
+        if(!el) continue;
+        if(el.tagName === 'BUTTON'){
+            el.classList.toggle('selected', config[key]);
+        } else {
+            const _el = el as HTMLInputElement;
+            if(_el.type === 'checkbox') _el.checked = config[key];
+            else _el.value = config[key];
+        }
+        send('config', key, config[key]);
+    }
+    localStorage.setItem('config', JSON.stringify(config));
+    // restore keybinds
+    for(const key in preset.keybinds){
+        keybinds[key] = preset.keybinds[key];
+        const el = $i(`key-${key}`);
+        if(el) el.value = keybinds[key];
+        send('keybind', key, keybinds[key]);
+    }
+    localStorage.setItem('keybinds', JSON.stringify(keybinds));
+    // restore cheats
+    for(const key in preset.cheats){
+        cheats[key] = preset.cheats[key];
+        const toggle = $i(`toggle-${key}`);
+        if(toggle) toggle.checked = cheats[key];
+        send('cheats', key, cheats[key]);
+    }
+});
+
+$_('preset-delete').addEventListener('click', () => {
+    const sel = $_('preset-list') as HTMLSelectElement;
+    const name = sel.value;
+    if(!name) return;
+    delete presets[name];
+    localStorage.setItem('presets', JSON.stringify(presets));
+    updatePresetList();
+});
+
+$_('preset-export').addEventListener('click', () => {
+    const data = JSON.stringify({ config, keybinds, cheats }, null, 2);
+    const blob = new Blob([data], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'cheat-config.json';
+    a.click();
+    URL.revokeObjectURL(url);
+});
+
+$_('preset-import').addEventListener('click', () => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    input.onchange = () => {
+        const file = input.files?.[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+            try {
+                const data = JSON.parse(reader.result as string);
+                if(data.config){
+                    for(const key in data.config){
+                        config[key] = data.config[key];
+                        const el = $_(key);
+                        if(!el) continue;
+                        if(el.tagName === 'BUTTON') el.classList.toggle('selected', config[key]);
+                        else {
+                            const _el = el as HTMLInputElement;
+                            if(_el.type === 'checkbox') _el.checked = config[key];
+                            else _el.value = config[key];
+                        }
+                        send('config', key, config[key]);
+                    }
+                    localStorage.setItem('config', JSON.stringify(config));
+                }
+                if(data.keybinds){
+                    for(const key in data.keybinds){
+                        keybinds[key] = data.keybinds[key];
+                        const el = $i(`key-${key}`);
+                        if(el) el.value = keybinds[key];
+                        send('keybind', key, keybinds[key]);
+                    }
+                    localStorage.setItem('keybinds', JSON.stringify(keybinds));
+                }
+                if(data.cheats){
+                    for(const key in data.cheats){
+                        cheats[key] = data.cheats[key];
+                        const toggle = $i(`toggle-${key}`);
+                        if(toggle) toggle.checked = cheats[key];
+                        send('cheats', key, cheats[key]);
+                    }
+                }
+            } catch(e){ console.error('Import error:', e); }
+        };
+        reader.readAsText(file);
+    };
+    input.click();
+});
+
+$_('cheat-reset-all').addEventListener('click', () => {
+    // reset all cheats to off
+    for(const key in cheats){
+        cheats[key] = false;
+        const toggle = $i(`toggle-${key}`);
+        if(toggle) toggle.checked = false;
+        send('cheats', key, false);
+    }
+    // reset config to defaults
+    $$_('.config').forEach((el:HTMLElement) => {
+        if(el.tagName === 'BUTTON'){
+            el.classList.remove('selected');
+            config[el.id] = false;
+        } else if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT') {
+            const _el = el as HTMLInputElement;
+            if(_el.type === 'checkbox'){
+                _el.checked = false;
+                config[_el.id] = false;
+            } else {
+                _el.value = _el.defaultValue;
+                config[_el.id] = _el.defaultValue;
+            }
+        }
+        send('config', el.id, config[el.id]);
+    });
+    localStorage.setItem('config', JSON.stringify(config));
+    // reset keybinds
+    for(const key in keybinds){
+        keybinds[key] = '';
+        const el = $i(`key-${key}`);
+        if(el) el.value = '';
+        send('keybind', key, '');
+    }
+    localStorage.setItem('keybinds', JSON.stringify(keybinds));
 });
 
 // Connect to WebSocket sidecar

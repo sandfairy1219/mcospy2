@@ -654,6 +654,7 @@
         "unlock-all-char": { "en": "Unlock All Character", "ko": "\uBAA8\uB4E0 \uCE90\uB9AD \uD574\uAE08", "ja": "\u3059\u3079\u3066\u306E\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC\u30ED\u30C3\u30AF\u89E3\u9664", "zh": "\u89E3\u9501\u6240\u6709\u89D2\u8272" },
         "buy-clan-gold": { "en": "Buy Clan Gold", "ko": "\uD074\uCF54 \uAD6C\uB9E4", "ja": "\u30AF\u30E9\u30F3\u30B4\u30FC\u30EB\u30C9\u8CFC\u5165", "zh": "\u8D2D\u4E70\u516C\u4F1A\u91D1\u5E01" },
         "get-daily-reward": { "en": "Get Daily", "ko": "\uC77C\uC77C \uBCF4\uC0C1 \uD68D\uB4DD", "ja": "\u65E5\u65E5\u5831\u916C\u7372\u5F97", "zh": "\u83B7\u53D6\u6BCF\u65E5\u5956\u52B1" },
+        "request-br-reward": { "en": "BR Reward", "ko": "\uBC30\uD2C0\uB85C\uC584 \uBCF4\uC0C1", "ja": "\u30D0\u30C8\u30EB\u30ED\u30A4\u30E4\u30EB\u5831\u916C", "zh": "\u5927\u9003\u6740\u5956\u52B1" },
         "buy-item": { "en": "Buy", "ko": "\uAD6C\uB9E4", "ja": "\u8CFC\u5165", "zh": "\u8D2D\u4E70" },
         "repeat-count": { "en": "Repeat Count", "ko": "\uBC18\uBCF5 \uD69F\uC218", "ja": "\u7E70\u308A\u8FD4\u3057\u56DE\u6570", "zh": "\u91CD\u590D\u6B21\u6570" },
         "char-id": { "en": "Character ID", "ko": "\uCE90\uB9AD\uD130 ID", "ja": "\u30AD\u30E3\u30E9\u30AF\u30BF\u30FCID", "zh": "\u89D2\u8272ID" },
@@ -672,6 +673,8 @@
         "change-nickname": { "en": "Change Nickname", "ko": "\uB2C9\uB124\uC784 \uBCC0\uACBD", "ja": "\u30CB\u30C3\u30AF\u30CD\u30FC\u30E0\u5909\u66F4", "zh": "\u66F4\u6539\u6635\u79F0" },
         "create": { "en": "Create", "ko": "\uC0DD\uC131", "ja": "\u4F5C\u6210", "zh": "\u521B\u5EFA" },
         "server-exploit": { "en": "Exploit Server", "ko": "\uC11C\uBC84 \uD3ED\uD30C", "ja": "\u30B5\u30FC\u30D0\u30FC\u30D5\u30A9\u30FC\u30EB\u30C8", "zh": "\u670D\u52A1\u5668\u7834\u574F" },
+        "claim-supply-1": { "en": "Claim Supply 1", "ko": "\uBCF4\uAE09\uD4881 \uC218\uB839", "ja": "\u88DC\u7D66\u54C11\u53D7\u53D6", "zh": "\u9886\u53D6\u8865\u7ED91" },
+        "claim-supply-2": { "en": "Claim Supply 2", "ko": "\uBCF4\uAE09\uD4882 \uC218\uB839", "ja": "\u88DC\u7D66\u54C12\u53D7\u53D6", "zh": "\u9886\u53D6\u8865\u7ED92" },
         "ctm": { "en": "Capture The Milk", "ko": "\uC6B0\uC720 \uBE8F\uAE30", "ja": "\u30DF\u30EB\u30AF\u3092\u53D6\u308B", "zh": "\u62A2\u5976" },
         "milk": { "en": "Milk", "ko": "\uBC00\uD06C", "ja": "\u30DF\u30EB\u30AF", "zh": "\u725B\u5976" },
         "choco": { "en": "Choco", "ko": "\uCD08\uCF54", "ja": "\u30C1\u30E7\u30B3", "zh": "\u5DE7\u514B\u529B" },
@@ -683,6 +686,8 @@
         "execute": { "en": "Execute", "ko": "\uC2E4\uD589", "ja": "\u5B9F\u884C", "zh": "\u6267\u884C" },
         "general": { "en": "General", "ko": "\uC77C\uBC18", "ja": "\u4E00\u822C", "zh": "\u4E00\u822C" },
         "frame": { "en": "Frame", "ko": "\uD504\uB808\uC784", "ja": "\u30D5\u30EC\u30FC\u30E0", "zh": "\u5E27" },
+        "stress-test": { "en": "Stress Test", "ko": "\uC2A4\uD2B8\uB808\uC2A4 \uD14C\uC2A4\uD2B8", "ja": "\u30B9\u30C8\u30EC\u30B9\u30C6\u30B9\u30C8", "zh": "\u538B\u529B\u6D4B\u8BD5" },
+        "mute-logging": { "en": "Mute Logging / Analytics", "ko": "\uB85C\uAE45/\uBD84\uC11D \uBB34\uB825\uD654", "ja": "\u30ED\u30B0/\u5206\u6790\u7121\u52B9\u5316", "zh": "\u7981\u7528\u65E5\u5FD7/\u5206\u6790" },
         "mobile-controller": { "en": "Mobile Controller", "ko": "\uBAA8\uBC14\uC77C \uCEE8\uD2B8\uB864\uB7EC", "ja": "\u30E2\u30D0\u30A4\u30EB\u30B3\u30F3\u30C8\u30ED\u30FC\u30E9", "zh": "\u79FB\u52A8\u63A7\u5236\u5668" },
         "utility": { "en": "Utility", "ko": "\uC720\uD2F8\uB9AC\uD2F0", "ja": "\u30E6\u30FC\u30C6\u30A3\u30EA\u30C6\u30A3", "zh": "\u6548\u7528" },
         "replay": { "en": "Replay", "ko": "\uB9AC\uD50C\uB808\uC774", "ja": "\u30EA\u30D7\u30EC\u30A4", "zh": "\u91CD\u64AD" },
@@ -694,7 +699,51 @@
         "gyro-scope-use-gamma": { "en": "Gyro Scope Use Gamma", "ko": "\uC790\uC774\uB85C \uC2A4\uCF54\uD504 \uAC10\uB9C8 \uC0AC\uC6A9", "ja": "\u30B8\u30E3\u30A4\u30ED\u30B9\u30B3\u30FC\u30D7\u30AC\u30F3\u30DE\u4F7F\u7528", "zh": "\u9640\u87BA\u4EEA\u4F7F\u7528\u4F3D\u9A6C" },
         "gyro-scope-invert": { "en": "Gyro Scope Invert", "ko": "\uC790\uC774\uB85C \uC2A4\uCF54\uD504 \uBC18\uC804", "ja": "\u30B8\u30E3\u30A4\u30ED\u30B9\u30B3\u30FC\u30D7\u53CD\u8EE2", "zh": "\u9640\u87BA\u4EEA\u53CD\u8F6C" },
         "gyro-scope-sensitivity": { "en": "Gyro Scope Sensitivity", "ko": "\uC790\uC774\uB85C \uC2A4\uCF54\uD504 \uAC10\uB3C4", "ja": "\u30B8\u30E3\u30A4\u30ED\u30B9\u30B3\u30FC\u30D7\u611F\u5EA6", "zh": "\u9640\u87BA\u4EEA\u7075\u654F\u5EA6" },
-        "search-player": { "en": "Search Player", "ko": "\uD50C\uB808\uC774\uC5B4 \uAC80\uC0C9", "ja": "\u30D7\u30EC\u30A4\u30E4\u30FC\u691C\u7D22", "zh": "\u641C\u7D22\u73A9\u5BB6" }
+        "search-player": { "en": "Search Player", "ko": "\uD50C\uB808\uC774\uC5B4 \uAC80\uC0C9", "ja": "\u30D7\u30EC\u30A4\u30E4\u30FC\u691C\u7D22", "zh": "\u641C\u7D22\u73A9\u5BB6" },
+        "cheat-settings": { "en": "Presets", "ko": "\uD504\uB9AC\uC14B", "ja": "\u30D7\u30EA\u30BB\u30C3\u30C8", "zh": "\u9884\u8BBE" },
+        // info start
+        "info-aimbot": { "en": "Auto-aim at enemies", "ko": "\uC801\uC5D0\uAC8C \uC790\uB3D9 \uC870\uC900", "ja": "\u6575\u306B\u81EA\u52D5\u7167\u6E96", "zh": "\u81EA\u52A8\u7784\u51C6\u654C\u4EBA" },
+        "info-aim-assist": { "en": "Smooth aim correction toward enemies", "ko": "\uC801 \uBC29\uD5A5\uC73C\uB85C \uBD80\uB4DC\uB7FD\uAC8C \uC870\uC900 \uBCF4\uC815", "ja": "\u6575\u65B9\u5411\u3078\u30B9\u30E0\u30FC\u30BA\u306A\u7167\u6E96\u88DC\u6B63", "zh": "\u5E73\u6ED1\u7784\u51C6\u4FEE\u6B63" },
+        "info-esp": { "en": "See enemy positions through walls", "ko": "\uBCBD \uB108\uBA38 \uC801 \uC704\uCE58 \uD45C\uC2DC", "ja": "\u58C1\u8D8A\u3057\u306B\u6575\u306E\u4F4D\u7F6E\u3092\u8868\u793A", "zh": "\u900F\u89C6\u5899\u58C1\u663E\u793A\u654C\u4EBA\u4F4D\u7F6E" },
+        "info-blackhole": { "en": "Pull enemies to a single point", "ko": "\uC801\uC744 \uD55C \uC9C0\uC810\uC73C\uB85C \uB04C\uC5B4\uBAA8\uC74C", "ja": "\u6575\u3092\u4E00\u70B9\u306B\u5F15\u304D\u5BC4\u305B\u308B", "zh": "\u5C06\u654C\u4EBA\u62C9\u5230\u4E00\u4E2A\u70B9" },
+        "info-shoot-speed": { "en": "Increase firing rate", "ko": "\uBC1C\uC0AC \uC18D\uB3C4 \uC99D\uAC00", "ja": "\u767A\u5C04\u901F\u5EA6\u3092\u4E0A\u3052\u308B", "zh": "\u63D0\u9AD8\u5C04\u51FB\u901F\u5EA6" },
+        "info-no-recoil": { "en": "Remove weapon recoil", "ko": "\uBB34\uAE30 \uBC18\uB3D9 \uC81C\uAC70", "ja": "\u6B66\u5668\u306E\u53CD\u52D5\u3092\u9664\u53BB", "zh": "\u6D88\u9664\u6B66\u5668\u540E\u5EA7\u529B" },
+        "info-no-spread": { "en": "Remove bullet spread", "ko": "\uD0C4 \uD37C\uC9D0 \uC81C\uAC70", "ja": "\u5F3E\u306E\u62E1\u6563\u3092\u9664\u53BB", "zh": "\u6D88\u9664\u5B50\u5F39\u6563\u5E03" },
+        "no-spread-moving": { "en": "Moving", "ko": "\uC774\uB3D9", "ja": "\u79FB\u52D5\u4E2D", "zh": "\u79FB\u52A8" },
+        "no-spread-shooting": { "en": "Shooting", "ko": "\uC0AC\uACA9", "ja": "\u5C04\u6483\u4E2D", "zh": "\u5C04\u51FB" },
+        "no-spread-idle": { "en": "Idle", "ko": "\uB300\uAE30", "ja": "\u5F85\u6A5F\u4E2D", "zh": "\u5F85\u673A" },
+        "no-spread-jump": { "en": "Jump", "ko": "\uC810\uD504", "ja": "\u30B8\u30E3\u30F3\u30D7\u4E2D", "zh": "\u8DF3\u8DC3" },
+        "info-infinite-ammo": { "en": "Unlimited ammunition", "ko": "\uBB34\uC81C\uD55C \uD0C4\uC57D", "ja": "\u7121\u5236\u9650\u306E\u5F3E\u85AC", "zh": "\u65E0\u9650\u5F39\u836F" },
+        "info-no-timer": { "en": "Remove reload/grenade/respawn timers", "ko": "\uC7AC\uC7A5\uC804/\uC218\uB958\uD0C4/\uBD80\uD65C \uD0C0\uC774\uBA38 \uC81C\uAC70", "ja": "\u30EA\u30ED\u30FC\u30C9/\u30B0\u30EC\u30CD\u30FC\u30C9/\u30EA\u30B9\u30DD\u30FC\u30F3\u30BF\u30A4\u30DE\u30FC\u9664\u53BB", "zh": "\u79FB\u9664\u88C5\u5F39/\u624B\u96F7/\u91CD\u751F\u8BA1\u65F6\u5668" },
+        "info-skill-cooldown": { "en": "Remove skill cooldown", "ko": "\uC2A4\uD0AC \uCFE8\uD0C0\uC784 \uC81C\uAC70", "ja": "\u30B9\u30AD\u30EB\u30AF\u30FC\u30EB\u30C0\u30A6\u30F3\u9664\u53BB", "zh": "\u6D88\u9664\u6280\u80FD\u51B7\u5374" },
+        "info-no-clip": { "en": "Walk through walls", "ko": "\uBCBD \uD1B5\uACFC", "ja": "\u58C1\u3092\u3059\u308A\u629C\u3051\u308B", "zh": "\u7A7F\u5899" },
+        "info-fly": { "en": "Fly freely in any direction", "ko": "\uC790\uC720 \uBE44\uD589", "ja": "\u81EA\u7531\u306B\u98DB\u884C", "zh": "\u81EA\u7531\u98DE\u884C" },
+        "info-move-speed": { "en": "Change movement speed", "ko": "\uC774\uB3D9 \uC18D\uB3C4 \uBCC0\uACBD", "ja": "\u79FB\u52D5\u901F\u5EA6\u3092\u5909\u66F4", "zh": "\u66F4\u6539\u79FB\u52A8\u901F\u5EA6" },
+        "info-infinite-jump": { "en": "Jump unlimited times in air", "ko": "\uACF5\uC911\uC5D0\uC11C \uBB34\uD55C \uC810\uD504", "ja": "\u7A7A\u4E2D\u3067\u7121\u9650\u30B8\u30E3\u30F3\u30D7", "zh": "\u7A7A\u4E2D\u65E0\u9650\u8DF3\u8DC3" },
+        "info-upskill": { "en": "Boost skill power", "ko": "\uC2A4\uD0AC \uC704\uB825 \uAC15\uD654", "ja": "\u30B9\u30AD\u30EB\u30D1\u30EF\u30FC\u5F37\u5316", "zh": "\u63D0\u5347\u6280\u80FD\u5A01\u529B" },
+        "info-grenade": { "en": "Instant grenade throw", "ko": "\uC989\uC2DC \uC218\uB958\uD0C4 \uD22C\uCC99", "ja": "\u5373\u6642\u30B0\u30EC\u30CD\u30FC\u30C9\u6295\u64F2", "zh": "\u5373\u65F6\u6295\u63B7\u624B\u96F7" },
+        "info-anti-hook": { "en": "Prevent hook-based detection", "ko": "\uD6C4\uD06C \uAE30\uBC18 \uD0D0\uC9C0 \uBC29\uC9C0", "ja": "\u30D5\u30C3\u30AF\u30D9\u30FC\u30B9\u306E\u691C\u51FA\u3092\u9632\u6B62", "zh": "\u9632\u6B62\u94A9\u5B50\u68C0\u6D4B" },
+        "info-kicker": { "en": "Kick players from the match", "ko": "\uD50C\uB808\uC774\uC5B4\uB97C \uB9E4\uCE58\uC5D0\uC11C \uD0A5", "ja": "\u30D7\u30EC\u30A4\u30E4\u30FC\u3092\u30DE\u30C3\u30C1\u304B\u3089\u30AD\u30C3\u30AF", "zh": "\u5C06\u73A9\u5BB6\u8E22\u51FA\u6BD4\u8D5B" },
+        "info-one-kill": { "en": "Kill enemies in one hit", "ko": "\uC801\uC744 \uD55C \uBC29\uC5D0 \uCC98\uCE58", "ja": "\u6575\u3092\u4E00\u6483\u3067\u5012\u3059", "zh": "\u4E00\u51FB\u6740\u654C" },
+        "info-skill-damage": { "en": "Increase skill damage", "ko": "\uC2A4\uD0AC \uB370\uBBF8\uC9C0 \uC99D\uAC00", "ja": "\u30B9\u30AD\u30EB\u30C0\u30E1\u30FC\u30B8\u5897\u52A0", "zh": "\u589E\u52A0\u6280\u80FD\u4F24\u5BB3" },
+        "info-debuff": { "en": "Apply debuffs to enemies", "ko": "\uC801\uC5D0\uAC8C \uB514\uBC84\uD504 \uC801\uC6A9", "ja": "\u6575\u306B\u30C7\u30D0\u30D5\u3092\u4ED8\u4E0E", "zh": "\u5BF9\u654C\u4EBA\u65BD\u52A0\u51CF\u76CA" },
+        "info-electric": { "en": "Apply electric effect to enemies", "ko": "\uC801\uC5D0\uAC8C \uC804\uAE30 \uD6A8\uACFC \uC801\uC6A9", "ja": "\u6575\u306B\u96FB\u6C17\u52B9\u679C\u3092\u4ED8\u4E0E", "zh": "\u5BF9\u654C\u4EBA\u65BD\u52A0\u7535\u51FB\u6548\u679C" },
+        "info-mago": { "en": "Apply mago effect to enemies", "ko": "\uC801\uC5D0\uAC8C \uB9C8\uACE0 \uD6A8\uACFC \uC801\uC6A9", "ja": "\u6575\u306B\u30DE\u30B4\u52B9\u679C\u3092\u4ED8\u4E0E", "zh": "\u5BF9\u654C\u4EBA\u65BD\u52A0\u9A6C\u6208\u6548\u679C" },
+        "info-hide-me": { "en": "Make yourself invisible to others", "ko": "\uB2E4\uB978 \uD50C\uB808\uC774\uC5B4\uC5D0\uAC8C \uD22C\uBA85\uD654", "ja": "\u4ED6\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\u304B\u3089\u900F\u660E\u5316", "zh": "\u5BF9\u5176\u4ED6\u73A9\u5BB6\u9690\u8EAB" },
+        "info-changer": { "en": "Modify position, skill code, etc.", "ko": "\uC704\uCE58, \uC2A4\uD0AC\uCF54\uB4DC \uB4F1 \uBCC0\uACBD", "ja": "\u4F4D\u7F6E\u3001\u30B9\u30AD\u30EB\u30B3\u30FC\u30C9\u306A\u3069\u3092\u5909\u66F4", "zh": "\u4FEE\u6539\u4F4D\u7F6E\u3001\u6280\u80FD\u4EE3\u7801\u7B49" },
+        "info-resource-hack": { "en": "Obtain resources and rewards", "ko": "\uC790\uC6D0 \uBC0F \uBCF4\uC0C1 \uD68D\uB4DD", "ja": "\u30EA\u30BD\u30FC\u30B9\u3068\u5831\u916C\u3092\u53D6\u5F97", "zh": "\u83B7\u53D6\u8D44\u6E90\u548C\u5956\u52B1" },
+        "info-utilities": { "en": "Nickname, clan, item utilities", "ko": "\uB2C9\uB124\uC784, \uD074\uB79C, \uC544\uC774\uD15C \uC720\uD2F8", "ja": "\u30CB\u30C3\u30AF\u30CD\u30FC\u30E0\u3001\u30AF\u30E9\u30F3\u3001\u30A2\u30A4\u30C6\u30E0\u30E6\u30FC\u30C6\u30A3\u30EA\u30C6\u30A3", "zh": "\u6635\u79F0\u3001\u516C\u4F1A\u3001\u7269\u54C1\u5DE5\u5177" },
+        "info-cheat-settings": { "en": "Save/load cheat presets", "ko": "\uCE58\uD2B8 \uD504\uB9AC\uC14B \uC800\uC7A5/\uBD88\uB7EC\uC624\uAE30", "ja": "\u30C1\u30FC\u30C8\u30D7\u30EA\u30BB\u30C3\u30C8\u306E\u4FDD\u5B58/\u8AAD\u307F\u8FBC\u307F", "zh": "\u4FDD\u5B58/\u52A0\u8F7D\u4F5C\u5F0A\u9884\u8BBE" },
+        "preset-name": { "en": "Preset Name", "ko": "\uD504\uB9AC\uC14B \uC774\uB984", "ja": "\u30D7\u30EA\u30BB\u30C3\u30C8\u540D", "zh": "\u9884\u8BBE\u540D\u79F0" },
+        "preset-save": { "en": "Save", "ko": "\uC800\uC7A5", "ja": "\u4FDD\u5B58", "zh": "\u4FDD\u5B58" },
+        "preset-load": { "en": "Load", "ko": "\uBD88\uB7EC\uC624\uAE30", "ja": "\u8AAD\u307F\u8FBC\u307F", "zh": "\u52A0\u8F7D" },
+        "preset-delete": { "en": "Delete", "ko": "\uC0AD\uC81C", "ja": "\u524A\u9664", "zh": "\u5220\u9664" },
+        "preset-export": { "en": "Export", "ko": "\uB0B4\uBCF4\uB0B4\uAE30", "ja": "\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8", "zh": "\u5BFC\u51FA" },
+        "preset-import": { "en": "Import", "ko": "\uAC00\uC838\uC624\uAE30", "ja": "\u30A4\u30F3\u30DD\u30FC\u30C8", "zh": "\u5BFC\u5165" },
+        "cheat-reset-all": { "en": "Reset All", "ko": "\uC804\uCCB4 \uCD08\uAE30\uD654", "ja": "\u5168\u3066\u30EA\u30BB\u30C3\u30C8", "zh": "\u5168\u90E8\u91CD\u7F6E" },
+        "exp-boost": { "en": "EXP Boost", "ko": "\uACBD\uD5D8\uCE58 \uBD80\uC2A4\uD2B8", "ja": "\u7D4C\u9A13\u5024\u30D6\u30FC\u30B9\u30C8", "zh": "\u7ECF\u9A8C\u503C\u52A0\u6210" },
+        "exp-boost-multiplier": { "en": "Multiplier", "ko": "\uBC30\uC728", "ja": "\u500D\u7387", "zh": "\u500D\u7387" },
+        "info-exp-boost": { "en": "Multiply EXP gain (1-31x)", "ko": "\uACBD\uD5D8\uCE58 \uD68D\uB4DD\uB7C9 \uC99D\uAC00 (1-31\uBC30)", "ja": "\u7D4C\u9A13\u5024\u7372\u5F97\u91CF\u5897\u52A0\uFF081-31\u500D\uFF09", "zh": "\u589E\u52A0\u7ECF\u9A8C\u503C\u83B7\u53D6\u91CF\uFF081-31\u500D\uFF09" }
       };
       function lng(la, str) {
         return lan[str] ? lan[str][la] : str;
@@ -812,9 +861,21 @@
         });
         (0, dom_1.$$_)("*[data-lang]").forEach((el) => {
           if (el.tagName === "SUMMARY" && el.id) {
+            const cheatId = el.getAttribute("data-lang");
+            const infoKey = `info-${cheatId}`;
+            const infoText = lan[infoKey] ? lng(lang, infoKey) : "";
             el.innerHTML = `
                 <input type="checkbox" class="toggle" id="toggle-${el.id}">
-                <p>${lng(lang, el.getAttribute("data-lang"))}</p>
+                <p>${lng(lang, cheatId)}</p>
+                ${infoText ? `<span class="info-icon" data-tooltip="${infoText}">i</span>` : ""}
+            `;
+          } else if (el.tagName === "SUMMARY" && !el.id) {
+            const cheatId = el.getAttribute("data-lang");
+            const infoKey = `info-${cheatId}`;
+            const infoText = lan[infoKey] ? lng(lang, infoKey) : "";
+            el.innerHTML = `
+                ${lng(lang, cheatId)}
+                ${infoText ? `<span class="info-icon" data-tooltip="${infoText}">i</span>` : ""}
             `;
           } else
             el.textContent = lng(lang, el.getAttribute("data-lang"));
@@ -1001,6 +1062,9 @@
       (0, dom_1.$_)("get-daily-reward").addEventListener("click", () => {
         (0, ipc_1.send)("get-daily-reward", parseInt((0, dom_1.$i)("get-daily-reward-repeat").value) || 1);
       });
+      (0, dom_1.$_)("request-br-reward").addEventListener("click", () => {
+        (0, ipc_1.send)("request-br-reward");
+      });
       (0, dom_1.$_)("kick-player").addEventListener("click", () => {
         (0, ipc_1.send)("kick-player", parseInt((0, dom_1.$i)("kick-player-number").value) || 0);
       });
@@ -1024,6 +1088,12 @@
       });
       (0, dom_1.$_)("equip-mh9").addEventListener("click", () => {
         (0, ipc_1.send)("equip-item", parseInt((0, dom_1.$i)("equip-char-number").value) || 1, 1, 15);
+      });
+      (0, dom_1.$_)("claim-supply-1").addEventListener("click", () => {
+        (0, ipc_1.send)("claim-supply", 1, 30);
+      });
+      (0, dom_1.$_)("claim-supply-2").addEventListener("click", () => {
+        (0, ipc_1.send)("claim-supply", 2, 30);
       });
       updateExceptNumber();
       (0, dom_1.$_)("except-number").addEventListener("change", updateExceptNumber);
@@ -1049,6 +1119,8 @@
         tauriInvoke("lock_layout", { lock: (0, dom_1.$i)("lock-layout").checked });
       });
       setInterval(async () => {
+        if (!(0, dom_1.$i)("show-layout").checked)
+          return;
         try {
           const bounds2 = await tauriInvoke("resize_layout");
           if (bounds2)
@@ -1146,6 +1218,184 @@
           });
           finderOut.appendChild(wpOut);
         });
+      });
+      var presets = {};
+      var presetStore = localStorage.getItem("presets");
+      if (presetStore)
+        presets = JSON.parse(presetStore);
+      function updatePresetList() {
+        const sel2 = (0, dom_1.$_)("preset-list");
+        sel2.innerHTML = "";
+        for (const name of Object.keys(presets)) {
+          const opt = document.createElement("option");
+          opt.value = name;
+          opt.textContent = name;
+          sel2.appendChild(opt);
+        }
+      }
+      updatePresetList();
+      (0, dom_1.$_)("preset-save").addEventListener("click", () => {
+        const name = (0, dom_1.$i)("preset-name").value.trim();
+        if (!name)
+          return;
+        presets[name] = {
+          config: { ...config },
+          keybinds: { ...keybinds },
+          cheats: { ...cheats }
+        };
+        localStorage.setItem("presets", JSON.stringify(presets));
+        updatePresetList();
+        (0, dom_1.$_)("preset-list").value = name;
+      });
+      (0, dom_1.$_)("preset-load").addEventListener("click", () => {
+        const sel2 = (0, dom_1.$_)("preset-list");
+        const name = sel2.value;
+        if (!name || !presets[name])
+          return;
+        const preset = presets[name];
+        for (const key in preset.config) {
+          config[key] = preset.config[key];
+          const el = (0, dom_1.$_)(key);
+          if (!el)
+            continue;
+          if (el.tagName === "BUTTON") {
+            el.classList.toggle("selected", config[key]);
+          } else {
+            const _el = el;
+            if (_el.type === "checkbox")
+              _el.checked = config[key];
+            else
+              _el.value = config[key];
+          }
+          (0, ipc_1.send)("config", key, config[key]);
+        }
+        localStorage.setItem("config", JSON.stringify(config));
+        for (const key in preset.keybinds) {
+          keybinds[key] = preset.keybinds[key];
+          const el = (0, dom_1.$i)(`key-${key}`);
+          if (el)
+            el.value = keybinds[key];
+          (0, ipc_1.send)("keybind", key, keybinds[key]);
+        }
+        localStorage.setItem("keybinds", JSON.stringify(keybinds));
+        for (const key in preset.cheats) {
+          cheats[key] = preset.cheats[key];
+          const toggle = (0, dom_1.$i)(`toggle-${key}`);
+          if (toggle)
+            toggle.checked = cheats[key];
+          (0, ipc_1.send)("cheats", key, cheats[key]);
+        }
+      });
+      (0, dom_1.$_)("preset-delete").addEventListener("click", () => {
+        const sel2 = (0, dom_1.$_)("preset-list");
+        const name = sel2.value;
+        if (!name)
+          return;
+        delete presets[name];
+        localStorage.setItem("presets", JSON.stringify(presets));
+        updatePresetList();
+      });
+      (0, dom_1.$_)("preset-export").addEventListener("click", () => {
+        const data = JSON.stringify({ config, keybinds, cheats }, null, 2);
+        const blob = new Blob([data], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "cheat-config.json";
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+      (0, dom_1.$_)("preset-import").addEventListener("click", () => {
+        const input = document.createElement("input");
+        input.type = "file";
+        input.accept = ".json";
+        input.onchange = () => {
+          const file = input.files?.[0];
+          if (!file)
+            return;
+          const reader = new FileReader();
+          reader.onload = () => {
+            try {
+              const data = JSON.parse(reader.result);
+              if (data.config) {
+                for (const key in data.config) {
+                  config[key] = data.config[key];
+                  const el = (0, dom_1.$_)(key);
+                  if (!el)
+                    continue;
+                  if (el.tagName === "BUTTON")
+                    el.classList.toggle("selected", config[key]);
+                  else {
+                    const _el = el;
+                    if (_el.type === "checkbox")
+                      _el.checked = config[key];
+                    else
+                      _el.value = config[key];
+                  }
+                  (0, ipc_1.send)("config", key, config[key]);
+                }
+                localStorage.setItem("config", JSON.stringify(config));
+              }
+              if (data.keybinds) {
+                for (const key in data.keybinds) {
+                  keybinds[key] = data.keybinds[key];
+                  const el = (0, dom_1.$i)(`key-${key}`);
+                  if (el)
+                    el.value = keybinds[key];
+                  (0, ipc_1.send)("keybind", key, keybinds[key]);
+                }
+                localStorage.setItem("keybinds", JSON.stringify(keybinds));
+              }
+              if (data.cheats) {
+                for (const key in data.cheats) {
+                  cheats[key] = data.cheats[key];
+                  const toggle = (0, dom_1.$i)(`toggle-${key}`);
+                  if (toggle)
+                    toggle.checked = cheats[key];
+                  (0, ipc_1.send)("cheats", key, cheats[key]);
+                }
+              }
+            } catch (e) {
+              console.error("Import error:", e);
+            }
+          };
+          reader.readAsText(file);
+        };
+        input.click();
+      });
+      (0, dom_1.$_)("cheat-reset-all").addEventListener("click", () => {
+        for (const key in cheats) {
+          cheats[key] = false;
+          const toggle = (0, dom_1.$i)(`toggle-${key}`);
+          if (toggle)
+            toggle.checked = false;
+          (0, ipc_1.send)("cheats", key, false);
+        }
+        (0, dom_1.$$_)(".config").forEach((el) => {
+          if (el.tagName === "BUTTON") {
+            el.classList.remove("selected");
+            config[el.id] = false;
+          } else if (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.tagName === "SELECT") {
+            const _el = el;
+            if (_el.type === "checkbox") {
+              _el.checked = false;
+              config[_el.id] = false;
+            } else {
+              _el.value = _el.defaultValue;
+              config[_el.id] = _el.defaultValue;
+            }
+          }
+          (0, ipc_1.send)("config", el.id, config[el.id]);
+        });
+        localStorage.setItem("config", JSON.stringify(config));
+        for (const key in keybinds) {
+          keybinds[key] = "";
+          const el = (0, dom_1.$i)(`key-${key}`);
+          if (el)
+            el.value = "";
+          (0, ipc_1.send)("keybind", key, "");
+        }
+        localStorage.setItem("keybinds", JSON.stringify(keybinds));
       });
       async function initConnection() {
         try {

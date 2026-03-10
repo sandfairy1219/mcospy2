@@ -97,6 +97,7 @@ export const startFrida = async (id: string, filename: string, onCrashed: () => 
         return false;
     }
     try {
+        try { await adb.shell(id, `su -c "killall frida-server"`); } catch {}
         const server = adb.shell(id, `su -c /data/local/tmp/${filename}`);
         server.then(onCrashed);
         return true;

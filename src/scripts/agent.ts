@@ -136,6 +136,7 @@ let elec: any = null;
 let mago: any = null;
 
 const log = (...args:any[]) => send(['log', ...args]);
+const silentCallSentinel = '__pixel_silent__';
 
 let found: boolean = false;
 const loadModule = setInterval(() => {
@@ -539,10 +540,7 @@ function init(){
                             break;
                         }
                         case 'no-spread':{
-                            const _addr1 = Module.getExportByName('libMyGame.so', xaOffset['no-spread1'].name).add(xaOffset['no-spread1'].offset);
-                            forceWriteS32(_addr1, args[1] ? 505942016 : -1119869952);
-                            const _addr2 = Module.getExportByName('libMyGame.so', xaOffset['no-spread2'].name).add(xaOffset['no-spread2'].offset);
-                            forceWriteS32(_addr2, args[1] ? 505942016 : -1119870976);
+                            applyNoSpread(args[1]);
                             break;
                         }
                         case 'no-reload':{
@@ -572,9 +570,44 @@ function init(){
                             forceWriteS32(_addr, args[1] ? 505925632 : 506335232);
                             break;
                         }
+                        case 'exp-boost':{
+                            try{
+                                const _name = xaOffset['exp-bonus'].name;
+                                const _off = xaOffset['exp-bonus'].offset;
+                                send(['log', `exp-boost: looking up ${_name} +0x${_off.toString(16)}`]);
+                                const _base = Module.getExportByName('libMyGame.so', _name);
+                                send(['log', `exp-boost: base=${_base}`]);
+                                const _addr = _base.add(_off);
+                                const before = _addr.readS32();
+                                send(['log', `exp-boost: addr=${_addr} current=0x${(before>>>0).toString(16)}`]);
+                                if(args[1]){
+                                    const mult = Math.min(31, Math.max(1, +(config['exp-boost-multiplier'] || 30)));
+                                    const encoded = encodeExpBoost(mult);
+                                    send(['log', `exp-boost: patching mult=${mult} encoded=0x${(encoded>>>0).toString(16)}`]);
+                                    forceWriteS32(_addr, encoded);
+                                    send(['log', `exp-boost: after=0x${(_addr.readS32()>>>0).toString(16)}`]);
+                                } else {
+                                    forceWriteS32(_addr, 506335240); // fmov s8, #1.0 (original)
+                                    send(['log', `exp-boost: restored to original`]);
+                                }
+                            }catch(e){
+                                send(['log', `exp-boost ERROR: ${e}`]);
+                            }
+                            break;
+                        }
                     }
                 } else if(name === 'config'){
                     config[args[0]] = args[1];
+                    if(_libMyGame && args[0] === 'exp-boost-multiplier' && cheats['exp-boost']){
+                        try{
+                            const _addr = Module.getExportByName('libMyGame.so', xaOffset['exp-bonus'].name).add(xaOffset['exp-bonus'].offset);
+                            const mult = Math.min(31, Math.max(1, +(args[1] || 30)));
+                            forceWriteS32(_addr, encodeExpBoost(mult));
+                        }catch(e){}
+                    }
+                    if(_libMyGame && ['no-spread-moving','no-spread-shooting','no-spread-idle','no-spread-jump'].includes(args[0])){
+                        applyNoSpreadSub(args[0]);
+                    }
                 } else if(name === 'keybind'){
                     keybinds[args[0]] = args[1];
                 } else if(name === 'keyevent'){
@@ -582,7 +615,6 @@ function init(){
                     const action = args[1];
                     if(action === 'DOWN') keymap[key] = true;
                     else if(action === 'UP') delete keymap[key];
-                    log("[KEYEVENT]", key, action, JSON.stringify(keymap));
                     if(key === keybinds['reverse'] && action === 'DOWN') reverse();
                     // if(key === keybinds['scan-epos'] && action === 'DOWN') {
                     //     epos = scanEpos();
@@ -744,7 +776,9 @@ function init(){
                 } else if(name === "unhook"){
                     cmdUnhookAll();
                 } else if(name === "call"){
-                    cmdCallF(args[0], ...args.slice(1));
+                    const silentLog = args[1] === silentCallSentinel;
+                    const callArgs = silentLog ? args.slice(2) : args.slice(1);
+                    cmdCallF(args[0], { silentLog }, ...callArgs);
                 } else if(name === "read"){
                     cmdReadF(args[0], args[1]);
                 } else if(name === "write"){
@@ -846,7 +880,8 @@ function loop(){
                         const y = entity.add(eposOffset['y']).readFloat();
                         const z = entity.add(eposOffset['z']).readFloat();
                         const number = entity.add(eposOffset['number']).readS32();
-                        const nickname = entity.add(eposOffset['nickname']).readUtf8String();
+                        let nickname = '';
+                        try { nickname = entity.add(eposOffset['nickname']).readUtf8String() || ''; } catch (_) { nickname = entity.add(eposOffset['nickname']).readCString() || ''; }
                         const hp = entity.add(eposOffset["hp"]).readS16();
                         const barrier = entity.add(eposOffset["barrier"]).readS16();
                         const health = {
@@ -1193,7 +1228,7 @@ function scanEntityList(_eposPointer:NativePointer):Set<NativePointer>{
     }
     try{
         log("Entity Found:", _entityList.size, '\n',
-            [..._entityList].map(entity => `${entity.toString()} [${entity.add(eposOffset['number']).readS32()}] ${entity.add(eposOffset['nickname']).readUtf8String()}`).join('\n')
+            [..._entityList].map(entity => { let n = ''; try { n = entity.add(eposOffset['nickname']).readUtf8String() || ''; } catch(_) { n = entity.add(eposOffset['nickname']).readCString() || ''; } return `${entity.toString()} [${entity.add(eposOffset['number']).readS32()}] ${n}`; }).join('\n')
         );
     } catch(e){
         send(['entity-state', 'error', 'Error logging']);
@@ -1989,6 +2024,55 @@ function withWritable<T>(_ptr: NativePointer, fn: () => T): T {
         Memory.protect(base, size, originalProt);
     }
 }
+// Encode ARM64 fmov s8, #imm for exp boost
+// float = (1 + efgh/16) * 2^(bcd-3), imm8 = 0_bcd_efgh
+function encodeExpBoost(multiplier:number):number {
+    const base = 506335240; // fmov s8, #1.0 = 0x1E2E1008
+    // Find best fmov encoding for the multiplier
+    let bestImm8 = 0x70; // default 1.0
+    let bestDiff = Infinity;
+    for(let imm8 = 0; imm8 < 128; imm8++){
+        const bcd = (imm8 >> 4) & 7;
+        const efgh = imm8 & 0xF;
+        const val = (1.0 + efgh/16.0) * Math.pow(2, bcd - 3);
+        const diff = Math.abs(val - multiplier);
+        if(diff < bestDiff){ bestDiff = diff; bestImm8 = imm8; }
+    }
+    const mask = ~(0xFF << 13) >>> 0;
+    return ((base & mask) | (bestImm8 << 13)) | 0;
+}
+const noSpreadPatches:{key:string, addr:string, orig:number, configKey:string}[] = [
+    {key:'no-spread1', addr:'', orig:-1119869952, configKey:'no-spread-moving'},
+    {key:'no-spread-move-zoom', addr:'', orig:-1119865184, configKey:'no-spread-moving'},
+    {key:'no-spread2', addr:'', orig:-1119870976, configKey:'no-spread-shooting'},
+    {key:'no-spread-shoot-zoom', addr:'', orig:-1119866208, configKey:'no-spread-shooting'},
+    {key:'no-spread-idle', addr:'', orig:-1119871328, configKey:'no-spread-idle'},
+    {key:'no-spread-idle-zoom', addr:'', orig:-1119867232, configKey:'no-spread-idle'},
+    {key:'no-spread-jump', addr:'', orig:-1119868256, configKey:'no-spread-jump'},
+    {key:'no-spread-jump-zoom', addr:'', orig:-1119864160, configKey:'no-spread-jump'},
+];
+function applyNoSpread(enabled:boolean){
+    const PATCHED = 505942016; // fmov s0, wzr
+    for(const p of noSpreadPatches){
+        try{
+            const addr = Module.getExportByName('libMyGame.so', xaOffset[p.key].name).add(xaOffset[p.key].offset);
+            const subEnabled = config[p.configKey] !== false; // default true
+            forceWriteS32(addr, enabled && subEnabled ? PATCHED : p.orig);
+        }catch(e){}
+    }
+}
+function applyNoSpreadSub(configKey:string){
+    if(!cheats['no-spread']) return;
+    const PATCHED = 505942016;
+    for(const p of noSpreadPatches){
+        if(p.configKey !== configKey) continue;
+        try{
+            const addr = Module.getExportByName('libMyGame.so', xaOffset[p.key].name).add(xaOffset[p.key].offset);
+            const subEnabled = config[configKey] !== false;
+            forceWriteS32(addr, subEnabled ? PATCHED : p.orig);
+        }catch(e){}
+    }
+}
 function forceWriteS32(_ptr:NativePointer, value:number){
     // Write 32-bit signed integer with safe protection handling
     withWritable(_ptr, () => { _ptr.writeS32(value); });
@@ -2259,7 +2343,7 @@ function argMap(arg:string): string {
         default: return "pointer";
     }
 }
-function cmdCallF(str:string, ...args:any[]):any{
+function cmdCallF(str:string, options: { silentLog?: boolean } = {}, ...args:any[]):any{
     try {
         const demangled = demangle(str);
         const f = new NativeFunction(
@@ -2290,11 +2374,11 @@ function cmdCallF(str:string, ...args:any[]):any{
             }
         }).filter(arg => arg !== null);
         const ret = (f as any)(...args);
-        log(ret);
+        if(!options.silentLog) log(ret);
         return ret;
     } catch (error) {
         console.error(error);
-        log(error);
+        if(!options.silentLog) log(error);
     }
 }
 function cmdArg(arg: string, args: NativePointer): string {

@@ -2,6 +2,8 @@ export class Commander {
     aliasMap: Map<string, string> = new Map();
     hookMap: Set<string> = new Set();
     script: any = null;
+    private readonly silentCallFlags = new Set(["--silent", "-s", "--no-log"]);
+    private readonly silentCallSentinel = "__pixel_silent__";
 
     // Add index signature to allow string-based method access
     [key: string]: any;
@@ -79,11 +81,15 @@ export class Commander {
     call(tar: string, ...args: string[]): string {
         if(!this.script) return "script not initialized";
         if(!tar) return "need at least one argument";
-        if(!args.length) return "need at least one argument";
         tar = this.aliasMap.get(tar) || tar;
-        args = args.map(arg => this.aliasMap.get(arg) || arg);
-        this.script.post(["call", tar, ...args]);
-        return `called ${tar} -> ${args.join(" ")}`;
+        const silent = args.some(arg => this.silentCallFlags.has(arg));
+        const callArgs = args
+            .filter(arg => !this.silentCallFlags.has(arg))
+            .map(arg => this.aliasMap.get(arg) || arg);
+        const payload = silent ? ["call", tar, this.silentCallSentinel, ...callArgs] : ["call", tar, ...callArgs];
+        this.script.post(payload);
+        const suffix = silent ? " (silent log)" : "";
+        return `called ${tar} -> ${callArgs.join(" ")}${suffix}`;
     }
 
     read(tar: string, type: string = "uint32"): string {

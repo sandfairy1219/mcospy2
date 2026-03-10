@@ -4,8 +4,27 @@ use tauri::{Manager, State};
 
 struct WsPort(Mutex<u16>);
 
-// Keep sidecar alive by storing its handle in managed state
-struct SidecarHandle(Mutex<Option<Box<dyn std::any::Any + Send>>>);
+// Sidecar process wrapper that supports both dev (std::process::Child) and
+// production (tauri-plugin-shell CommandChild) modes.
+enum SidecarProcess {
+    Std(std::process::Child),
+    Tauri(tauri_plugin_shell::process::CommandChild),
+}
+
+impl SidecarProcess {
+    fn kill(self) {
+        match self {
+            SidecarProcess::Std(mut child) => {
+                let _ = child.kill();
+            }
+            SidecarProcess::Tauri(child) => {
+                let _ = child.kill();
+            }
+        }
+    }
+}
+
+struct SidecarHandle(Mutex<Option<SidecarProcess>>);
 
 #[derive(Serialize, Deserialize)]
 struct LayoutBounds {
@@ -120,7 +139,7 @@ pub fn run() {
                         println!("Bridge started on port {}", port_str);
                         let state = app.state::<SidecarHandle>();
                         let mut guard = state.0.lock().unwrap();
-                        *guard = Some(Box::new(child));
+                        *guard = Some(SidecarProcess::Std(child));
                     }
                     Err(e) => {
                         eprintln!(
@@ -133,6 +152,7 @@ pub fn run() {
                         let agent_path = agent_path.clone();
                         tauri::async_runtime::spawn(async move {
                             use tauri_plugin_shell::ShellExt;
+                            use tauri_plugin_shell::process::CommandEvent;
                             match handle.shell().sidecar("bridge") {
                                 Ok(cmd) => {
                                     let mut args = vec!["--ws-port".to_string(), port_str.clone()];
@@ -145,8 +165,25 @@ pub fn run() {
                                         args.push(path);
                                     }
                                     match cmd.args(args).spawn() {
-                                        Ok((_rx, _child)) => {
-                                            println!("Sidecar started on port {}", port_str)
+                                        Ok((mut rx, child)) => {
+                                            println!("Sidecar started on port {}", port_str);
+                                            tauri::async_runtime::spawn(async move {
+                                                while let Some(event) = rx.recv().await {
+                                                    match event {
+                                                        CommandEvent::Stdout(line) => {
+                                                            print!("{}", String::from_utf8_lossy(&line));
+                                                        }
+                                                        CommandEvent::Stderr(line) => {
+                                                            eprint!("{}", String::from_utf8_lossy(&line));
+                                                        }
+                                                        CommandEvent::Terminated(_) => break,
+                                                        _ => {}
+                                                    }
+                                                }
+                                            });
+                                            let state = handle.state::<SidecarHandle>();
+                                            let mut guard = state.0.lock().unwrap();
+                                            *guard = Some(SidecarProcess::Tauri(child));
                                         }
                                         Err(err) => eprintln!("Failed to spawn sidecar: {}", err),
                                     }
@@ -163,6 +200,7 @@ pub fn run() {
                 let agent_path = agent_path.clone();
                 tauri::async_runtime::spawn(async move {
                     use tauri_plugin_shell::ShellExt;
+                    use tauri_plugin_shell::process::CommandEvent;
                     match handle.shell().sidecar("bridge") {
                         Ok(cmd) => {
                             let mut args = vec!["--ws-port".to_string(), port_str.clone()];
@@ -176,13 +214,32 @@ pub fn run() {
                             }
                             println!("Spawning sidecar with args: {:?}", args);
                             match cmd.args(args).spawn() {
-                                Ok((rx, child)) => {
+                                Ok((mut rx, child)) => {
                                     println!("Sidecar started on port {}", port_str);
-                                    // Store child handle in managed state to keep sidecar alive
+                                    // IMPORTANT: consume stdout/stderr to prevent pipe buffer
+                                    // from filling up and blocking the sidecar process
+                                    tauri::async_runtime::spawn(async move {
+                                        while let Some(event) = rx.recv().await {
+                                            match event {
+                                                CommandEvent::Stdout(line) => {
+                                                    print!("{}", String::from_utf8_lossy(&line));
+                                                }
+                                                CommandEvent::Stderr(line) => {
+                                                    eprint!("{}", String::from_utf8_lossy(&line));
+                                                }
+                                                CommandEvent::Terminated(payload) => {
+                                                    eprintln!("Sidecar terminated: {:?}", payload);
+                                                    break;
+                                                }
+                                                _ => {}
+                                            }
+                                        }
+                                    });
+                                    // Store child handle for cleanup on exit
                                     {
                                         let state = handle.state::<SidecarHandle>();
                                         let mut guard = state.0.lock().unwrap();
-                                        *guard = Some(Box::new((rx, child)));
+                                        *guard = Some(SidecarProcess::Tauri(child));
                                     }
                                 }
                                 Err(e) => eprintln!("Failed to spawn sidecar: {}", e),
@@ -208,10 +265,8 @@ pub fn run() {
                     // Kill bridge process before exiting
                     let state = window.app_handle().state::<SidecarHandle>();
                     if let Ok(mut guard) = state.0.lock() {
-                        if let Some(handle) = guard.take() {
-                            if let Ok(mut child) = handle.downcast::<std::process::Child>() {
-                                let _ = child.kill();
-                            }
+                        if let Some(process) = guard.take() {
+                            process.kill();
                         }
                     }
                     // When main window is closed, exit the entire app

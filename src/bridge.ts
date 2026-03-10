@@ -16,7 +16,7 @@ import path from "path";
 import { WebSocketServer, WebSocket } from "ws";
 
 import type * as Frida from "frida";
-import { existsSync, readFileSync } from "fs";
+import { existsSync, readFileSync, copyFileSync } from "fs";
 import { adb, attachProcess, checkFridaPerm, connectFrida, connectAdbDevice, executeProcess, fileExist, fileName, getArch, getUrl, startFrida } from "./data/frida";
 import { exec } from "child_process";
 import { createServer as createPixelServer } from "./core/server";
@@ -99,6 +99,43 @@ function getAgentScript(): string {
     return _agentScript;
 }
 
+// Lazy-load mute-logging script (prepended to agent when "mute-logging" config is on)
+let _muteLoggingScript: string | null = null;
+function getMuteLoggingScript(): string {
+    if (_muteLoggingScript !== null) return _muteLoggingScript;
+
+    const candidates = [
+        path.join(__dirname, 'scripts', 'mute-logging.js'),
+        path.join(__dirname, './../public/scripts/', 'mute-logging.js'),
+        path.join(__dirname, './../../public/scripts/', 'mute-logging.js'),
+        path.join(process.cwd(), 'public/scripts/', 'mute-logging.js'),
+        path.join(path.dirname(process.execPath), 'resources', 'mute-logging.js'),
+        path.join(path.dirname(process.execPath), 'resources', 'scripts', 'mute-logging.js'),
+        path.join(path.dirname(process.execPath), 'resources', 'public', 'scripts', 'mute-logging.js'),
+        path.join(path.dirname(process.execPath), 'scripts', 'mute-logging.js'),
+        path.join(path.dirname(process.execPath), '..', 'resources', 'mute-logging.js'),
+        path.join(path.dirname(process.execPath), '..', 'resources', 'public', 'scripts', 'mute-logging.js'),
+    ].filter((p): p is string => Boolean(p));
+
+    const found = candidates.find(p => existsSync(p));
+    if (!found) {
+        console.warn("mute-logging.js not found; muting disabled");
+        _muteLoggingScript = "";
+        return _muteLoggingScript;
+    }
+
+    const raw = readFileSync(found, 'utf8').toString();
+    const cutIdx1 = raw.indexOf('"cut";');
+    const cutIdx2 = cutIdx1 < 0 ? raw.indexOf("'cut';") : cutIdx1;
+    const marker = cutIdx1 < 0 ? "'cut';" : '"cut";';
+    if (cutIdx2 >= 0) {
+        _muteLoggingScript = raw.slice(cutIdx2 + marker.length);
+    } else {
+        _muteLoggingScript = raw;
+    }
+    return _muteLoggingScript;
+}
+
 // Load env
 const envCandidates = [
     path.resolve(__dirname, '..', '..', '.env'),
@@ -130,6 +167,10 @@ try {
 const emitter = new EventEmitter();
 let keyboardListenerEnabled = false;
 const isWindows = process.platform === "win32";
+const isPkg = typeof (process as any).pkg !== 'undefined';
+
+// Resolve WinKeyServer.exe path - in pkg mode, the snapshot path is virtual
+// so we need to copy it to the real filesystem
 const keyListenerBin = path.join(
     path.dirname(require.resolve("node-global-key-listener")),
     "..",
@@ -137,13 +178,32 @@ const keyListenerBin = path.join(
     "WinKeyServer.exe"
 );
 
-if (isWindows && !existsSync(keyListenerBin)) {
-    console.warn("Global keyboard listener disabled: missing WinKeyServer.exe", keyListenerBin);
+let resolvedKeyListenerBin = keyListenerBin;
+if (isPkg && isWindows && existsSync(keyListenerBin)) {
+    // Copy from pkg snapshot to real filesystem next to the executable
+    const realBin = path.join(path.dirname(process.execPath), 'WinKeyServer.exe');
+    try {
+        if (!existsSync(realBin)) {
+            copyFileSync(keyListenerBin, realBin);
+        }
+        resolvedKeyListenerBin = realBin;
+    } catch (e) {
+        console.warn("Failed to extract WinKeyServer.exe:", e);
+    }
+}
+
+if (isWindows && !existsSync(resolvedKeyListenerBin)) {
+    console.warn("Global keyboard listener disabled: missing WinKeyServer.exe", resolvedKeyListenerBin);
 } else {
     try {
-        const listener = new GlobalKeyboardListener();
+        const listener = new GlobalKeyboardListener(
+            isPkg && isWindows ? { windows: { serverPath: resolvedKeyListenerBin } } : {}
+        );
         listener.addListener((event, down) => {
             emitter.emit("gk", event, down);
+        }).catch((err: Error) => {
+            keyboardListenerEnabled = false;
+            console.warn("Global keyboard listener failed to start:", err.message);
         });
         keyboardListenerEnabled = true;
     } catch (err) {
@@ -426,9 +486,10 @@ async function main() {
                         state("session", "active", "Xigncode Bypassed");
                         try {
                         const agentSrc = getAgentScript();
-                        debugLog(`Agent script loaded (${agentSrc.length} chars), attaching to pid ${bpPid}`);
+                        const mutePrefix = config["mute-logging"] ? getMuteLoggingScript() : "";
+                        debugLog(`Agent script loaded (${agentSrc.length} chars), mute=${!!mutePrefix}, attaching to pid ${bpPid}`);
                         const [dispose, script] = await attachProcess(bpPid, fridaDevice,
-                            agentSrc
+                            mutePrefix + agentSrc
                                 .replace("/*xaOffset*/", JSON.stringify(_xaOffset))
                                 .replace("/*anOffset*/", JSON.stringify(_anOffset))
                                 .replace("/*eposOffset*/", JSON.stringify(_eposOffset))
@@ -509,10 +570,12 @@ async function main() {
                                 messageRouter.on("unlock-all-item", (charid: number) => script.post(['unlock-all-item', charid]));
                                 messageRouter.on("unlock-all-char", () => script.post(['unlock-all-char']));
                                 messageRouter.on("get-daily-reward", (repeat: number) => script.post(['get-daily-reward', repeat]));
+                                messageRouter.on("request-br-reward", () => script.post(['request-br-reward']));
                                 messageRouter.on("kick-player", (number: number) => script.post(['kick-player', number]));
                                 messageRouter.on("change-nickname", (name: string) => script.post(['change-nickname', name]));
                                 messageRouter.on("purchase-pass", (num: number, item: number) => script.post(['purchase-pass', num, item]));
                                 messageRouter.on("server-exploit", () => script.post(['server-exploit']));
+                                messageRouter.on("claim-supply", (passType: number, count: number) => script.post(['claim-supply', passType, count]));
                                 messageRouter.on("create-clan", (name: string) => script.post(['create-clan', name]));
                                 messageRouter.on("break-clan", () => script.post(['break-clan']));
                                 messageRouter.on("buy-clan-gold", (amount: number) => script.post(['buy-clan-gold', amount]));
@@ -572,10 +635,12 @@ async function main() {
                                 messageRouter.removeAllListeners("unlock-sl-medal");
                                 messageRouter.removeAllListeners("unlock-all-item");
                                 messageRouter.removeAllListeners("get-daily-reward");
+                                messageRouter.removeAllListeners("request-br-reward");
                                 messageRouter.removeAllListeners("kick-player");
                                 messageRouter.removeAllListeners("change-nickname");
                                 messageRouter.removeAllListeners("purchase-pass");
                                 messageRouter.removeAllListeners("server-exploit");
+                                messageRouter.removeAllListeners("claim-supply");
                                 messageRouter.removeAllListeners("create-clan");
                                 messageRouter.removeAllListeners("break-clan");
                                 messageRouter.removeAllListeners("buy-clan-gold");

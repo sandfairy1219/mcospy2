@@ -10,7 +10,7 @@
     "prepare:frida-binding": "node scripts/prepare-frida-binding.cjs",
     "prepare:agent-resource": "node scripts/prepare-agent-resource.cjs",
     "build": "tsc && npx tailwindcss -i ./public/global.css -o ./public/output.css --minify && tsc --project tsconfig.scripts.json && npx esbuild dist/main.js --bundle --outfile=public/renderer.js --platform=browser --format=iife && npx esbuild dist/layout.js --bundle --outfile=public/layout.bundle.js --platform=browser --format=iife",
-    "build:sidecar": "npm run prepare:frida-binding && npm run prepare:agent-resource && node -e \"require('fs').mkdirSync('dist/scripts',{recursive:true});require('fs').copyFileSync('public/scripts/agent.js','dist/scripts/agent.js')\" && npx pkg dist/bridge.js -t node18-win-x64 -o src-tauri/binaries/bridge-x86_64-pc-windows-msvc.exe",
+    "build:sidecar": "npm run prepare:frida-binding && npm run prepare:agent-resource && node -e \"require('fs').mkdirSync('dist/scripts',{recursive:true});require('fs').copyFileSync('public/scripts/agent.js','dist/scripts/agent.js');require('fs').copyFileSync('public/scripts/mute-logging.js','dist/scripts/mute-logging.js')\" && npx pkg dist/bridge.js -t node18-win-x64 -o src-tauri/binaries/bridge-x86_64-pc-windows-msvc.exe",
     "dist": "npm run build && npm run build:sidecar && npx tauri build",
     "clean:win": "rd /s /q dist && rd /s /q build && del public/output.css /q",
     "clean:linux": "rm -rf dist build public/output.css",
@@ -54,7 +54,9 @@
   "pkg": {
     "assets": [
       "public/scripts/agent.js",
-      "dist/scripts/agent.js"
+      "dist/scripts/agent.js",
+      "public/scripts/mute-logging.js",
+      "dist/scripts/mute-logging.js"
     ]
   },
   "repository": {
