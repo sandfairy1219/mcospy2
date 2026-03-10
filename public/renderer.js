@@ -654,6 +654,10 @@
         "unlock-all-char": { "en": "Unlock All Character", "ko": "\uBAA8\uB4E0 \uCE90\uB9AD \uD574\uAE08", "ja": "\u3059\u3079\u3066\u306E\u30AD\u30E3\u30E9\u30AF\u30BF\u30FC\u30ED\u30C3\u30AF\u89E3\u9664", "zh": "\u89E3\u9501\u6240\u6709\u89D2\u8272" },
         "buy-clan-gold": { "en": "Buy Clan Gold", "ko": "\uD074\uCF54 \uAD6C\uB9E4", "ja": "\u30AF\u30E9\u30F3\u30B4\u30FC\u30EB\u30C9\u8CFC\u5165", "zh": "\u8D2D\u4E70\u516C\u4F1A\u91D1\u5E01" },
         "get-daily-reward": { "en": "Get Daily", "ko": "\uC77C\uC77C \uBCF4\uC0C1 \uD68D\uB4DD", "ja": "\u65E5\u65E5\u5831\u916C\u7372\u5F97", "zh": "\u83B7\u53D6\u6BCF\u65E5\u5956\u52B1" },
+        "get-guide-reward": { "en": "Guide Reward", "ko": "\uAC00\uC774\uB4DC \uBCF4\uC0C1", "ja": "\u30AC\u30A4\u30C9\u5831\u916C", "zh": "\u6307\u5357\u5956\u52B1" },
+        "ads-reward": { "en": "AD Reward", "ko": "\uAD11\uACE0 \uBCF4\uC0C1", "ja": "\u5E83\u544A\u5831\u916C", "zh": "\u5E7F\u544A\u5956\u52B1" },
+        "ads-shop-dia": { "en": "AD Dia", "ko": "\uAD11\uACE0 \uB2E4\uC774\uC544", "ja": "\u5E83\u544A\u30C0\u30A4\u30E4", "zh": "\u5E7F\u544A\u94BB\u77F3" },
+        "ads-shop-gold": { "en": "AD Gold", "ko": "\uAD11\uACE0 \uACE8\uB4DC", "ja": "\u5E83\u544A\u30B4\u30FC\u30EB\u30C9", "zh": "\u5E7F\u544A\u91D1\u5E01" },
         "request-br-reward": { "en": "BR Reward", "ko": "\uBC30\uD2C0\uB85C\uC584 \uBCF4\uC0C1", "ja": "\u30D0\u30C8\u30EB\u30ED\u30A4\u30E4\u30EB\u5831\u916C", "zh": "\u5927\u9003\u6740\u5956\u52B1" },
         "buy-item": { "en": "Buy", "ko": "\uAD6C\uB9E4", "ja": "\u8CFC\u5165", "zh": "\u8D2D\u4E70" },
         "repeat-count": { "en": "Repeat Count", "ko": "\uBC18\uBCF5 \uD69F\uC218", "ja": "\u7E70\u308A\u8FD4\u3057\u56DE\u6570", "zh": "\u91CD\u590D\u6B21\u6570" },
@@ -686,8 +690,6 @@
         "execute": { "en": "Execute", "ko": "\uC2E4\uD589", "ja": "\u5B9F\u884C", "zh": "\u6267\u884C" },
         "general": { "en": "General", "ko": "\uC77C\uBC18", "ja": "\u4E00\u822C", "zh": "\u4E00\u822C" },
         "frame": { "en": "Frame", "ko": "\uD504\uB808\uC784", "ja": "\u30D5\u30EC\u30FC\u30E0", "zh": "\u5E27" },
-        "stress-test": { "en": "Stress Test", "ko": "\uC2A4\uD2B8\uB808\uC2A4 \uD14C\uC2A4\uD2B8", "ja": "\u30B9\u30C8\u30EC\u30B9\u30C6\u30B9\u30C8", "zh": "\u538B\u529B\u6D4B\u8BD5" },
-        "mute-logging": { "en": "Mute Logging / Analytics", "ko": "\uB85C\uAE45/\uBD84\uC11D \uBB34\uB825\uD654", "ja": "\u30ED\u30B0/\u5206\u6790\u7121\u52B9\u5316", "zh": "\u7981\u7528\u65E5\u5FD7/\u5206\u6790" },
         "mobile-controller": { "en": "Mobile Controller", "ko": "\uBAA8\uBC14\uC77C \uCEE8\uD2B8\uB864\uB7EC", "ja": "\u30E2\u30D0\u30A4\u30EB\u30B3\u30F3\u30C8\u30ED\u30FC\u30E9", "zh": "\u79FB\u52A8\u63A7\u5236\u5668" },
         "utility": { "en": "Utility", "ko": "\uC720\uD2F8\uB9AC\uD2F0", "ja": "\u30E6\u30FC\u30C6\u30A3\u30EA\u30C6\u30A3", "zh": "\u6548\u7528" },
         "replay": { "en": "Replay", "ko": "\uB9AC\uD50C\uB808\uC774", "ja": "\u30EA\u30D7\u30EC\u30A4", "zh": "\u91CD\u64AD" },
@@ -1061,6 +1063,18 @@
       sel.addEventListener("change", blurCurrent);
       (0, dom_1.$_)("get-daily-reward").addEventListener("click", () => {
         (0, ipc_1.send)("get-daily-reward", parseInt((0, dom_1.$i)("get-daily-reward-repeat").value) || 1);
+      });
+      (0, dom_1.$_)("get-guide-reward").addEventListener("click", () => {
+        (0, ipc_1.send)("get-guide-reward");
+      });
+      (0, dom_1.$_)("ads-reward").addEventListener("click", () => {
+        (0, ipc_1.send)("ads-reward");
+      });
+      (0, dom_1.$_)("ads-shop-dia").addEventListener("click", () => {
+        (0, ipc_1.send)("ads-shop-dia");
+      });
+      (0, dom_1.$_)("ads-shop-gold").addEventListener("click", () => {
+        (0, ipc_1.send)("ads-shop-gold");
       });
       (0, dom_1.$_)("request-br-reward").addEventListener("click", () => {
         (0, ipc_1.send)("request-br-reward");

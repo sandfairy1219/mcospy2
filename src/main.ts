@@ -31,10 +31,22 @@ const keymap:{[key:string]:IGlobalKey} = {
 
 const lan:{[key:string]:{[key:string]:string}} = {
     'checking-for-updates':{
-        'en':'Checking for updates',
-        'ko':'업데이트 확인 중',
-        'ja':'更新を確認中',
-        'zh':'检查更新中',
+        'en':'Checking for updates...',
+        'ko':'업데이트 확인 중...',
+        'ja':'更新を確認中...',
+        'zh':'检查更新中...',
+    },
+    'updating-to':{
+        'en':'Updating to',
+        'ko':'업데이트 중',
+        'ja':'更新中',
+        'zh':'更新到',
+    },
+    'update-failed':{
+        'en':'Update check failed',
+        'ko':'업데이트 확인 실패',
+        'ja':'更新確認に失敗しました',
+        'zh':'检查更新失败',
     },
     'key':{
         'en':'Key',
@@ -388,6 +400,10 @@ const lan:{[key:string]:{[key:string]:string}} = {
     'unlock-all-char': { 'en':'Unlock All Character', 'ko':'모든 캐릭 해금', 'ja':'すべてのキャラクターロック解除', 'zh':'解锁所有角色', },
     'buy-clan-gold': { 'en':'Buy Clan Gold', 'ko':'클코 구매', 'ja':'クランゴールド購入', 'zh':'购买公会金币', },
     'get-daily-reward': { 'en':'Get Daily', 'ko':'일일 보상 획득', 'ja':'日日報酬獲得', 'zh':'获取每日奖励', },
+    'get-guide-reward': { 'en':'Guide Reward', 'ko':'가이드 보상', 'ja':'ガイド報酬', 'zh':'指南奖励', },
+    'ads-reward': { 'en':'AD Reward', 'ko':'광고 보상', 'ja':'広告報酬', 'zh':'广告奖励', },
+    'ads-shop-dia': { 'en':'AD Dia', 'ko':'광고 다이아', 'ja':'広告ダイヤ', 'zh':'广告钻石', },
+    'ads-shop-gold': { 'en':'AD Gold', 'ko':'광고 골드', 'ja':'広告ゴールド', 'zh':'广告金币', },
     'request-br-reward': { 'en':'BR Reward', 'ko':'배틀로얄 보상', 'ja':'バトルロイヤル報酬', 'zh':'大逃杀奖励', },
     'buy-item': { 'en':'Buy', 'ko':'구매', 'ja':'購入', 'zh':'购买', },
     'repeat-count': { 'en':'Repeat Count', 'ko':'반복 횟수', 'ja':'繰り返し回数', 'zh':'重复次数', },
@@ -673,12 +689,43 @@ $$_('.config').forEach((el:HTMLElement) => {
 const bounds = localStorage.getItem('layout');
 send('init', keybinds, config, wpdata, bounds ? JSON.parse(bounds) : null);
 
-// No login required - show app directly with all features unlocked
-$_('login').classList.add('hide');
-$_('app').classList.remove('hide');
-$_('selector-dev-mode').classList.remove('hide');
-$_('selector-console').classList.remove('hide');
-$_('selector-finder').classList.remove('hide');
+// Auto-update check
+function showApp() {
+    $_('login').classList.add('hide');
+    $_('app').classList.remove('hide');
+    $_('selector-dev-mode').classList.remove('hide');
+    $_('selector-console').classList.remove('hide');
+    $_('selector-finder').classList.remove('hide');
+}
+(async () => {
+    try {
+        const { check } = await import('@tauri-apps/plugin-updater');
+        const update = await check();
+        if (update) {
+            $_('updp').textContent = `${lan['updating-to'][lang]} v${update.version}...`;
+            $_('updbar').classList.remove('hide');
+            let total = 0, downloaded = 0;
+            await update.downloadAndInstall((event) => {
+                if (event.event === 'Started') {
+                    total = event.data.contentLength || 0;
+                } else if (event.event === 'Progress') {
+                    downloaded += event.data.chunkLength;
+                    if (total > 0) {
+                        ($_('updprg') as HTMLElement).style.width = `${Math.round((downloaded / total) * 100)}%`;
+                    }
+                } else if (event.event === 'Finished') {
+                    ($_('updprg') as HTMLElement).style.width = '100%';
+                }
+            });
+            const { relaunch } = await import('@tauri-apps/plugin-process');
+            await relaunch();
+            return;
+        }
+    } catch (e) {
+        console.warn('Update check failed:', e);
+    }
+    showApp();
+})();
 
 listen('update-state', (id:string, _state:string, log:string) => {
     const el = $_(`state-${id}`);
@@ -794,6 +841,10 @@ sel.addEventListener('change', blurCurrent);
 // $_('unlock-all-item').addEventListener('click', () => {send('unlock-all-item', parseInt($i('unlock-all-item-char-id').value) || 0);});
 // $_('unlock-all-char').addEventListener('click', () => {send('unlock-all-char');});
 $_('get-daily-reward').addEventListener('click', () => {send('get-daily-reward', parseInt($i('get-daily-reward-repeat').value) || 1);});
+$_('get-guide-reward').addEventListener('click', () => {send('get-guide-reward');});
+$_('ads-reward').addEventListener('click', () => {send('ads-reward');});
+$_('ads-shop-dia').addEventListener('click', () => {send('ads-shop-dia');});
+$_('ads-shop-gold').addEventListener('click', () => {send('ads-shop-gold');});
 $_('request-br-reward').addEventListener('click', () => {send('request-br-reward');});
 
 $_('kick-player').addEventListener('click', () => {send('kick-player', parseInt($i('kick-player-number').value) || 0);});

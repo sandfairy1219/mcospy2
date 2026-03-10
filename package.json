@@ -1,6 +1,6 @@
 {
   "name": "mcospy",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "milkchoco frida cheat tool",
   "main": "dist/bridge.js",
   "scripts": {
@@ -25,7 +25,9 @@
     "@nut-tree-fork/nut-js": "^4.2.6",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2",
+    "@tauri-apps/plugin-process": "^2.3.1",
     "@tauri-apps/plugin-shell": "^2",
+    "@tauri-apps/plugin-updater": "^2.10.0",
     "adb-ts": "^6.2.0",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",

@@ -85,6 +85,7 @@ function getAgentScript(): string {
     if (!agentPath) {
         throw new Error("Failed to open agent file. Searched: " + agentCandidates.join(", "));
     }
+    console.info("[agent] loaded from:", agentPath);
 
     const rawAgentScript = readFileSync(agentPath, 'utf8').toString();
     _agentScript = rawAgentScript;
@@ -570,6 +571,10 @@ async function main() {
                                 messageRouter.on("unlock-all-item", (charid: number) => script.post(['unlock-all-item', charid]));
                                 messageRouter.on("unlock-all-char", () => script.post(['unlock-all-char']));
                                 messageRouter.on("get-daily-reward", (repeat: number) => script.post(['get-daily-reward', repeat]));
+                                messageRouter.on("get-guide-reward", () => script.post(['get-guide-reward']));
+                                messageRouter.on("ads-reward", () => script.post(['ads-reward']));
+                                messageRouter.on("ads-shop-dia", () => script.post(['ads-shop-dia']));
+                                messageRouter.on("ads-shop-gold", () => script.post(['ads-shop-gold']));
                                 messageRouter.on("request-br-reward", () => script.post(['request-br-reward']));
                                 messageRouter.on("kick-player", (number: number) => script.post(['kick-player', number]));
                                 messageRouter.on("change-nickname", (name: string) => script.post(['change-nickname', name]));
@@ -635,6 +640,10 @@ async function main() {
                                 messageRouter.removeAllListeners("unlock-sl-medal");
                                 messageRouter.removeAllListeners("unlock-all-item");
                                 messageRouter.removeAllListeners("get-daily-reward");
+                                messageRouter.removeAllListeners("get-guide-reward");
+                                messageRouter.removeAllListeners("ads-reward");
+                                messageRouter.removeAllListeners("ads-shop-dia");
+                                messageRouter.removeAllListeners("ads-shop-gold");
                                 messageRouter.removeAllListeners("request-br-reward");
                                 messageRouter.removeAllListeners("kick-player");
                                 messageRouter.removeAllListeners("change-nickname");

@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicegui/nicegui/tauri/tauri.conf.json",
   "productName": "mcospy",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "identifier": "com.sandfairy1219.mcospy",
   "build": {
     "frontendDist": "../public",
@@ -12,7 +12,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "mcospy v1.0.0",
+        "title": "mcospy v1.0.2",
         "url": "main.html",
         "width": 300,
         "height": 400,
@@ -29,6 +29,7 @@
   "bundle": {
     "active": true,
     "targets": "nsis",
+    "createUpdaterArtifacts": true,
     "icon": [
       "icons/icon.ico"
     ],
@@ -49,6 +50,12 @@
   "plugins": {
     "shell": {
       "open": true
+    },
+    "updater": {
+      "endpoints": [
+        "https://github.com/sandfairy1219/mcospy2/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDc5OUZGNTg5NTYxNkY2NzIKUldSeTloWldpZldmZVEvYUM5L0JjTlBFTTdmOGYvWVVqSVRCakQ1amZTNHVPdi9UeTlLMGZlUlQK"
     }
   }
 }

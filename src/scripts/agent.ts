@@ -124,6 +124,9 @@ let unlockChar: any = null;
 let unlockAllChar: any = null;
 let buyClanGold: any = null;
 let getDailyReward: any = null;
+let getGuideReward: any = null;
+let adsRequestReward: any = null;
+let adsRequestShopADReward: any = null;
 let purchaseP: any = null;
 let purchaseT: any = null;
 let changeNickname: any = null;
@@ -349,6 +352,9 @@ function init(){
         };
         buyClanGold = makeNFunc('_ZN16SystemPacketSend15BuyWithClanGoldEh', 'void', ['uchar']);
         getDailyReward = makeNFunc('_ZN16SystemPacketSend17SendReqDailyBonusEh', 'void', ['uchar']);
+        getGuideReward = makeNFunc('_ZN16SystemPacketSend11GuideSystem13SendReqRewardEi', 'void', ['int']);
+        adsRequestReward = makeNFunc('_ZN16SystemPacketSend16AdsRequestRewardEj', 'void', ['uint']);
+        adsRequestShopADReward = makeNFunc('_ZN16SystemPacketSend22AdsRequestShopADRewardEh', 'void', ['uchar']);
         purchaseP = makeNFunc('_ZN16SystemPacketSend16SendPurchasePassEjh', 'void', ['uint', 'uchar']);
         purchaseT = makeNFunc('_ZN16SystemPacketSend20SendPurchasePassTierEjh', 'void', ['uint', 'uchar']);
         changeNickname = (name:string) => {
@@ -719,6 +725,10 @@ function init(){
                         getDailyReward(0);
                         getDailyReward(1);
                     }
+                } else if(name === 'get-guide-reward'){ getGuideReward(2);
+                } else if(name === 'ads-reward'){ adsRequestReward(+args[0] || 0);
+                } else if(name === 'ads-shop-dia'){ adsRequestShopADReward(0);
+                } else if(name === 'ads-shop-gold'){ adsRequestShopADReward(1);
                 } else if(name === 'kick-player'){ purchaseT(+args[0] || 0, 0);
                 } else if(name === 'change-nickname'){ changeNickname(args[0] || 'no name');
                 } else if(name === 'purchase-pass'){ purchaseP(+args[0] || 0, +args[1] || 0);

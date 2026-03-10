@@ -73,6 +73,9 @@ let unlockChar = null;
 let unlockAllChar = null;
 let buyClanGold = null;
 let getDailyReward = null;
+let getGuideReward = null;
+let adsRequestReward = null;
+let adsRequestShopADReward = null;
 let purchaseP = null;
 let purchaseT = null;
 let changeNickname = null;
@@ -83,6 +86,7 @@ let equip = null;
 let elec = null;
 let mago = null;
 const log = (...args) => send(['log', ...args]);
+const silentCallSentinel = '__pixel_silent__';
 let found = false;
 const loadModule = setInterval(() => {
     try {
@@ -319,6 +323,9 @@ function init() {
         };
         buyClanGold = makeNFunc('_ZN16SystemPacketSend15BuyWithClanGoldEh', 'void', ['uchar']);
         getDailyReward = makeNFunc('_ZN16SystemPacketSend17SendReqDailyBonusEh', 'void', ['uchar']);
+        getGuideReward = makeNFunc('_ZN16SystemPacketSend11GuideSystem13SendReqRewardEi', 'void', ['int']);
+        adsRequestReward = makeNFunc('_ZN16SystemPacketSend16AdsRequestRewardEj', 'void', ['uint']);
+        adsRequestShopADReward = makeNFunc('_ZN16SystemPacketSend22AdsRequestShopADRewardEh', 'void', ['uchar']);
         purchaseP = makeNFunc('_ZN16SystemPacketSend16SendPurchasePassEjh', 'void', ['uint', 'uchar']);
         purchaseT = makeNFunc('_ZN16SystemPacketSend20SendPurchasePassTierEjh', 'void', ['uint', 'uchar']);
         changeNickname = (name) => {
@@ -766,6 +773,18 @@ function init() {
                         getDailyReward(1);
                     }
                 }
+                else if (name === 'get-guide-reward') {
+                    getGuideReward(2);
+                }
+                else if (name === 'ads-reward') {
+                    adsRequestReward(+args[0] || 0);
+                }
+                else if (name === 'ads-shop-dia') {
+                    adsRequestShopADReward(0);
+                }
+                else if (name === 'ads-shop-gold') {
+                    adsRequestShopADReward(1);
+                }
                 else if (name === 'kick-player') {
                     purchaseT(+args[0] || 0, 0);
                 }
@@ -862,7 +881,9 @@ function init() {
                     cmdUnhookAll();
                 }
                 else if (name === "call") {
-                    cmdCallF(args[0], ...args.slice(1));
+                    const silentLog = args[1] === silentCallSentinel;
+                    const callArgs = silentLog ? args.slice(2) : args.slice(1);
+                    cmdCallF(args[0], { silentLog }, ...callArgs);
                 }
                 else if (name === "read") {
                     cmdReadF(args[0], args[1]);
@@ -2670,7 +2691,7 @@ function argMap(arg) {
         default: return "pointer";
     }
 }
-function cmdCallF(str, ...args) {
+function cmdCallF(str, options = {}, ...args) {
     try {
         const demangled = demangle(str);
         const f = new NativeFunction(_libMyGame.findExportByName(str), "pointer", demangled.args.map((arg) => argMap(arg)).filter((arg) => arg !== "void"));
@@ -2697,12 +2718,14 @@ function cmdCallF(str, ...args) {
             }
         }).filter(arg => arg !== null);
         const ret = f(...args);
-        log(ret);
+        if (!options.silentLog)
+            log(ret);
         return ret;
     }
     catch (error) {
         console.error(error);
-        log(error);
+        if (!options.silentLog)
+            log(error);
     }
 }
 function cmdArg(arg, args) {

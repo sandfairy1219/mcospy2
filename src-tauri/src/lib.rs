@@ -55,8 +55,7 @@ fn lock_layout(app: tauri::AppHandle, lock: bool) {
     if let Some(layout) = app.get_webview_window("layout") {
         let _ = layout.set_always_on_top(lock);
         let _ = layout.set_ignore_cursor_events(lock);
-        // Note: Tauri v2 doesn't have direct set_movable/set_resizable equivalents
-        // The ignore_cursor_events effectively prevents interaction when locked
+        let _ = layout.set_resizable(!lock);
     }
 }
 
@@ -72,7 +71,7 @@ fn restore_layout_bounds(app: tauri::AppHandle, bounds: LayoutBounds) {
 fn resize_layout(app: tauri::AppHandle) -> Option<LayoutBounds> {
     if let Some(layout) = app.get_webview_window("layout") {
         if let Ok(pos) = layout.outer_position() {
-            if let Ok(size) = layout.outer_size() {
+            if let Ok(size) = layout.inner_size() {
                 return Some(LayoutBounds {
                     x: pos.x,
                     y: pos.y,
@@ -98,6 +97,8 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
+        .plugin(tauri_plugin_process::init())
         .manage(WsPort(Mutex::new(ws_port)))
         .manage(SidecarHandle(Mutex::new(None)))
         .setup(move |app| {
