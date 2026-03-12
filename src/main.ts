@@ -234,6 +234,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'レイアウトロック',
         'zh':'锁定布局',
     },
+    'reset-layout':{
+        'en':'Reset Layout Size',
+        'ko':'레이아웃 크기 초기화',
+        'ja':'レイアウトサイズリセット',
+        'zh':'重置布局大小',
+    },
     'scan-epos':{
         'en':'Scan EPOS',
         'ko':'EPOS 스캔',
@@ -888,6 +894,11 @@ $_('show-layout').addEventListener('change', async () => {
 });
 $_('lock-layout').addEventListener('change', () => {
     tauriInvoke('lock_layout', { lock: $i('lock-layout').checked });
+});
+$_('reset-layout').addEventListener('click', async () => {
+    const bounds = { x: 0, y: 0, width: 800, height: 600 };
+    await tauriInvoke('restore_layout_bounds', { bounds });
+    localStorage.setItem('layout', JSON.stringify(bounds));
 });
 
 // Periodically save layout bounds (only when visible)
