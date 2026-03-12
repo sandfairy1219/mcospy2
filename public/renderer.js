@@ -158,9 +158,297 @@
     }
   });
 
+  // node_modules/@tauri-apps/api/external/tslib/tslib.es6.cjs
+  var require_tslib_es6 = __commonJS({
+    "node_modules/@tauri-apps/api/external/tslib/tslib.es6.cjs"(exports) {
+      "use strict";
+      function __classPrivateFieldGet(receiver, state, kind, f) {
+        if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a getter");
+        if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot read private member from an object whose class did not declare it");
+        return kind === "m" ? f : kind === "a" ? f.call(receiver) : f ? f.value : state.get(receiver);
+      }
+      function __classPrivateFieldSet(receiver, state, value, kind, f) {
+        if (kind === "m") throw new TypeError("Private method is not writable");
+        if (kind === "a" && !f) throw new TypeError("Private accessor was defined without a setter");
+        if (typeof state === "function" ? receiver !== state || !f : !state.has(receiver)) throw new TypeError("Cannot write private member to an object whose class did not declare it");
+        return kind === "a" ? f.call(receiver, value) : f ? f.value = value : state.set(receiver, value), value;
+      }
+      exports.__classPrivateFieldGet = __classPrivateFieldGet;
+      exports.__classPrivateFieldSet = __classPrivateFieldSet;
+    }
+  });
+
+  // node_modules/@tauri-apps/api/core.cjs
+  var require_core = __commonJS({
+    "node_modules/@tauri-apps/api/core.cjs"(exports) {
+      "use strict";
+      var tslib_es6 = require_tslib_es6();
+      var _Channel_onmessage;
+      var _Channel_nextMessageIndex;
+      var _Channel_pendingMessages;
+      var _Channel_messageEndIndex;
+      var _Resource_rid;
+      var SERIALIZE_TO_IPC_FN = "__TAURI_TO_IPC_KEY__";
+      function transformCallback(callback, once = false) {
+        return window.__TAURI_INTERNALS__.transformCallback(callback, once);
+      }
+      var Channel = class {
+        constructor(onmessage) {
+          _Channel_onmessage.set(this, void 0);
+          _Channel_nextMessageIndex.set(this, 0);
+          _Channel_pendingMessages.set(this, []);
+          _Channel_messageEndIndex.set(this, void 0);
+          tslib_es6.__classPrivateFieldSet(this, _Channel_onmessage, onmessage || (() => {
+          }), "f");
+          this.id = transformCallback((rawMessage) => {
+            const index = rawMessage.index;
+            if ("end" in rawMessage) {
+              if (index == tslib_es6.__classPrivateFieldGet(this, _Channel_nextMessageIndex, "f")) {
+                this.cleanupCallback();
+              } else {
+                tslib_es6.__classPrivateFieldSet(this, _Channel_messageEndIndex, index, "f");
+              }
+              return;
+            }
+            const message = rawMessage.message;
+            if (index == tslib_es6.__classPrivateFieldGet(this, _Channel_nextMessageIndex, "f")) {
+              tslib_es6.__classPrivateFieldGet(this, _Channel_onmessage, "f").call(this, message);
+              tslib_es6.__classPrivateFieldSet(this, _Channel_nextMessageIndex, tslib_es6.__classPrivateFieldGet(this, _Channel_nextMessageIndex, "f") + 1, "f");
+              while (tslib_es6.__classPrivateFieldGet(this, _Channel_nextMessageIndex, "f") in tslib_es6.__classPrivateFieldGet(this, _Channel_pendingMessages, "f")) {
+                const message2 = tslib_es6.__classPrivateFieldGet(this, _Channel_pendingMessages, "f")[tslib_es6.__classPrivateFieldGet(this, _Channel_nextMessageIndex, "f")];
+                tslib_es6.__classPrivateFieldGet(this, _Channel_onmessage, "f").call(this, message2);
+                delete tslib_es6.__classPrivateFieldGet(this, _Channel_pendingMessages, "f")[tslib_es6.__classPrivateFieldGet(this, _Channel_nextMessageIndex, "f")];
+                tslib_es6.__classPrivateFieldSet(this, _Channel_nextMessageIndex, tslib_es6.__classPrivateFieldGet(this, _Channel_nextMessageIndex, "f") + 1, "f");
+              }
+              if (tslib_es6.__classPrivateFieldGet(this, _Channel_nextMessageIndex, "f") === tslib_es6.__classPrivateFieldGet(this, _Channel_messageEndIndex, "f")) {
+                this.cleanupCallback();
+              }
+            } else {
+              tslib_es6.__classPrivateFieldGet(this, _Channel_pendingMessages, "f")[index] = message;
+            }
+          });
+        }
+        cleanupCallback() {
+          window.__TAURI_INTERNALS__.unregisterCallback(this.id);
+        }
+        set onmessage(handler) {
+          tslib_es6.__classPrivateFieldSet(this, _Channel_onmessage, handler, "f");
+        }
+        get onmessage() {
+          return tslib_es6.__classPrivateFieldGet(this, _Channel_onmessage, "f");
+        }
+        [(_Channel_onmessage = /* @__PURE__ */ new WeakMap(), _Channel_nextMessageIndex = /* @__PURE__ */ new WeakMap(), _Channel_pendingMessages = /* @__PURE__ */ new WeakMap(), _Channel_messageEndIndex = /* @__PURE__ */ new WeakMap(), SERIALIZE_TO_IPC_FN)]() {
+          return `__CHANNEL__:${this.id}`;
+        }
+        toJSON() {
+          return this[SERIALIZE_TO_IPC_FN]();
+        }
+      };
+      var PluginListener = class {
+        constructor(plugin, event, channelId) {
+          this.plugin = plugin;
+          this.event = event;
+          this.channelId = channelId;
+        }
+        async unregister() {
+          return invoke(`plugin:${this.plugin}|remove_listener`, {
+            event: this.event,
+            channelId: this.channelId
+          });
+        }
+      };
+      async function addPluginListener(plugin, event, cb) {
+        const handler = new Channel(cb);
+        try {
+          await invoke(`plugin:${plugin}|register_listener`, {
+            event,
+            handler
+          });
+          return new PluginListener(plugin, event, handler.id);
+        } catch {
+          await invoke(`plugin:${plugin}|registerListener`, { event, handler });
+          return new PluginListener(plugin, event, handler.id);
+        }
+      }
+      async function checkPermissions(plugin) {
+        return invoke(`plugin:${plugin}|check_permissions`);
+      }
+      async function requestPermissions(plugin) {
+        return invoke(`plugin:${plugin}|request_permissions`);
+      }
+      async function invoke(cmd, args = {}, options) {
+        return window.__TAURI_INTERNALS__.invoke(cmd, args, options);
+      }
+      function convertFileSrc(filePath, protocol = "asset") {
+        return window.__TAURI_INTERNALS__.convertFileSrc(filePath, protocol);
+      }
+      var Resource = class {
+        get rid() {
+          return tslib_es6.__classPrivateFieldGet(this, _Resource_rid, "f");
+        }
+        constructor(rid) {
+          _Resource_rid.set(this, void 0);
+          tslib_es6.__classPrivateFieldSet(this, _Resource_rid, rid, "f");
+        }
+        /**
+         * Destroys and cleans up this resource from memory.
+         * **You should not call any method on this object anymore and should drop any reference to it.**
+         */
+        async close() {
+          return invoke("plugin:resources|close", {
+            rid: this.rid
+          });
+        }
+      };
+      _Resource_rid = /* @__PURE__ */ new WeakMap();
+      function isTauri() {
+        return !!(globalThis || window).isTauri;
+      }
+      exports.Channel = Channel;
+      exports.PluginListener = PluginListener;
+      exports.Resource = Resource;
+      exports.SERIALIZE_TO_IPC_FN = SERIALIZE_TO_IPC_FN;
+      exports.addPluginListener = addPluginListener;
+      exports.checkPermissions = checkPermissions;
+      exports.convertFileSrc = convertFileSrc;
+      exports.invoke = invoke;
+      exports.isTauri = isTauri;
+      exports.requestPermissions = requestPermissions;
+      exports.transformCallback = transformCallback;
+    }
+  });
+
+  // node_modules/@tauri-apps/plugin-updater/dist-js/index.cjs
+  var require_dist_js = __commonJS({
+    "node_modules/@tauri-apps/plugin-updater/dist-js/index.cjs"(exports) {
+      "use strict";
+      var core = require_core();
+      var Update = class extends core.Resource {
+        constructor(metadata) {
+          super(metadata.rid);
+          this.available = true;
+          this.currentVersion = metadata.currentVersion;
+          this.version = metadata.version;
+          this.date = metadata.date;
+          this.body = metadata.body;
+          this.rawJson = metadata.rawJson;
+        }
+        /** Download the updater package */
+        async download(onEvent, options) {
+          convertToRustHeaders(options);
+          const channel = new core.Channel();
+          if (onEvent) {
+            channel.onmessage = onEvent;
+          }
+          const downloadedBytesRid = await core.invoke("plugin:updater|download", {
+            onEvent: channel,
+            rid: this.rid,
+            ...options
+          });
+          this.downloadedBytes = new core.Resource(downloadedBytesRid);
+        }
+        /** Install downloaded updater package */
+        async install() {
+          if (!this.downloadedBytes) {
+            throw new Error("Update.install called before Update.download");
+          }
+          await core.invoke("plugin:updater|install", {
+            updateRid: this.rid,
+            bytesRid: this.downloadedBytes.rid
+          });
+          this.downloadedBytes = void 0;
+        }
+        /** Downloads the updater package and installs it */
+        async downloadAndInstall(onEvent, options) {
+          convertToRustHeaders(options);
+          const channel = new core.Channel();
+          if (onEvent) {
+            channel.onmessage = onEvent;
+          }
+          await core.invoke("plugin:updater|download_and_install", {
+            onEvent: channel,
+            rid: this.rid,
+            ...options
+          });
+        }
+        async close() {
+          await this.downloadedBytes?.close();
+          await super.close();
+        }
+      };
+      async function check(options) {
+        convertToRustHeaders(options);
+        const metadata = await core.invoke("plugin:updater|check", {
+          ...options
+        });
+        return metadata ? new Update(metadata) : null;
+      }
+      function convertToRustHeaders(options) {
+        if (options?.headers) {
+          options.headers = Array.from(new Headers(options.headers).entries());
+        }
+      }
+      exports.Update = Update;
+      exports.check = check;
+    }
+  });
+
+  // node_modules/@tauri-apps/plugin-process/dist-js/index.cjs
+  var require_dist_js2 = __commonJS({
+    "node_modules/@tauri-apps/plugin-process/dist-js/index.cjs"(exports) {
+      "use strict";
+      var core = require_core();
+      async function exit(code = 0) {
+        await core.invoke("plugin:process|exit", { code });
+      }
+      async function relaunch() {
+        await core.invoke("plugin:process|restart");
+      }
+      exports.exit = exit;
+      exports.relaunch = relaunch;
+    }
+  });
+
   // dist/main.js
   var require_main = __commonJS({
     "dist/main.js"(exports) {
+      var __createBinding = exports && exports.__createBinding || (Object.create ? function(o, m, k, k2) {
+        if (k2 === void 0) k2 = k;
+        var desc = Object.getOwnPropertyDescriptor(m, k);
+        if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+          desc = { enumerable: true, get: function() {
+            return m[k];
+          } };
+        }
+        Object.defineProperty(o, k2, desc);
+      } : function(o, m, k, k2) {
+        if (k2 === void 0) k2 = k;
+        o[k2] = m[k];
+      });
+      var __setModuleDefault = exports && exports.__setModuleDefault || (Object.create ? function(o, v) {
+        Object.defineProperty(o, "default", { enumerable: true, value: v });
+      } : function(o, v) {
+        o["default"] = v;
+      });
+      var __importStar = exports && exports.__importStar || /* @__PURE__ */ function() {
+        var ownKeys = function(o) {
+          ownKeys = Object.getOwnPropertyNames || function(o2) {
+            var ar = [];
+            for (var k in o2) if (Object.prototype.hasOwnProperty.call(o2, k)) ar[ar.length] = k;
+            return ar;
+          };
+          return ownKeys(o);
+        };
+        return function(mod) {
+          if (mod && mod.__esModule) return mod;
+          var result = {};
+          if (mod != null) {
+            for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+          }
+          __setModuleDefault(result, mod);
+          return result;
+        };
+      }();
       Object.defineProperty(exports, "__esModule", { value: true });
       var ipc_1 = require_ipc();
       var devtools_1 = require_devtools();
@@ -297,10 +585,22 @@
       };
       var lan = {
         "checking-for-updates": {
-          "en": "Checking for updates",
-          "ko": "\uC5C5\uB370\uC774\uD2B8 \uD655\uC778 \uC911",
-          "ja": "\u66F4\u65B0\u3092\u78BA\u8A8D\u4E2D",
-          "zh": "\u68C0\u67E5\u66F4\u65B0\u4E2D"
+          "en": "Checking for updates...",
+          "ko": "\uC5C5\uB370\uC774\uD2B8 \uD655\uC778 \uC911...",
+          "ja": "\u66F4\u65B0\u3092\u78BA\u8A8D\u4E2D...",
+          "zh": "\u68C0\u67E5\u66F4\u65B0\u4E2D..."
+        },
+        "updating-to": {
+          "en": "Updating to",
+          "ko": "\uC5C5\uB370\uC774\uD2B8 \uC911",
+          "ja": "\u66F4\u65B0\u4E2D",
+          "zh": "\u66F4\u65B0\u5230"
+        },
+        "update-failed": {
+          "en": "Update check failed",
+          "ko": "\uC5C5\uB370\uC774\uD2B8 \uD655\uC778 \uC2E4\uD328",
+          "ja": "\u66F4\u65B0\u78BA\u8A8D\u306B\u5931\u6557\u3057\u307E\u3057\u305F",
+          "zh": "\u68C0\u67E5\u66F4\u65B0\u5931\u8D25"
         },
         "key": {
           "en": "Key",
@@ -943,11 +1243,42 @@
       });
       var bounds = localStorage.getItem("layout");
       (0, ipc_1.send)("init", keybinds, config, wpdata, bounds ? JSON.parse(bounds) : null);
-      (0, dom_1.$_)("login").classList.add("hide");
-      (0, dom_1.$_)("app").classList.remove("hide");
-      (0, dom_1.$_)("selector-dev-mode").classList.remove("hide");
-      (0, dom_1.$_)("selector-console").classList.remove("hide");
-      (0, dom_1.$_)("selector-finder").classList.remove("hide");
+      function showApp() {
+        (0, dom_1.$_)("login").classList.add("hide");
+        (0, dom_1.$_)("app").classList.remove("hide");
+        (0, dom_1.$_)("selector-dev-mode").classList.remove("hide");
+        (0, dom_1.$_)("selector-console").classList.remove("hide");
+        (0, dom_1.$_)("selector-finder").classList.remove("hide");
+      }
+      (async () => {
+        try {
+          const { check } = await Promise.resolve().then(() => __importStar(require_dist_js()));
+          const update = await check();
+          if (update) {
+            (0, dom_1.$_)("updp").textContent = `${lan["updating-to"][lang]} v${update.version}...`;
+            (0, dom_1.$_)("updbar").classList.remove("hide");
+            let total = 0, downloaded = 0;
+            await update.downloadAndInstall((event) => {
+              if (event.event === "Started") {
+                total = event.data.contentLength || 0;
+              } else if (event.event === "Progress") {
+                downloaded += event.data.chunkLength;
+                if (total > 0) {
+                  (0, dom_1.$_)("updprg").style.width = `${Math.round(downloaded / total * 100)}%`;
+                }
+              } else if (event.event === "Finished") {
+                (0, dom_1.$_)("updprg").style.width = "100%";
+              }
+            });
+            const { relaunch } = await Promise.resolve().then(() => __importStar(require_dist_js2()));
+            await relaunch();
+            return;
+          }
+        } catch (e) {
+          console.warn("Update check failed:", e);
+        }
+        showApp();
+      })();
       (0, ipc_1.listen)("update-state", (id, _state, log2) => {
         const el = (0, dom_1.$_)(`state-${id}`);
         const elog = (0, dom_1.$_)(`state-${id}-log`);

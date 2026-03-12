@@ -62,8 +62,19 @@ fn lock_layout(app: tauri::AppHandle, lock: bool) {
 #[tauri::command]
 fn restore_layout_bounds(app: tauri::AppHandle, bounds: LayoutBounds) {
     if let Some(layout) = app.get_webview_window("layout") {
-        let _ = layout.set_position(tauri::PhysicalPosition::new(bounds.x, bounds.y));
-        let _ = layout.set_size(tauri::PhysicalSize::new(bounds.width, bounds.height));
+        // Clamp to primary monitor bounds
+        if let Some(monitor) = layout.primary_monitor().ok().flatten() {
+            let screen = monitor.size();
+            let w = bounds.width.min(screen.width);
+            let h = bounds.height.min(screen.height);
+            let x = bounds.x.max(0).min((screen.width - w) as i32);
+            let y = bounds.y.max(0).min((screen.height - h) as i32);
+            let _ = layout.set_position(tauri::PhysicalPosition::new(x, y));
+            let _ = layout.set_size(tauri::PhysicalSize::new(w, h));
+        } else {
+            let _ = layout.set_position(tauri::PhysicalPosition::new(bounds.x, bounds.y));
+            let _ = layout.set_size(tauri::PhysicalSize::new(bounds.width, bounds.height));
+        }
     }
 }
 

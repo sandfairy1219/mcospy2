@@ -1,6 +1,6 @@
 {
   "name": "mcospy",
-  "version": "1.0.1",
+  "version": "1.0.5",
   "description": "milkchoco frida cheat tool",
   "main": "dist/bridge.js",
   "scripts": {
