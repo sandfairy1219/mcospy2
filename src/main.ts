@@ -438,6 +438,10 @@ const lan:{[key:string]:{[key:string]:string}} = {
     'ctm-desert':{ 'en':'Desert Map', 'ko':'사막 우뺏', 'ja':'砂漠マップ', 'zh':'沙漠地图', },
     'ctm-castle':{ 'en':'Castle Map', 'ko':'성 우뺏', 'ja':'城マップ', 'zh':'城堡地图', },
     'ctm-mountain':{ 'en':'Mountain Map', 'ko':'산 우뺏', 'ja':'山マップ', 'zh':'山地图', },
+    'deathmatch':{ 'en':'Deathmatch', 'ko':'데스매치', 'ja':'デスマッチ', 'zh':'死亡竞赛', },
+    'deathmatch-warning':{ 'en':'⚠ Bot match only', 'ko':'⚠ 봇전에서만 사용하세요', 'ja':'⚠ ボット戦専用', 'zh':'⚠ 仅限机器人战', },
+    'deathmatch-start':{ 'en':'Start', 'ko':'시작', 'ja':'開始', 'zh':'开始', },
+    'deathmatch-stop':{ 'en':'Stop', 'ko':'정지', 'ja':'停止', 'zh':'停止', },
     'macro':{ 'en':'Macro', 'ko':'매크로', 'ja':'マクロ', 'zh':'宏', },
     'execute':{ 'en':'Execute', 'ko':'실행', 'ja':'実行', 'zh':'执行', },
     'general':{ 'en':'General', 'ko':'일반', 'ja':'一般', 'zh':'一般', },
@@ -457,7 +461,7 @@ const lan:{[key:string]:{[key:string]:string}} = {
     'cheat-settings':{ 'en':'Presets', 'ko':'프리셋', 'ja':'プリセット', 'zh':'预设', },
     // info start
     'info-aimbot':{ 'en':'Auto-aim at enemies', 'ko':'적에게 자동 조준', 'ja':'敵に自動照準', 'zh':'自动瞄准敌人', },
-    'info-aim-assist':{ 'en':'Smooth aim correction toward enemies', 'ko':'적 방향으로 부드럽게 조준 보정', 'ja':'敵方向へスムーズな照準補正', 'zh':'平滑瞄准修正', },
+    'info-aim-assist':{ 'en':'Auto-aim while shooting', 'ko':'사격 시 적에게 자동 조준', 'ja':'射撃中に自動照準', 'zh':'射击时自动瞄准', },
     'info-esp':{ 'en':'See enemy positions through walls', 'ko':'벽 너머 적 위치 표시', 'ja':'壁越しに敵の位置を表示', 'zh':'透视墙壁显示敌人位置', },
     'info-blackhole':{ 'en':'Pull enemies to a single point', 'ko':'적을 한 지점으로 끌어모음', 'ja':'敵を一点に引き寄せる', 'zh':'将敌人拉到一个点', },
     'info-shoot-speed':{ 'en':'Increase firing rate', 'ko':'발사 속도 증가', 'ja':'発射速度を上げる', 'zh':'提高射击速度', },
@@ -486,7 +490,7 @@ const lan:{[key:string]:{[key:string]:string}} = {
     'info-hide-me':{ 'en':'Make yourself invisible to others', 'ko':'다른 플레이어에게 투명화', 'ja':'他のプレイヤーから透明化', 'zh':'对其他玩家隐身', },
     'info-changer':{ 'en':'Modify position, skill code, etc.', 'ko':'위치, 스킬코드 등 변경', 'ja':'位置、スキルコードなどを変更', 'zh':'修改位置、技能代码等', },
     'info-resource-hack':{ 'en':'Obtain resources and rewards', 'ko':'자원 및 보상 획득', 'ja':'リソースと報酬を取得', 'zh':'获取资源和奖励', },
-    'info-utilities':{ 'en':'Nickname, clan, item utilities', 'ko':'닉네임, 클랜, 아이템 유틸', 'ja':'ニックネーム、クラン、アイテムユーティリティ', 'zh':'昵称、公会、物品工具', },
+    'info-utilities':{ 'en':'Nickname, clan, item utilities (some may not work)', 'ko':'닉네임, 클랜, 아이템 유틸 (일부 작동 안함)', 'ja':'ニックネーム、クラン、アイテムユーティリティ (一部動作しない)', 'zh':'昵称、公会、物品工具 (部分功能可能无法使用)', },
     'info-cheat-settings':{ 'en':'Save/load cheat presets', 'ko':'치트 프리셋 저장/불러오기', 'ja':'チートプリセットの保存/読み込み', 'zh':'保存/加载作弊预设', },
     'preset-name':{ 'en':'Preset Name', 'ko':'프리셋 이름', 'ja':'プリセット名', 'zh':'预设名称', },
     'preset-save':{ 'en':'Save', 'ko':'저장', 'ja':'保存', 'zh':'保存', },
@@ -495,7 +499,7 @@ const lan:{[key:string]:{[key:string]:string}} = {
     'preset-export':{ 'en':'Export', 'ko':'내보내기', 'ja':'エクスポート', 'zh':'导出', },
     'preset-import':{ 'en':'Import', 'ko':'가져오기', 'ja':'インポート', 'zh':'导入', },
     'cheat-reset-all':{ 'en':'Reset All', 'ko':'전체 초기화', 'ja':'全てリセット', 'zh':'全部重置', },
-    'exp-boost':{ 'en':'EXP Boost', 'ko':'경험치 부스트', 'ja':'経験値ブースト', 'zh':'经验值加成', },
+    'exp-boost':{ 'en':'EXP Boost (doesn\'t work)', 'ko':'경험치 부스트 (작동 안함)', 'ja':'経験値ブースト(動作しない)', 'zh':'经验值加成(不工作)', },
     'exp-boost-multiplier':{ 'en':'Multiplier', 'ko':'배율', 'ja':'倍率', 'zh':'倍率', },
     'info-exp-boost':{ 'en':'Multiply EXP gain (1-31x)', 'ko':'경험치 획득량 증가 (1-31배)', 'ja':'経験値獲得量増加（1-31倍）', 'zh':'增加经验值获取量（1-31倍）', },
 }
@@ -864,6 +868,16 @@ $_('equip-spyra').addEventListener('click', () => {send('equip-item', parseInt($
 $_('equip-mh9').addEventListener('click', () => {send('equip-item', parseInt($i('equip-char-number').value) || 1, 1, 15);});
 $_('claim-supply-1').addEventListener('click', () => {send('claim-supply', 1, 30);});
 $_('claim-supply-2').addEventListener('click', () => {send('claim-supply', 2, 30);});
+$_('ctm-default-milk').addEventListener('click', () => {send('ctm-default-milk');});
+$_('ctm-default-choco').addEventListener('click', () => {send('ctm-default-choco');});
+$_('ctm-desert-milk').addEventListener('click', () => {send('ctm-desert-milk');});
+$_('ctm-desert-choco').addEventListener('click', () => {send('ctm-desert-choco');});
+$_('ctm-castle-milk').addEventListener('click', () => {send('ctm-castle-milk');});
+$_('ctm-castle-choco').addEventListener('click', () => {send('ctm-castle-choco');});
+$_('ctm-mountain-milk').addEventListener('click', () => {send('ctm-mountain-milk');});
+$_('ctm-mountain-choco').addEventListener('click', () => {send('ctm-mountain-choco');});
+$_('deathmatch-start').addEventListener('click', () => {send('deathmatch-start');});
+$_('deathmatch-stop').addEventListener('click', () => {send('deathmatch-stop');});
 
 updateExceptNumber();
 $_('except-number').addEventListener('change', updateExceptNumber);

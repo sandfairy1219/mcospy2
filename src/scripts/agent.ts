@@ -744,6 +744,8 @@ function init(){
                 } else if(name === 'ctm-castle-choco'){ ctmCastleChoco();
                 } else if(name === 'ctm-mountain-milk'){ ctmMountainMilk();
                 } else if(name === 'ctm-mountain-choco'){ ctmMountainChoco();
+                } else if(name === 'deathmatch-start'){ deathmatchStart();
+                } else if(name === 'deathmatch-stop'){ deathmatchStop();
                 // } else if(name === 'scan-epos'){
                 //     epos = scanEpos();
                 // } else if(name === 'scan-entity'){
@@ -1875,6 +1877,38 @@ async function ctmMountainChoco(){
     await home();
     await teleport(epos, -162, 0, -90);
     await home();
+}
+
+let deathmatchInterval:ReturnType<typeof setInterval>|null = null;
+function deathmatchStart(){
+    if(deathmatchInterval) return;
+    deathmatchInterval = setInterval(() => {
+        if(!epos || epos.isNull()) return;
+        if(!entityList || entityList.size === 0) return;
+        [...entityList].map(pt => ptr(pt))
+        .filter(entity => !entity.isNull())
+        .filter(entity => {
+            const num = entity.add(eposOffset['number']).readS32();
+            return num < 0; // bots only
+        })
+        .filter(entity => !isDead(entity))
+        .filter(entity => !isTeam(epos, entity))
+        .forEach(entity => {
+            entity.add(eposOffset['y']).writeFloat(-200);
+            entity.add(eposOffset['dx']).writeFloat(0);
+            entity.add(eposOffset['dy']).writeFloat(0);
+            entity.add(eposOffset['dz']).writeFloat(0);
+            entity.add(eposOffset['state']).writeS32(1);
+        });
+    }, 100);
+    send(['deathmatch', 'started']);
+}
+function deathmatchStop(){
+    if(deathmatchInterval){
+        clearInterval(deathmatchInterval);
+        deathmatchInterval = null;
+    }
+    send(['deathmatch', 'stopped']);
 }
 
 rpc.exports = {

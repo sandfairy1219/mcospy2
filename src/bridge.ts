@@ -594,6 +594,8 @@ async function main() {
                                 messageRouter.on("ctm-castle-choco", () => script.post(['ctm-castle-choco']));
                                 messageRouter.on("ctm-mountain-milk", () => script.post(['ctm-mountain-milk']));
                                 messageRouter.on("ctm-mountain-choco", () => script.post(['ctm-mountain-choco']));
+                                messageRouter.on("deathmatch-start", () => script.post(['deathmatch-start']));
+                                messageRouter.on("deathmatch-stop", () => script.post(['deathmatch-stop']));
                                 messageRouter.on("execute-cmd", (data: string) => script.post(['execute-cmd', data]));
                                 // Developer tools (dev-only)
                                 if (isDev) {

@@ -788,6 +788,12 @@
           "ja": "\u30EC\u30A4\u30A2\u30A6\u30C8\u30ED\u30C3\u30AF",
           "zh": "\u9501\u5B9A\u5E03\u5C40"
         },
+        "reset-layout": {
+          "en": "Reset Layout Size",
+          "ko": "\uB808\uC774\uC544\uC6C3 \uD06C\uAE30 \uCD08\uAE30\uD654",
+          "ja": "\u30EC\u30A4\u30A2\u30A6\u30C8\u30B5\u30A4\u30BA\u30EA\u30BB\u30C3\u30C8",
+          "zh": "\u91CD\u7F6E\u5E03\u5C40\u5927\u5C0F"
+        },
         "scan-epos": {
           "en": "Scan EPOS",
           "ko": "EPOS \uC2A4\uCE94",
@@ -986,6 +992,10 @@
         "ctm-desert": { "en": "Desert Map", "ko": "\uC0AC\uB9C9 \uC6B0\uBE8F", "ja": "\u7802\u6F20\u30DE\u30C3\u30D7", "zh": "\u6C99\u6F20\u5730\u56FE" },
         "ctm-castle": { "en": "Castle Map", "ko": "\uC131 \uC6B0\uBE8F", "ja": "\u57CE\u30DE\u30C3\u30D7", "zh": "\u57CE\u5821\u5730\u56FE" },
         "ctm-mountain": { "en": "Mountain Map", "ko": "\uC0B0 \uC6B0\uBE8F", "ja": "\u5C71\u30DE\u30C3\u30D7", "zh": "\u5C71\u5730\u56FE" },
+        "deathmatch": { "en": "Deathmatch", "ko": "\uB370\uC2A4\uB9E4\uCE58", "ja": "\u30C7\u30B9\u30DE\u30C3\u30C1", "zh": "\u6B7B\u4EA1\u7ADE\u8D5B" },
+        "deathmatch-warning": { "en": "\u26A0 Bot match only", "ko": "\u26A0 \uBD07\uC804\uC5D0\uC11C\uB9CC \uC0AC\uC6A9\uD558\uC138\uC694", "ja": "\u26A0 \u30DC\u30C3\u30C8\u6226\u5C02\u7528", "zh": "\u26A0 \u4EC5\u9650\u673A\u5668\u4EBA\u6218" },
+        "deathmatch-start": { "en": "Start", "ko": "\uC2DC\uC791", "ja": "\u958B\u59CB", "zh": "\u5F00\u59CB" },
+        "deathmatch-stop": { "en": "Stop", "ko": "\uC815\uC9C0", "ja": "\u505C\u6B62", "zh": "\u505C\u6B62" },
         "macro": { "en": "Macro", "ko": "\uB9E4\uD06C\uB85C", "ja": "\u30DE\u30AF\u30ED", "zh": "\u5B8F" },
         "execute": { "en": "Execute", "ko": "\uC2E4\uD589", "ja": "\u5B9F\u884C", "zh": "\u6267\u884C" },
         "general": { "en": "General", "ko": "\uC77C\uBC18", "ja": "\u4E00\u822C", "zh": "\u4E00\u822C" },
@@ -1005,7 +1015,7 @@
         "cheat-settings": { "en": "Presets", "ko": "\uD504\uB9AC\uC14B", "ja": "\u30D7\u30EA\u30BB\u30C3\u30C8", "zh": "\u9884\u8BBE" },
         // info start
         "info-aimbot": { "en": "Auto-aim at enemies", "ko": "\uC801\uC5D0\uAC8C \uC790\uB3D9 \uC870\uC900", "ja": "\u6575\u306B\u81EA\u52D5\u7167\u6E96", "zh": "\u81EA\u52A8\u7784\u51C6\u654C\u4EBA" },
-        "info-aim-assist": { "en": "Smooth aim correction toward enemies", "ko": "\uC801 \uBC29\uD5A5\uC73C\uB85C \uBD80\uB4DC\uB7FD\uAC8C \uC870\uC900 \uBCF4\uC815", "ja": "\u6575\u65B9\u5411\u3078\u30B9\u30E0\u30FC\u30BA\u306A\u7167\u6E96\u88DC\u6B63", "zh": "\u5E73\u6ED1\u7784\u51C6\u4FEE\u6B63" },
+        "info-aim-assist": { "en": "Auto-aim while shooting", "ko": "\uC0AC\uACA9 \uC2DC \uC801\uC5D0\uAC8C \uC790\uB3D9 \uC870\uC900", "ja": "\u5C04\u6483\u4E2D\u306B\u81EA\u52D5\u7167\u6E96", "zh": "\u5C04\u51FB\u65F6\u81EA\u52A8\u7784\u51C6" },
         "info-esp": { "en": "See enemy positions through walls", "ko": "\uBCBD \uB108\uBA38 \uC801 \uC704\uCE58 \uD45C\uC2DC", "ja": "\u58C1\u8D8A\u3057\u306B\u6575\u306E\u4F4D\u7F6E\u3092\u8868\u793A", "zh": "\u900F\u89C6\u5899\u58C1\u663E\u793A\u654C\u4EBA\u4F4D\u7F6E" },
         "info-blackhole": { "en": "Pull enemies to a single point", "ko": "\uC801\uC744 \uD55C \uC9C0\uC810\uC73C\uB85C \uB04C\uC5B4\uBAA8\uC74C", "ja": "\u6575\u3092\u4E00\u70B9\u306B\u5F15\u304D\u5BC4\u305B\u308B", "zh": "\u5C06\u654C\u4EBA\u62C9\u5230\u4E00\u4E2A\u70B9" },
         "info-shoot-speed": { "en": "Increase firing rate", "ko": "\uBC1C\uC0AC \uC18D\uB3C4 \uC99D\uAC00", "ja": "\u767A\u5C04\u901F\u5EA6\u3092\u4E0A\u3052\u308B", "zh": "\u63D0\u9AD8\u5C04\u51FB\u901F\u5EA6" },
@@ -1034,7 +1044,7 @@
         "info-hide-me": { "en": "Make yourself invisible to others", "ko": "\uB2E4\uB978 \uD50C\uB808\uC774\uC5B4\uC5D0\uAC8C \uD22C\uBA85\uD654", "ja": "\u4ED6\u306E\u30D7\u30EC\u30A4\u30E4\u30FC\u304B\u3089\u900F\u660E\u5316", "zh": "\u5BF9\u5176\u4ED6\u73A9\u5BB6\u9690\u8EAB" },
         "info-changer": { "en": "Modify position, skill code, etc.", "ko": "\uC704\uCE58, \uC2A4\uD0AC\uCF54\uB4DC \uB4F1 \uBCC0\uACBD", "ja": "\u4F4D\u7F6E\u3001\u30B9\u30AD\u30EB\u30B3\u30FC\u30C9\u306A\u3069\u3092\u5909\u66F4", "zh": "\u4FEE\u6539\u4F4D\u7F6E\u3001\u6280\u80FD\u4EE3\u7801\u7B49" },
         "info-resource-hack": { "en": "Obtain resources and rewards", "ko": "\uC790\uC6D0 \uBC0F \uBCF4\uC0C1 \uD68D\uB4DD", "ja": "\u30EA\u30BD\u30FC\u30B9\u3068\u5831\u916C\u3092\u53D6\u5F97", "zh": "\u83B7\u53D6\u8D44\u6E90\u548C\u5956\u52B1" },
-        "info-utilities": { "en": "Nickname, clan, item utilities", "ko": "\uB2C9\uB124\uC784, \uD074\uB79C, \uC544\uC774\uD15C \uC720\uD2F8", "ja": "\u30CB\u30C3\u30AF\u30CD\u30FC\u30E0\u3001\u30AF\u30E9\u30F3\u3001\u30A2\u30A4\u30C6\u30E0\u30E6\u30FC\u30C6\u30A3\u30EA\u30C6\u30A3", "zh": "\u6635\u79F0\u3001\u516C\u4F1A\u3001\u7269\u54C1\u5DE5\u5177" },
+        "info-utilities": { "en": "Nickname, clan, item utilities (some may not work)", "ko": "\uB2C9\uB124\uC784, \uD074\uB79C, \uC544\uC774\uD15C \uC720\uD2F8 (\uC77C\uBD80 \uC791\uB3D9 \uC548\uD568)", "ja": "\u30CB\u30C3\u30AF\u30CD\u30FC\u30E0\u3001\u30AF\u30E9\u30F3\u3001\u30A2\u30A4\u30C6\u30E0\u30E6\u30FC\u30C6\u30A3\u30EA\u30C6\u30A3 (\u4E00\u90E8\u52D5\u4F5C\u3057\u306A\u3044)", "zh": "\u6635\u79F0\u3001\u516C\u4F1A\u3001\u7269\u54C1\u5DE5\u5177 (\u90E8\u5206\u529F\u80FD\u53EF\u80FD\u65E0\u6CD5\u4F7F\u7528)" },
         "info-cheat-settings": { "en": "Save/load cheat presets", "ko": "\uCE58\uD2B8 \uD504\uB9AC\uC14B \uC800\uC7A5/\uBD88\uB7EC\uC624\uAE30", "ja": "\u30C1\u30FC\u30C8\u30D7\u30EA\u30BB\u30C3\u30C8\u306E\u4FDD\u5B58/\u8AAD\u307F\u8FBC\u307F", "zh": "\u4FDD\u5B58/\u52A0\u8F7D\u4F5C\u5F0A\u9884\u8BBE" },
         "preset-name": { "en": "Preset Name", "ko": "\uD504\uB9AC\uC14B \uC774\uB984", "ja": "\u30D7\u30EA\u30BB\u30C3\u30C8\u540D", "zh": "\u9884\u8BBE\u540D\u79F0" },
         "preset-save": { "en": "Save", "ko": "\uC800\uC7A5", "ja": "\u4FDD\u5B58", "zh": "\u4FDD\u5B58" },
@@ -1043,7 +1053,7 @@
         "preset-export": { "en": "Export", "ko": "\uB0B4\uBCF4\uB0B4\uAE30", "ja": "\u30A8\u30AF\u30B9\u30DD\u30FC\u30C8", "zh": "\u5BFC\u51FA" },
         "preset-import": { "en": "Import", "ko": "\uAC00\uC838\uC624\uAE30", "ja": "\u30A4\u30F3\u30DD\u30FC\u30C8", "zh": "\u5BFC\u5165" },
         "cheat-reset-all": { "en": "Reset All", "ko": "\uC804\uCCB4 \uCD08\uAE30\uD654", "ja": "\u5168\u3066\u30EA\u30BB\u30C3\u30C8", "zh": "\u5168\u90E8\u91CD\u7F6E" },
-        "exp-boost": { "en": "EXP Boost", "ko": "\uACBD\uD5D8\uCE58 \uBD80\uC2A4\uD2B8", "ja": "\u7D4C\u9A13\u5024\u30D6\u30FC\u30B9\u30C8", "zh": "\u7ECF\u9A8C\u503C\u52A0\u6210" },
+        "exp-boost": { "en": "EXP Boost (doesn't work)", "ko": "\uACBD\uD5D8\uCE58 \uBD80\uC2A4\uD2B8 (\uC791\uB3D9 \uC548\uD568)", "ja": "\u7D4C\u9A13\u5024\u30D6\u30FC\u30B9\u30C8(\u52D5\u4F5C\u3057\u306A\u3044)", "zh": "\u7ECF\u9A8C\u503C\u52A0\u6210(\u4E0D\u5DE5\u4F5C)" },
         "exp-boost-multiplier": { "en": "Multiplier", "ko": "\uBC30\uC728", "ja": "\u500D\u7387", "zh": "\u500D\u7387" },
         "info-exp-boost": { "en": "Multiply EXP gain (1-31x)", "ko": "\uACBD\uD5D8\uCE58 \uD68D\uB4DD\uB7C9 \uC99D\uAC00 (1-31\uBC30)", "ja": "\u7D4C\u9A13\u5024\u7372\u5F97\u91CF\u5897\u52A0\uFF081-31\u500D\uFF09", "zh": "\u589E\u52A0\u7ECF\u9A8C\u503C\u83B7\u53D6\u91CF\uFF081-31\u500D\uFF09" }
       };
@@ -1440,6 +1450,36 @@
       (0, dom_1.$_)("claim-supply-2").addEventListener("click", () => {
         (0, ipc_1.send)("claim-supply", 2, 30);
       });
+      (0, dom_1.$_)("ctm-default-milk").addEventListener("click", () => {
+        (0, ipc_1.send)("ctm-default-milk");
+      });
+      (0, dom_1.$_)("ctm-default-choco").addEventListener("click", () => {
+        (0, ipc_1.send)("ctm-default-choco");
+      });
+      (0, dom_1.$_)("ctm-desert-milk").addEventListener("click", () => {
+        (0, ipc_1.send)("ctm-desert-milk");
+      });
+      (0, dom_1.$_)("ctm-desert-choco").addEventListener("click", () => {
+        (0, ipc_1.send)("ctm-desert-choco");
+      });
+      (0, dom_1.$_)("ctm-castle-milk").addEventListener("click", () => {
+        (0, ipc_1.send)("ctm-castle-milk");
+      });
+      (0, dom_1.$_)("ctm-castle-choco").addEventListener("click", () => {
+        (0, ipc_1.send)("ctm-castle-choco");
+      });
+      (0, dom_1.$_)("ctm-mountain-milk").addEventListener("click", () => {
+        (0, ipc_1.send)("ctm-mountain-milk");
+      });
+      (0, dom_1.$_)("ctm-mountain-choco").addEventListener("click", () => {
+        (0, ipc_1.send)("ctm-mountain-choco");
+      });
+      (0, dom_1.$_)("deathmatch-start").addEventListener("click", () => {
+        (0, ipc_1.send)("deathmatch-start");
+      });
+      (0, dom_1.$_)("deathmatch-stop").addEventListener("click", () => {
+        (0, ipc_1.send)("deathmatch-stop");
+      });
       updateExceptNumber();
       (0, dom_1.$_)("except-number").addEventListener("change", updateExceptNumber);
       function updateExceptNumber() {
@@ -1462,6 +1502,11 @@
       });
       (0, dom_1.$_)("lock-layout").addEventListener("change", () => {
         tauriInvoke("lock_layout", { lock: (0, dom_1.$i)("lock-layout").checked });
+      });
+      (0, dom_1.$_)("reset-layout").addEventListener("click", async () => {
+        const bounds2 = { x: 0, y: 0, width: 800, height: 600 };
+        await tauriInvoke("restore_layout_bounds", { bounds: bounds2 });
+        localStorage.setItem("layout", JSON.stringify(bounds2));
       });
       setInterval(async () => {
         if (!(0, dom_1.$i)("show-layout").checked)
