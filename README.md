@@ -1,4 +1,4 @@
-# pixel
+# mcospy
 
 milkchoco frida cheat tool
 
