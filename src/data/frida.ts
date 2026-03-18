@@ -101,7 +101,14 @@ export const startFrida = async (id: string, filename: string, onCrashed: () => 
         const gen = ++fridaServerGeneration;
         try { await adb.shell(id, `su -c "killall frida-server"`); } catch {}
         const server = adb.shell(id, `su -c /data/local/tmp/${filename}`);
-        const guardedCrash = () => { if (gen === fridaServerGeneration) onCrashed(); };
+        const guardedCrash = async () => {
+            if (gen !== fridaServerGeneration) return;
+            try {
+                const pid = await adb.shell(id, "pidof frida-server");
+                if (pid.trim()) return;
+            } catch {}
+            onCrashed();
+        };
         server.then(guardedCrash).catch(guardedCrash);
         return true;
     } catch {
