@@ -18,6 +18,7 @@ const cargoTomlPath = path.join('src-tauri', 'Cargo.toml');
 
 const tc = JSON.parse(fs.readFileSync(tauriConfPath, 'utf8'));
 tc.version = v;
+tc.app.windows[0].title = `mcospy v${v}`;
 fs.writeFileSync(tauriConfPath, JSON.stringify(tc, null, 2) + '\n');
 
 const ct = fs.readFileSync(cargoTomlPath, 'utf8');

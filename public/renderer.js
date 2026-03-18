@@ -614,6 +614,18 @@
           "ja": "\u30ED\u30B0\u30A4\u30F3",
           "zh": "\u767B\u5F55"
         },
+        "authenticating": {
+          "en": "Authenticating...",
+          "ko": "\uC778\uC99D \uC911...",
+          "ja": "\u8A8D\u8A3C\u4E2D...",
+          "zh": "\u8BA4\u8BC1\u4E2D..."
+        },
+        "auth-failed": {
+          "en": "Authentication failed",
+          "ko": "\uC778\uC99D \uC2E4\uD328",
+          "ja": "\u8A8D\u8A3C\u5931\u6557",
+          "zh": "\u8BA4\u8BC1\u5931\u8D25"
+        },
         "initialize": {
           "en": "Initialize",
           "ko": "\uCD08\uAE30\uD654",
@@ -1314,8 +1326,32 @@
         } catch (e) {
           console.warn("Update check failed:", e);
         }
-        showApp();
+        (0, dom_1.$_)("updp").textContent = lng(lang, "authenticating");
+        (0, ipc_1.send)("auth-verify");
       })();
+      (0, ipc_1.listen)("auth-status", (result) => {
+        if (result.ok) {
+          showApp();
+        } else {
+          (0, dom_1.$_)("updp").textContent = lng(lang, "auth-failed");
+          (0, dom_1.$_)("logform").classList.remove("hide");
+          (0, dom_1.$_)("logerr").textContent = result.error || "";
+          (0, dom_1.$_)("logbtn").removeAttribute("disabled");
+        }
+      });
+      (0, dom_1.$_)("logbtn").addEventListener("click", () => {
+        const key = (0, dom_1.$i)("key").value.trim();
+        if (!key)
+          return;
+        (0, dom_1.$_)("logerr").textContent = "";
+        (0, dom_1.$_)("logbtn").setAttribute("disabled", "true");
+        (0, dom_1.$_)("updp").textContent = lng(lang, "authenticating");
+        (0, ipc_1.send)("auth-activate", key);
+      });
+      (0, dom_1.$_)("key").addEventListener("keydown", (e) => {
+        if (e.key === "Enter")
+          (0, dom_1.$_)("logbtn").click();
+      });
       (0, ipc_1.listen)("update-state", (id, _state, log2) => {
         const el = (0, dom_1.$_)(`state-${id}`);
         const elog = (0, dom_1.$_)(`state-${id}-log`);
