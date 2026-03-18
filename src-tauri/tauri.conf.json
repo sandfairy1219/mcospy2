@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/nicegui/nicegui/tauri/tauri.conf.json",
   "productName": "mcospy",
-  "version": "1.12.3",
+  "version": "1.12.4",
   "identifier": "com.sandfairy1219.mcospy",
   "build": {
     "frontendDist": "../public",
@@ -12,7 +12,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "mcospy v1.12.3",
+        "title": "mcospy v1.12.4",
         "url": "main.html",
         "width": 300,
         "height": 400,
