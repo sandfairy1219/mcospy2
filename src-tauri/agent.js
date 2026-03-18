@@ -388,9 +388,9 @@ function init() {
                     if (ts && !ts.isNull()) {
                         saveWPData(ts);
                         if (ts.toString() === epos.toString()) {
-                            if (cheats['skill-cooldown']) {
-                                makeNFunc('_ZN16SystemPacketSend33CheatSetAllSkillCoolTimeOneSecondEb', 'void', ['bool'])(1);
-                            }
+                            // if(cheats['skill-cooldown']){
+                            //     makeNFunc('_ZN16SystemPacketSend33CheatSetAllSkillCoolTimeOneSecondEb', 'void', ['bool'])(1);
+                            // }
                         }
                         else {
                             entityList.add(ts.toString());
@@ -430,14 +430,10 @@ function init() {
                 }
             },
         });
-        attachNFunc('_ZN5Skill16GetMaxSkillCountEh', { onLeave: retval => { if (cheats['skill-cooldown'])
-                retval.replace(12); } });
-        attachNFunc('_ZN5Skill16GetCurSkillCountEv', { onLeave: retval => { if (cheats['skill-cooldown'])
-                retval.replace(12); } });
-        attachNFunc('_ZN5Skill16IsSkillManyTimesEh', { onLeave: retval => { if (cheats['skill-cooldown'])
-                retval.replace(1); } });
-        attachNFunc('_ZN5Cloud8CharData12GetSkillTimeEv', { onLeave: retval => { if (cheats['skill-cooldown'])
-                retval.writeFloat(1); } });
+        // attachNFunc('_ZN5Skill16GetMaxSkillCountEh', {onLeave: retval => {if(cheats['skill-cooldown']) retval.replace(12 as any)}})
+        // attachNFunc('_ZN5Skill16GetCurSkillCountEv', {onLeave: retval => {if(cheats['skill-cooldown']) retval.replace(12 as any)}})
+        // attachNFunc('_ZN5Skill16IsSkillManyTimesEh', {onLeave: retval => {if(cheats['skill-cooldown']) retval.replace(1 as any)}})
+        // attachNFunc('_ZN5Cloud8CharData12GetSkillTimeEv', {onLeave: retval => {if(cheats['skill-cooldown']) retval.writeFloat(1)}})
         attachNFunc('_ZN9GameScene4initEv', { onLeave: () => cheats['auto-end'] && (autoEnd = true) });
         const stateLoop = setInterval(() => {
             if (epos && !epos.isNull()) {
@@ -619,6 +615,12 @@ function init() {
                         delete keymap[key];
                     if (key === keybinds['reverse'] && action === 'DOWN')
                         reverse();
+                    if (key === keybinds['deathmatch-start'] && action === 'DOWN') {
+                        deathmatchStart();
+                    }
+                    if (key === keybinds['deathmatch-stop'] && action === 'DOWN') {
+                        deathmatchStop();
+                    }
                     // if(key === keybinds['scan-epos'] && action === 'DOWN') {
                     //     epos = scanEpos();
                     // }
