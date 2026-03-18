@@ -442,10 +442,19 @@ async function main() {
 
     messageRouter.on("connect-frida", async () => {
         state("frida", "pending", "Connecting to frida server");
-        await connectFrida(serial, () => state("frida", "error", "Frida server crashed"), (d) => {
-            fridaDevice = d;
-            state("frida", "active", "Connected to frida server");
-        });
+        try {
+            await connectFrida(serial, () => state("frida", "error", "Frida server crashed"), (d) => {
+                if (d) {
+                    fridaDevice = d;
+                    state("frida", "active", "Connected to frida server");
+                } else {
+                    state("frida", "error", "Frida device not found");
+                }
+            });
+        } catch (e) {
+            console.error("Frida connect error", e);
+            state("frida", "error", "Failed to connect to frida");
+        }
     });
 
     messageRouter.on("get-cookie", async () => {

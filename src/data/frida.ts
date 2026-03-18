@@ -91,15 +91,18 @@ export const getArch = async (id: string): Promise<string> => {
     return arch;
 };
 
+let fridaServerGeneration = 0;
 export const startFrida = async (id: string, filename: string, onCrashed: () => void): Promise<boolean> => {
     if (id === "") {
         console.error("[*] ADB not connected");
         return false;
     }
     try {
+        const gen = ++fridaServerGeneration;
         try { await adb.shell(id, `su -c "killall frida-server"`); } catch {}
         const server = adb.shell(id, `su -c /data/local/tmp/${filename}`);
-        server.then(onCrashed);
+        const guardedCrash = () => { if (gen === fridaServerGeneration) onCrashed(); };
+        server.then(guardedCrash).catch(guardedCrash);
         return true;
     } catch {
         console.error("[*] Failed to start frida server");
@@ -109,11 +112,15 @@ export const startFrida = async (id: string, filename: string, onCrashed: () => 
 
 export const connectFrida = async (serial: string, onCrashed: () => void, onConnected: (d: Frida.Device | null) => void) => {
     const frida = getFrida();
-    const devc = await frida.getDevice(serial);
-    if (devc) {
-        devc.processCrashed.connect(onCrashed);
-        onConnected(devc);
-        return;
+    try {
+        const devc = await frida.getDevice(serial);
+        if (devc) {
+            devc.processCrashed.connect(onCrashed);
+            onConnected(devc);
+            return;
+        }
+    } catch {
+        // device not found by id, try other methods
     }
     const deviceManager = frida.getDeviceManager();
     const ds = await deviceManager.enumerateDevices();
@@ -127,12 +134,10 @@ export const connectFrida = async (serial: string, onCrashed: () => void, onConn
     if (!tar) {
         console.error(`[*] Frida device not connected to ${serial}`);
         onConnected(null);
+        return;
     }
-    deviceManager.added.connect(async () => {
-        const fridaDevice = await frida.getUsbDevice();
-        fridaDevice.processCrashed.connect(onCrashed);
-        onConnected(fridaDevice);
-    });
+    tar.processCrashed.connect(onCrashed);
+    onConnected(tar);
 };
 
 export const conenctFrida = connectFrida;
