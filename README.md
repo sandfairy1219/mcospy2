@@ -1,67 +1,46 @@
 # mcospy
 
-milkchoco frida cheat tool
+Frida-based cheat tool for the MilkChoco mobile game.
 
-## Development
+A Tauri v2 desktop app that connects to Android devices via ADB and injects a Frida agent to manipulate game memory.
 
-### Prerequisites
+## Architecture
 
-- Node.js 20+
-- npm
-- Windows (for building)
+- **Tauri (Rust)** - Desktop app shell
+- **Bridge (Node.js)** - Sidecar process handling Frida/ADB connection, global keyboard hooking, and WebSocket IPC
+- **Frontend (TypeScript)** - WebView-based UI
+- **Agent (TypeScript)** - Frida script injected into the game process
 
-### Setup
+## Features
 
-```bash
-npm install
-npm run build
-npm start
-```
+- Aimbot, ESP, blackhole, and other combat cheats
+- Infinite ammo, skill damage, move speed modification
+- Global hotkey support
+- Deathmatch automation
+- Preset save/load
+- Auto-update
+- License key authentication
 
-### Building for Production
+## Requirements
 
-```bash
-npm run dist
-```
+- Windows 10/11
+- Node.js 18+
+- Rust (for Tauri build)
+- ADB (for Android device connection)
+- Frida 16.4.10
 
-## GitHub Actions - Automatic Releases
+## Scripts
 
-This project uses GitHub Actions to automatically build and release when tags are pushed.
-
-### How to Create a Release
-
-1. **Commit your changes** to the main branch
-2. **Create a version tag** in the format `v2.n.n` (e.g., `v2.1.0`)
-   ```bash
-   git tag v2.1.0
-   git push origin main --tags
-   ```
-3. **Wait for the workflow** to complete:
-   - The workflow will automatically run `npm run dist`
-   - It will create `pixel-Setup-2.1.0.exe` (note the dashes instead of spaces)
-   - It will upload the installer, `latest.yml`, and blockmap to the GitHub release
-
-### Workflow Details
-
-- **Trigger**: Push tags matching `v[0-9]+.[0-9]+.[0-9]+`
-- **Build Platform**: Windows
-- **Output**: `pixel-Setup-{version}.exe` (with dashes, not spaces)
-- **Auto-publish**: Files are automatically uploaded to GitHub Releases
-
-### Files Generated
-
-- `pixel-Setup-2.1.0.exe` - The installer
-- `latest.yml` - Update metadata for electron-updater
-- `pixel-Setup-2.1.0.exe.blockmap` - Blockmap for differential updates
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+| Command | Description |
+|---|---|
+| `bun run dev` | Start Tauri dev server |
+| `bun run dev:sidecar` | Run bridge standalone (debug) |
+| `bun run watch` | Watch TypeScript + CSS changes |
+| `bun run build` | Build frontend |
+| `bun run build:sidecar` | Build bridge binary |
+| `bun run dist` | Full build (build + sidecar + tauri) |
+| `bun run release [patch\|minor\|major]` | Bump version, build, push, and create GitHub release (default: patch) |
 
 ## License
 
-This project is licensed under the ISC License.
+ISC

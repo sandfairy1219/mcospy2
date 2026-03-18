@@ -62,6 +62,18 @@ const lan:{[key:string]:{[key:string]:string}} = {
         'ja':'ログイン',
         'zh':'登录',
     },
+    'authenticating':{
+        'en':'Authenticating...',
+        'ko':'인증 중...',
+        'ja':'認証中...',
+        'zh':'认证中...',
+    },
+    'auth-failed':{
+        'en':'Authentication failed',
+        'ko':'인증 실패',
+        'ja':'認証失敗',
+        'zh':'认证失败',
+    },
     'initialize':{
         'en':'Initialize',
         'ko':'초기화',
@@ -761,8 +773,35 @@ function showApp() {
     } catch (e) {
         console.warn('Update check failed:', e);
     }
-    showApp();
+    // Auth check
+    $_('updp').textContent = lng(lang, 'authenticating');
+    send('auth-verify');
 })();
+
+// Auth flow
+listen('auth-status', (result: { ok: boolean; error?: string }) => {
+    if (result.ok) {
+        showApp();
+    } else {
+        $_('updp').textContent = lng(lang, 'auth-failed');
+        $_('logform').classList.remove('hide');
+        $_('logerr').textContent = result.error || '';
+        $_('logbtn').removeAttribute('disabled');
+    }
+});
+
+$_('logbtn').addEventListener('click', () => {
+    const key = ($i('key') as HTMLInputElement).value.trim();
+    if (!key) return;
+    $_('logerr').textContent = '';
+    $_('logbtn').setAttribute('disabled', 'true');
+    $_('updp').textContent = lng(lang, 'authenticating');
+    send('auth-activate', key);
+});
+
+$_('key').addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.key === 'Enter') $_('logbtn').click();
+});
 
 listen('update-state', (id:string, _state:string, log:string) => {
     const el = $_(`state-${id}`);

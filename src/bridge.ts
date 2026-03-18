@@ -20,6 +20,7 @@ import { existsSync, readFileSync, copyFileSync } from "fs";
 import { adb, attachProcess, checkFridaPerm, connectFrida, connectAdbDevice, executeProcess, fileExist, fileName, getArch, getUrl, startFrida } from "./data/frida";
 import { exec } from "child_process";
 import { createServer as createPixelServer } from "./core/server";
+import { getHardwareId, authVerify, authActivate } from "./auth";
 import type { ServerFacade } from "./core/server";
 import { _anOffset, _eposOffset, _xaOffset } from "./offsets";
 import { nutKeymap } from "./keymaps";
@@ -305,8 +306,29 @@ const state = (id: string, _state: string, log: string) => {
     sendEvent("update-state", id, _state, log);
 };
 
+// ---- Auth ----
+const authServerUrl = process.env.AUTH_SERVER_URL || '';
+let authenticated = false;
+
+messageRouter.on("auth-verify", async () => {
+    if (!authServerUrl) { sendEvent("auth-status", { ok: true }); authenticated = true; main(); return; }
+    const hwid = getHardwareId();
+    const result = await authVerify(authServerUrl, hwid);
+    if (result.ok) { authenticated = true; main(); }
+    sendEvent("auth-status", result);
+});
+
+messageRouter.on("auth-activate", async (key: string) => {
+    if (!authServerUrl) { sendEvent("auth-status", { ok: true }); authenticated = true; main(); return; }
+    const hwid = getHardwareId();
+    const result = await authActivate(authServerUrl, key, hwid);
+    if (result.ok) { authenticated = true; main(); }
+    sendEvent("auth-status", result);
+});
+
 // ---- Main initialization ----
 async function main() {
+    if (authenticated === false && authServerUrl) return;
     if (!keyboardListenerEnabled) {
         console.warn("Continuing without global keyboard capture. Keybind hotkeys will be unavailable.");
     }
@@ -814,8 +836,11 @@ emitter.on("log", (...args: any[]) => {
 process.on('SIGINT', () => exitApp());
 process.on('SIGTERM', () => exitApp());
 
-// Start main
-main().catch(err => {
-    console.error("Bridge startup error:", err);
-    process.exit(1);
-});
+// Start main (auth-gated: main() is called after auth-verify/auth-activate succeeds)
+// If no AUTH_SERVER_URL, start immediately
+if (!authServerUrl) {
+    main().catch(err => {
+        console.error("Bridge startup error:", err);
+        process.exit(1);
+    });
+}
