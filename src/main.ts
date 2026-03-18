@@ -4,6 +4,8 @@ import { $, $$, $_, $c, $i, $$_ } from "./ui/dom";
 
 import type { IGlobalKey } from "node-global-key-listener";
 
+type DeathmatchState = 'running' | 'stopped';
+
 // Tauri API - uses window.__TAURI_INTERNALS__ provided by Tauri runtime
 const tauriInvoke = (cmd: string, args?: any): Promise<any> => {
     const internals = (window as any).__TAURI_INTERNALS__;
@@ -442,6 +444,12 @@ const lan:{[key:string]:{[key:string]:string}} = {
     'deathmatch-warning':{ 'en':'⚠ Bot match only', 'ko':'⚠ 봇전에서만 사용하세요', 'ja':'⚠ ボット戦専用', 'zh':'⚠ 仅限机器人战', },
     'deathmatch-start':{ 'en':'Start', 'ko':'시작', 'ja':'開始', 'zh':'开始', },
     'deathmatch-stop':{ 'en':'Stop', 'ko':'정지', 'ja':'停止', 'zh':'停止', },
+    'deathmatch-status-label':{ 'en':'Status', 'ko':'상태', 'ja':'状態', 'zh':'状态', },
+    'deathmatch-status-running':{ 'en':'Running', 'ko':'작동 중', 'ja':'稼働中', 'zh':'运行中', },
+    'deathmatch-status-stopped':{ 'en':'Stopped', 'ko':'정지됨', 'ja':'停止中', 'zh':'已停止', },
+    'deathmatch-hotkeys':{ 'en':'Quick Controls', 'ko':'빠른 제어', 'ja':'クイック操作', 'zh':'快捷控制', },
+    'deathmatch-hotkey-start':{ 'en':'Start Shortcut', 'ko':'시작 단축키', 'ja':'開始ショートカット', 'zh':'开始快捷键', },
+    'deathmatch-hotkey-stop':{ 'en':'Stop Shortcut', 'ko':'정지 단축키', 'ja':'停止ショートカット', 'zh':'停止快捷键', },
     'macro':{ 'en':'Macro', 'ko':'매크로', 'ja':'マクロ', 'zh':'宏', },
     'execute':{ 'en':'Execute', 'ko':'실행', 'ja':'実行', 'zh':'执行', },
     'general':{ 'en':'General', 'ko':'일반', 'ja':'一般', 'zh':'一般', },
@@ -473,7 +481,7 @@ const lan:{[key:string]:{[key:string]:string}} = {
     'no-spread-jump':{ 'en':'Jump', 'ko':'점프', 'ja':'ジャンプ中', 'zh':'跳跃', },
     'info-infinite-ammo':{ 'en':'Unlimited ammunition', 'ko':'무제한 탄약', 'ja':'無制限の弾薬', 'zh':'无限弹药', },
     'info-no-timer':{ 'en':'Remove reload/grenade/respawn timers', 'ko':'재장전/수류탄/부활 타이머 제거', 'ja':'リロード/グレネード/リスポーンタイマー除去', 'zh':'移除装弹/手雷/重生计时器', },
-    'info-skill-cooldown':{ 'en':'Remove skill cooldown', 'ko':'스킬 쿨타임 제거', 'ja':'スキルクールダウン除去', 'zh':'消除技能冷却', },
+    'info-skill-cooldown':{ 'en':'Warning : this feature can potentially ban your account. disabled for safety issues', 'ko':'경고 : 이 기능은 계정을 차단할 수 있습니다. 안전상의 문제로 인해 비활성화되었습니다.', 'ja':'警告 : この機能はアカウントを禁止する可能性があります。安全上の問題で無効化されています。', 'zh':'警告：此功能可能导致您的账户被封禁。出于安全考虑已禁用。', },
     'info-no-clip':{ 'en':'Walk through walls', 'ko':'벽 통과', 'ja':'壁をすり抜ける', 'zh':'穿墙', },
     'info-fly':{ 'en':'Fly freely in any direction', 'ko':'자유 비행', 'ja':'自由に飛行', 'zh':'自由飞行', },
     'info-move-speed':{ 'en':'Change movement speed', 'ko':'이동 속도 변경', 'ja':'移動速度を変更', 'zh':'更改移动速度', },
@@ -609,6 +617,24 @@ listen('macros', (_macros:any[]) => {
 // language
 let lang:string = localStorage.getItem('lang') || 'en';
 localStorage.setItem('lang', lang);
+
+let deathmatchState:DeathmatchState = 'stopped';
+const renderDeathmatchState = () => {
+    const indicator = $_('deathmatch-status-indicator');
+    const label = $_('deathmatch-status-text');
+    const startBtn = $_('deathmatch-start') as HTMLButtonElement | null;
+    const stopBtn = $_('deathmatch-stop') as HTMLButtonElement | null;
+    const stateKey = deathmatchState === 'running' ? 'deathmatch-status-running' : 'deathmatch-status-stopped';
+    if(indicator) indicator.setAttribute('data-state', deathmatchState);
+    if(label) label.textContent = lng(lang, stateKey);
+    if(startBtn) startBtn.disabled = deathmatchState === 'running';
+    if(stopBtn) stopBtn.disabled = deathmatchState !== 'running';
+};
+const setDeathmatchState = (state:DeathmatchState) => {
+    deathmatchState = state;
+    renderDeathmatchState();
+};
+
 const updateLang = () => {
     $$_('.toggle').forEach((el:HTMLInputElement) => {
         el.removeEventListener('change', toggleCheat);
@@ -651,6 +677,7 @@ const updateLang = () => {
         el.disabled = !attached;
         el.addEventListener('change', toggleCheat);
     });
+    renderDeathmatchState();
 };
 $i('lang').value = lang;
 updateLang();
@@ -821,6 +848,10 @@ listen('pos', (pos:number[]) => {
 listen('skillcode', (code:number) => {
     sel.value = code.toString();
 })
+
+listen('deathmatch', (state:'started'|'stopped') => {
+    setDeathmatchState(state === 'started' ? 'running' : 'stopped');
+});
 
 $_('change-NaN').addEventListener('click', () => {send('change-NaN');});
 

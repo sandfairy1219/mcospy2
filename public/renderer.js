@@ -996,6 +996,12 @@
         "deathmatch-warning": { "en": "\u26A0 Bot match only", "ko": "\u26A0 \uBD07\uC804\uC5D0\uC11C\uB9CC \uC0AC\uC6A9\uD558\uC138\uC694", "ja": "\u26A0 \u30DC\u30C3\u30C8\u6226\u5C02\u7528", "zh": "\u26A0 \u4EC5\u9650\u673A\u5668\u4EBA\u6218" },
         "deathmatch-start": { "en": "Start", "ko": "\uC2DC\uC791", "ja": "\u958B\u59CB", "zh": "\u5F00\u59CB" },
         "deathmatch-stop": { "en": "Stop", "ko": "\uC815\uC9C0", "ja": "\u505C\u6B62", "zh": "\u505C\u6B62" },
+        "deathmatch-status-label": { "en": "Status", "ko": "\uC0C1\uD0DC", "ja": "\u72B6\u614B", "zh": "\u72B6\u6001" },
+        "deathmatch-status-running": { "en": "Running", "ko": "\uC791\uB3D9 \uC911", "ja": "\u7A3C\u50CD\u4E2D", "zh": "\u8FD0\u884C\u4E2D" },
+        "deathmatch-status-stopped": { "en": "Stopped", "ko": "\uC815\uC9C0\uB428", "ja": "\u505C\u6B62\u4E2D", "zh": "\u5DF2\u505C\u6B62" },
+        "deathmatch-hotkeys": { "en": "Quick Controls", "ko": "\uBE60\uB978 \uC81C\uC5B4", "ja": "\u30AF\u30A4\u30C3\u30AF\u64CD\u4F5C", "zh": "\u5FEB\u6377\u63A7\u5236" },
+        "deathmatch-hotkey-start": { "en": "Start Shortcut", "ko": "\uC2DC\uC791 \uB2E8\uCD95\uD0A4", "ja": "\u958B\u59CB\u30B7\u30E7\u30FC\u30C8\u30AB\u30C3\u30C8", "zh": "\u5F00\u59CB\u5FEB\u6377\u952E" },
+        "deathmatch-hotkey-stop": { "en": "Stop Shortcut", "ko": "\uC815\uC9C0 \uB2E8\uCD95\uD0A4", "ja": "\u505C\u6B62\u30B7\u30E7\u30FC\u30C8\u30AB\u30C3\u30C8", "zh": "\u505C\u6B62\u5FEB\u6377\u952E" },
         "macro": { "en": "Macro", "ko": "\uB9E4\uD06C\uB85C", "ja": "\u30DE\u30AF\u30ED", "zh": "\u5B8F" },
         "execute": { "en": "Execute", "ko": "\uC2E4\uD589", "ja": "\u5B9F\u884C", "zh": "\u6267\u884C" },
         "general": { "en": "General", "ko": "\uC77C\uBC18", "ja": "\u4E00\u822C", "zh": "\u4E00\u822C" },
@@ -1027,7 +1033,7 @@
         "no-spread-jump": { "en": "Jump", "ko": "\uC810\uD504", "ja": "\u30B8\u30E3\u30F3\u30D7\u4E2D", "zh": "\u8DF3\u8DC3" },
         "info-infinite-ammo": { "en": "Unlimited ammunition", "ko": "\uBB34\uC81C\uD55C \uD0C4\uC57D", "ja": "\u7121\u5236\u9650\u306E\u5F3E\u85AC", "zh": "\u65E0\u9650\u5F39\u836F" },
         "info-no-timer": { "en": "Remove reload/grenade/respawn timers", "ko": "\uC7AC\uC7A5\uC804/\uC218\uB958\uD0C4/\uBD80\uD65C \uD0C0\uC774\uBA38 \uC81C\uAC70", "ja": "\u30EA\u30ED\u30FC\u30C9/\u30B0\u30EC\u30CD\u30FC\u30C9/\u30EA\u30B9\u30DD\u30FC\u30F3\u30BF\u30A4\u30DE\u30FC\u9664\u53BB", "zh": "\u79FB\u9664\u88C5\u5F39/\u624B\u96F7/\u91CD\u751F\u8BA1\u65F6\u5668" },
-        "info-skill-cooldown": { "en": "Remove skill cooldown", "ko": "\uC2A4\uD0AC \uCFE8\uD0C0\uC784 \uC81C\uAC70", "ja": "\u30B9\u30AD\u30EB\u30AF\u30FC\u30EB\u30C0\u30A6\u30F3\u9664\u53BB", "zh": "\u6D88\u9664\u6280\u80FD\u51B7\u5374" },
+        "info-skill-cooldown": { "en": "Warning : this feature can potentially ban your account. disabled for safety issues", "ko": "\uACBD\uACE0 : \uC774 \uAE30\uB2A5\uC740 \uACC4\uC815\uC744 \uCC28\uB2E8\uD560 \uC218 \uC788\uC2B5\uB2C8\uB2E4. \uC548\uC804\uC0C1\uC758 \uBB38\uC81C\uB85C \uC778\uD574 \uBE44\uD65C\uC131\uD654\uB418\uC5C8\uC2B5\uB2C8\uB2E4.", "ja": "\u8B66\u544A : \u3053\u306E\u6A5F\u80FD\u306F\u30A2\u30AB\u30A6\u30F3\u30C8\u3092\u7981\u6B62\u3059\u308B\u53EF\u80FD\u6027\u304C\u3042\u308A\u307E\u3059\u3002\u5B89\u5168\u4E0A\u306E\u554F\u984C\u3067\u7121\u52B9\u5316\u3055\u308C\u3066\u3044\u307E\u3059\u3002", "zh": "\u8B66\u544A\uFF1A\u6B64\u529F\u80FD\u53EF\u80FD\u5BFC\u81F4\u60A8\u7684\u8D26\u6237\u88AB\u5C01\u7981\u3002\u51FA\u4E8E\u5B89\u5168\u8003\u8651\u5DF2\u7981\u7528\u3002" },
         "info-no-clip": { "en": "Walk through walls", "ko": "\uBCBD \uD1B5\uACFC", "ja": "\u58C1\u3092\u3059\u308A\u629C\u3051\u308B", "zh": "\u7A7F\u5899" },
         "info-fly": { "en": "Fly freely in any direction", "ko": "\uC790\uC720 \uBE44\uD589", "ja": "\u81EA\u7531\u306B\u98DB\u884C", "zh": "\u81EA\u7531\u98DE\u884C" },
         "info-move-speed": { "en": "Change movement speed", "ko": "\uC774\uB3D9 \uC18D\uB3C4 \uBCC0\uACBD", "ja": "\u79FB\u52D5\u901F\u5EA6\u3092\u5909\u66F4", "zh": "\u66F4\u6539\u79FB\u52A8\u901F\u5EA6" },
@@ -1160,6 +1166,26 @@
       });
       var lang = localStorage.getItem("lang") || "en";
       localStorage.setItem("lang", lang);
+      var deathmatchState = "stopped";
+      var renderDeathmatchState = () => {
+        const indicator = (0, dom_1.$_)("deathmatch-status-indicator");
+        const label = (0, dom_1.$_)("deathmatch-status-text");
+        const startBtn = (0, dom_1.$_)("deathmatch-start");
+        const stopBtn = (0, dom_1.$_)("deathmatch-stop");
+        const stateKey = deathmatchState === "running" ? "deathmatch-status-running" : "deathmatch-status-stopped";
+        if (indicator)
+          indicator.setAttribute("data-state", deathmatchState);
+        if (label)
+          label.textContent = lng(lang, stateKey);
+        if (startBtn)
+          startBtn.disabled = deathmatchState === "running";
+        if (stopBtn)
+          stopBtn.disabled = deathmatchState !== "running";
+      };
+      var setDeathmatchState = (state) => {
+        deathmatchState = state;
+        renderDeathmatchState();
+      };
       var updateLang = () => {
         (0, dom_1.$$_)(".toggle").forEach((el) => {
           el.removeEventListener("change", toggleCheat);
@@ -1206,6 +1232,7 @@
           el.disabled = !attached;
           el.addEventListener("change", toggleCheat);
         });
+        renderDeathmatchState();
       };
       (0, dom_1.$i)("lang").value = lang;
       updateLang();
@@ -1382,6 +1409,9 @@
       });
       (0, ipc_1.listen)("skillcode", (code) => {
         sel.value = code.toString();
+      });
+      (0, ipc_1.listen)("deathmatch", (state) => {
+        setDeathmatchState(state === "started" ? "running" : "stopped");
       });
       (0, dom_1.$_)("change-NaN").addEventListener("click", () => {
         (0, ipc_1.send)("change-NaN");

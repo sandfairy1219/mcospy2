@@ -413,9 +413,9 @@
                     <input class="config" type="checkbox" id="no-timer-respawn">
                 </main>
             </details>
-            <!-- <details data-cheat="skill-cooldown">
+            <details data-cheat="skill-cooldown" class="cheat-disabled">
                 <summary class="no" id="skill-cooldown" data-lang="skill-cooldown"></summary>
-            </details> -->
+            </details>
             <!-- <details data-cheat="instant-respawn">
                 <summary class="no" id="instant-respawn" data-lang="instant-respawn"></summary>
             </details> -->
@@ -733,6 +733,26 @@
             <details data-cheat="deathmatch">
                 <summary data-lang="deathmatch"></summary>
                 <div class="w-full" style="color:#ff6b6b;font-size:11px;padding:4px 8px;" data-lang="deathmatch-warning"></div>
+                <div class="deathmatch-status-card">
+                    <div class="deathmatch-status-headline">
+                        <span data-lang="deathmatch-status-label"></span>
+                        <span id="deathmatch-status-indicator" class="deathmatch-status-indicator" data-state="stopped">
+                            <span class="deathmatch-status-dot"></span>
+                            <span id="deathmatch-status-text">Stopped</span>
+                        </span>
+                    </div>
+                    <div class="deathmatch-hotkey-title" data-lang="deathmatch-hotkeys"></div>
+                    <div class="deathmatch-hotkey-grid">
+                        <label class="deathmatch-hotkey-field">
+                            <span data-lang="deathmatch-hotkey-start"></span>
+                            <input type="text" id="key-deathmatch-start" class="keybind" data-lang-ph="keybind">
+                        </label>
+                        <label class="deathmatch-hotkey-field">
+                            <span data-lang="deathmatch-hotkey-stop"></span>
+                            <input type="text" id="key-deathmatch-stop" class="keybind" data-lang-ph="keybind">
+                        </label>
+                    </div>
+                </div>
                 <main>
                     <button class="w-full" id="deathmatch-start" data-lang="deathmatch-start"></button>
                     <button class="w-full" id="deathmatch-stop" data-lang="deathmatch-stop"></button>

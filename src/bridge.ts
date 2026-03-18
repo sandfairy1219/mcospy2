@@ -711,6 +711,9 @@ async function main() {
     emitter.on("skillcode", (code: number) => {
         sendEvent("skillcode", code);
     });
+    emitter.on("deathmatch", (state: string) => {
+        sendEvent("deathmatch", state);
+    });
     if (isDev) emitter.on("state", (code: number) => {
         sendEvent("state", code);
     });
