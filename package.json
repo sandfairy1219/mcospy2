@@ -20,7 +20,7 @@
     "//dist": "전체 빌드 (build + sidecar + tauri)",
     "//release": "bun run release [patch|minor|major] — 버전 올리고 빌드 + push + GitHub 릴리스 (기본: patch)",
     "//version": "npm version 시 tauri.conf.json, Cargo.toml 버전 자동 동기화",
-    "release": "node -e \"const{execSync:r}=require('child_process');require('dotenv').config();const bump=process.argv[1]||'patch';r('git add -A && git commit -m \\\"chore: pre-release\\\" --allow-empty',{stdio:'inherit'});r('npm version '+bump,{stdio:'inherit'});r('bun run build && bun run build:sidecar && npx tauri build',{stdio:'inherit',env:{...process.env}});const v=require('./package.json').version;r('git push origin main && git push origin v'+v+' && gh release create v'+v+' src-tauri/target/release/bundle/nsis/*.exe --title \\\"v'+v+'\\\" --generate-notes',{stdio:'inherit'})\"",
+    "release": "node scripts/release.cjs",
     "clean:win": "rd /s /q dist && rd /s /q build && del public/output.css /q",
     "clean:linux": "rm -rf dist build public/output.css",
     "download:binding": "start https://github.com/frida/frida/releases/download/16.4.10/frida-v16.4.10-node-v127-win32-x64.tar.gz",
