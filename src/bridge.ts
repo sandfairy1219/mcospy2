@@ -308,25 +308,38 @@ const state = (id: string, _state: string, log: string) => {
 
 // ---- Auth ----
 const authServerUrl = process.env.AUTH_SERVER_URL || 'https://mcospy-auth.onrender.com';
+const MASTER_KEY = 'k770OGzp7Q';
 let authenticated = false;
 
+function getHwid(): { hwid: string } | { error: string } {
+    try { return { hwid: getHardwareId() }; }
+    catch { return { error: 'Failed to read hardware info' }; }
+}
+
 messageRouter.on("auth-verify", async () => {
-    if (!authServerUrl) { sendEvent("auth-status", { ok: true }); authenticated = true; main(); return; }
-    let hwid: string;
-    try { hwid = getHardwareId(); } catch { sendEvent("auth-status", { ok: false, error: 'Failed to read hardware info' }); return; }
-    const result = await authVerify(authServerUrl, hwid);
+    const hw = getHwid();
+    if ('error' in hw) { sendEvent("auth-status", { ok: false, error: hw.error }); return; }
+    const result = await authVerify(authServerUrl, hw.hwid);
     if (result.ok) { authenticated = true; main(); }
+    // 서버 불가 시 키 입력 화면으로 유도
     sendEvent("auth-status", result);
 });
 
-const MASTER_KEY = 'k770OGzp7Q';
-
 messageRouter.on("auth-activate", async (key: string) => {
-    if (!authServerUrl || key === MASTER_KEY) { sendEvent("auth-status", { ok: true }); authenticated = true; main(); return; }
-    let hwid: string;
-    try { hwid = getHardwareId(); } catch { sendEvent("auth-status", { ok: false, error: 'Failed to read hardware info' }); return; }
-    const result = await authActivate(authServerUrl, key, hwid);
-    if (result.ok) { authenticated = true; main(); }
+    const hw = getHwid();
+    if ('error' in hw) { sendEvent("auth-status", { ok: false, error: hw.error }); return; }
+
+    // 1순위: 서버 인증
+    const result = await authActivate(authServerUrl, key, hw.hwid);
+    if (result.ok) { authenticated = true; main(); sendEvent("auth-status", result); return; }
+
+    // 2순위: 서버가 응답 불가일 때만 마스터 키 허용
+    if (result.error === 'Server unreachable' && key === MASTER_KEY) {
+        authenticated = true; main();
+        sendEvent("auth-status", { ok: true });
+        return;
+    }
+
     sendEvent("auth-status", result);
 });
 

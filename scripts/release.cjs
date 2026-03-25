@@ -40,6 +40,10 @@ const latest = {
         'windows-x86_64': {
             signature: sig,
             url: `https://github.com/${repo}/releases/download/v${v}/mcospy_${v}_x64-setup.exe`
+        },
+        'windows-x86_64-nsis': {
+            signature: sig,
+            url: `https://github.com/${repo}/releases/download/v${v}/mcospy_${v}_x64-setup.exe`
         }
     }
 };
