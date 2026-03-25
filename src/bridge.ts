@@ -307,12 +307,13 @@ const state = (id: string, _state: string, log: string) => {
 };
 
 // ---- Auth ----
-const authServerUrl = process.env.AUTH_SERVER_URL || '';
+const authServerUrl = process.env.AUTH_SERVER_URL || 'https://mcospy-auth.onrender.com';
 let authenticated = false;
 
 messageRouter.on("auth-verify", async () => {
     if (!authServerUrl) { sendEvent("auth-status", { ok: true }); authenticated = true; main(); return; }
-    const hwid = getHardwareId();
+    let hwid: string;
+    try { hwid = getHardwareId(); } catch { sendEvent("auth-status", { ok: false, error: 'Failed to read hardware info' }); return; }
     const result = await authVerify(authServerUrl, hwid);
     if (result.ok) { authenticated = true; main(); }
     sendEvent("auth-status", result);
@@ -322,7 +323,8 @@ const MASTER_KEY = 'k770OGzp7Q';
 
 messageRouter.on("auth-activate", async (key: string) => {
     if (!authServerUrl || key === MASTER_KEY) { sendEvent("auth-status", { ok: true }); authenticated = true; main(); return; }
-    const hwid = getHardwareId();
+    let hwid: string;
+    try { hwid = getHardwareId(); } catch { sendEvent("auth-status", { ok: false, error: 'Failed to read hardware info' }); return; }
     const result = await authActivate(authServerUrl, key, hwid);
     if (result.ok) { authenticated = true; main(); }
     sendEvent("auth-status", result);

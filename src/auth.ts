@@ -7,20 +7,27 @@ export function getHardwareId(): string {
     if (cachedHwid) return cachedHwid;
 
     const parts: string[] = [];
+    const OEM_VALUES = ['To be filled by O.E.M.', 'Default string', 'None', 'N/A', '0', ''];
     const commands = [
         'wmic baseboard get serialnumber',
         'wmic diskdrive get serialnumber',
         'wmic bios get serialnumber',
+        'wmic cpu get processorid',
+        'wmic nic where "NetEnabled=true" get MACAddress',
     ];
 
     for (const cmd of commands) {
         try {
             const out = execSync(cmd, { encoding: 'utf8', timeout: 5000 });
             const val = out.split('\n')[1]?.trim() || '';
-            if (val && val !== 'To be filled by O.E.M.') parts.push(val);
+            if (val && !OEM_VALUES.includes(val)) parts.push(val);
         } catch {
             // ignore
         }
+    }
+
+    if (parts.length === 0) {
+        throw new Error('Failed to collect hardware identifiers');
     }
 
     cachedHwid = createHash('sha256').update(parts.join('|')).digest('hex');
