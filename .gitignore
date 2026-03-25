@@ -138,3 +138,6 @@ src-tauri/target/
 
 #ai models
 .claude
+
+# other files
+lemonhack
