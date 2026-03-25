@@ -518,7 +518,8 @@ async function main() {
                         state("session", "active", "Xigncode Bypassed");
                         try {
                         const agentSrc = getAgentScript();
-                        const mutePrefix = config["mute-logging"] ? getMuteLoggingScript() : "";
+                        const useEmulator = true;
+                        const mutePrefix = (!useEmulator && config["mute-logging"]) ? getMuteLoggingScript() : "";
                         debugLog(`Agent script loaded (${agentSrc.length} chars), mute=${!!mutePrefix}, attaching to pid ${bpPid}`);
                         const [dispose, script] = await attachProcess(bpPid, fridaDevice,
                             mutePrefix + agentSrc
@@ -608,6 +609,7 @@ async function main() {
                                 messageRouter.on("ads-shop-gold", () => script.post(['ads-shop-gold']));
                                 messageRouter.on("request-br-reward", () => script.post(['request-br-reward']));
                                 messageRouter.on("kick-player", (number: number) => script.post(['kick-player', number]));
+                                messageRouter.on("kick-all-enemy", () => script.post(['kick-all-enemy']));
                                 messageRouter.on("change-nickname", (name: string) => script.post(['change-nickname', name]));
                                 messageRouter.on("purchase-pass", (num: number, item: number) => script.post(['purchase-pass', num, item]));
                                 messageRouter.on("server-exploit", () => script.post(['server-exploit']));
@@ -679,6 +681,7 @@ async function main() {
                                 messageRouter.removeAllListeners("ads-shop-gold");
                                 messageRouter.removeAllListeners("request-br-reward");
                                 messageRouter.removeAllListeners("kick-player");
+                                messageRouter.removeAllListeners("kick-all-enemy");
                                 messageRouter.removeAllListeners("change-nickname");
                                 messageRouter.removeAllListeners("purchase-pass");
                                 messageRouter.removeAllListeners("server-exploit");

@@ -430,7 +430,9 @@ const lan:{[key:string]:{[key:string]:string}} = {
     'char-id': { 'en':'Character ID', 'ko':'캐릭터 ID', 'ja':'キャラクターID', 'zh':'角色ID', },
     'utilities': { 'en':'Utilities', 'ko':'유틸리티', 'ja':'ユーティリティ', 'zh':'工具', },
     'user-id': { 'en':'User ID', 'ko':'유저 ID', 'ja':'ユーザーID', 'zh':'用户ID', },
+    'slot': { 'en':'Slot', 'ko':'슬롯', 'ja':'スロット', 'zh':'槽位', },
     'kick': { 'en':'Kick', 'ko':'킥', 'ja':'キック', 'zh':'踢出', },
+    'kick-all-enemy': { 'en':'Kick All Enemy', 'ko':'상대팀 전체 킥', 'ja':'敵全員キック', 'zh':'踢出全部敌人', },
     'change': { 'en':'Change', 'ko':'변경', 'ja':'変更', 'zh':'更改', },
     'vip-pass': { 'en':'VIP Pass', 'ko':'VIP 패스', 'ja':'VIPパス', 'zh':'VIP通行证', },
     'hero-pass': { 'en':'Hero Pass', 'ko':'히어로 패스', 'ja':'ヒーローパス', 'zh':'英雄通行证', },
@@ -927,7 +929,11 @@ $_('ads-shop-dia').addEventListener('click', () => {send('ads-shop-dia');});
 $_('ads-shop-gold').addEventListener('click', () => {send('ads-shop-gold');});
 $_('request-br-reward').addEventListener('click', () => {send('request-br-reward');});
 
-$_('kick-player').addEventListener('click', () => {send('kick-player', parseInt($i('kick-player-number').value) || 0);});
+for(let i = 0; i < 10; i++){
+    const el = $_(`kick-slot-${i}`);
+    if(el) el.addEventListener('click', () => {send('kick-player', i);});
+}
+$_('kick-all-enemy')?.addEventListener('click', () => {send('kick-all-enemy');});
 $_('change-nickname').addEventListener('click', () => {send('change-nickname', $i('nickname-value').value || '');});
 $_('purchase-pass').addEventListener('click', () => {send('purchase-pass', parseInt($i('purchase-player-number').value) || 0, parseInt($i('purchase-item').value) || 1);});
 $_('create-clan').addEventListener('click', () => {send('create-clan', $i('clanname-value').value || '');});

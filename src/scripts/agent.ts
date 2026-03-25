@@ -129,6 +129,7 @@ let adsRequestReward: any = null;
 let adsRequestShopADReward: any = null;
 let purchaseP: any = null;
 let purchaseT: any = null;
+let fMatchKickUserSlot: any = null;
 let changeNickname: any = null;
 let exploitServer: any = null;
 let createClan: any = null;
@@ -357,6 +358,7 @@ function init(){
         adsRequestShopADReward = makeNFunc('_ZN16SystemPacketSend22AdsRequestShopADRewardEh', 'void', ['uchar']);
         purchaseP = makeNFunc('_ZN16SystemPacketSend16SendPurchasePassEjh', 'void', ['uint', 'uchar']);
         purchaseT = makeNFunc('_ZN16SystemPacketSend20SendPurchasePassTierEjh', 'void', ['uint', 'uchar']);
+        fMatchKickUserSlot = makeNFunc('_ZN16SystemPacketSend18FMatchKickUserSlotEh', 'void', ['uchar']);
         changeNickname = (name:string) => {
             const sp = Memory.allocUtf8String(name);
             makeNFunc('_ZN16SystemPacketSend14ChangeNicknameEhPKch', 'void', ["uchar", "pointer", "uchar"])(1, sp, 0);
@@ -379,30 +381,36 @@ function init(){
         mago = makeNFunc('_ZN16SystemPacketSend20DeBuffSkillMagoTotemEjj', 'void', ['uint', 'uint']);
         attachNFunc('_ZN5Cloud10CameraData24GetCameraUserInformationEv', {
             onLeave(retval) {
+                let ts = ptr(retval.toString());
+                if(!ts || ts.isNull()) { epos = null; return; }
+                const num = ts.readS32();
+                const nick = ts.add(eposOffset['nickname']).readCString();
+                const zr1 = ts.add(eposOffset['zr1']).readFloat();
+                const zr2 = ts.add(eposOffset['zr2']).readFloat();
+                const valid = num > 0 && nick && nick.trim() !== "" && zr1 === 0 && zr2 === 0;
                 if(config['epos-number'] && config['epos-number'] != '0'){
-                    let ts = ptr(retval.toString());
-                    if(ts && !ts.isNull()){
-                        if(ts.readS32() === +config['epos-number']){
-                            if(autoEnd && epos.toString() !== ts.toString()) {
-                                const endType = config['auto-end-type'] || '0';
-                                if(endType === '0'){
-                                    endgame(ptr(ts.add(eposOffset['slot']).readU8() % 2));
-                                } else if(endType === '1'){
-                                    endgame(ptr(1 - (ts.add(eposOffset['slot']).readU8() % 2)));
-                                } else if(endType === '2'){
-                                    endgame(ptr(3));
-                                }
-                                autoEnd = false;
+                    if(num === +config['epos-number']){
+                        if(autoEnd && epos && epos.toString() !== ts.toString()) {
+                            const endType = config['auto-end-type'] || '0';
+                            if(endType === '0'){
+                                endgame(ptr(ts.add(eposOffset['slot']).readU8() % 2));
+                            } else if(endType === '1'){
+                                endgame(ptr(1 - (ts.add(eposOffset['slot']).readU8() % 2)));
+                            } else if(endType === '2'){
+                                endgame(ptr(3));
                             }
-                            epos = ts;
-                        } else if (
-                            epos.readS32() !== +config['epos-number']
-                            || epos.isNull()
-                            || epos.add(eposOffset['nickname']).readCString().trim() === ""
-                            || epos.add(eposOffset['zr1']).readFloat() !== 0
-                            || epos.add(eposOffset['zr2']).readFloat() !== 0
-                        ) epos = null;
-                    } else epos = null;
+                            autoEnd = false;
+                        }
+                        epos = ts;
+                    } else if (
+                        !epos || epos.isNull()
+                        || epos.readS32() !== +config['epos-number']
+                        || epos.add(eposOffset['nickname']).readCString().trim() === ""
+                        || epos.add(eposOffset['zr1']).readFloat() !== 0
+                        || epos.add(eposOffset['zr2']).readFloat() !== 0
+                    ) epos = null;
+                } else if(!epos || epos.isNull()){
+                    if(valid) epos = ts;
                 }
             },
         });
@@ -427,7 +435,7 @@ function init(){
                                         let slot = pt.add(eposOffset['slot']).readU8() % 2
                                         if(n > 0 && myslot != slot){
                                             if(!(config['auto-kick-ignore'] && excepts.includes(n))){
-                                                purchaseT(n, 0);
+                                                fMatchKickUserSlot(pt.add(eposOffset['slot']).readU8());
                                             }
                                         }
                                     }
@@ -480,32 +488,14 @@ function init(){
                     config = args[2];
                     wpdata = args[3];
                     excepts = (config['except-number'] as string || "").split(',').filter(v => v).map(v => parseInt(v) || 0).filter(v => v) || [];
-                // } else if(name === 'addr'){
-                    // isArm = Process.arch.includes('arm');
-                    // const r = Process.enumerateRanges('r--');
-                    // const rw = Process.enumerateRanges('rw-');
-                    // const rx = Process.enumerateRanges('r-x');
-                    // const rwx = Process.enumerateRanges('rwx');
-                    // const _xa = r.filter((range:RangeDetails) =>
-                    //     range.file &&
-                    //     range.file.path.includes('libMyGame.so')
-                    // );
-                    // if(_xa[0]) xa = _xa[0].base
-                    // else {
-                    //     const __xa = rx.filter((range:RangeDetails) =>
-                    //         range.file &&
-                    //         range.file.path.includes('split_config.arm64_v8a.apk') &&
-                    //         range.size >= 0x442_8000
-                    //     );
-                    //     if(__xa[0]) {
-                    //         xa = __xa[0].base;
-                    //     }
-                    // }
-                    // const _an = rw.filter((range:RangeDetails) =>
-                    //     (!range.file) &&
-                    //     range.size >= (isArm ? 0x1000 : 0x14E_8000)
-                    // );
-                    // if(_an[0]) an = _an[0].base;
+                    // Discover an (anonymous rw- range) for scanEpos
+                    isArm = Process.arch.includes('arm');
+                    const rw = Process.enumerateRanges('rw-');
+                    const _an = rw.filter((range:RangeDetails) =>
+                        (!range.file) &&
+                        range.size >= 0x800000
+                    );
+                    if(_an[0]) an = _an[0].base;
                     // if(isArm) rwx.filter((range:RangeDetails) =>
                     //     range.size >= 0x1_0000
                     // ).forEach((range:RangeDetails) => {
@@ -647,10 +637,12 @@ function init(){
                         send(['except-number', excepts]);
                     }
                     if(key === keybinds['kicker'] && action === 'DOWN'){
-                        const numbers = getFocusedEntity().map(entity => entity.add(eposOffset['number']).readS32())
-                        .filter(number => number > 0);
-                        numbers.forEach(number => {
-                            purchaseT(number, 0);
+                        const myteam = epos.add(eposOffset['slot']).readU8() % 2;
+                        getFocusedEntity()
+                        .filter(entity => entity.add(eposOffset['number']).readS32() > 0)
+                        .filter(entity => entity.add(eposOffset['slot']).readU8() % 2 !== myteam)
+                        .forEach(entity => {
+                            fMatchKickUserSlot(entity.add(eposOffset['slot']).readU8());
                         });
                     }
                     if(key === keybinds['electric'] && action === 'DOWN' && cheats['electric']){
@@ -735,7 +727,20 @@ function init(){
                 } else if(name === 'ads-reward'){ adsRequestReward(+args[0] || 0);
                 } else if(name === 'ads-shop-dia'){ adsRequestShopADReward(0);
                 } else if(name === 'ads-shop-gold'){ adsRequestShopADReward(1);
-                } else if(name === 'kick-player'){ purchaseT(+args[0] || 0, 0);
+                } else if(name === 'kick-player'){
+                    const slot = +args[0] || 0;
+                    const myteam = epos.add(eposOffset['slot']).readU8() % 2;
+                    if(slot % 2 !== myteam) fMatchKickUserSlot(slot);
+                } else if(name === 'kick-all-enemy'){
+                    const myteam = epos.add(eposOffset['slot']).readU8() % 2;
+                    [...entityList].forEach(p => {
+                        try{
+                            const pt = ptr(p);
+                            if(pt.add(eposOffset['number']).readS32() <= 0) return;
+                            const slot = pt.add(eposOffset['slot']).readU8();
+                            if(slot % 2 !== myteam) fMatchKickUserSlot(slot);
+                        }catch(_){}
+                    });
                 } else if(name === 'change-nickname'){ changeNickname(args[0] || 'no name');
                 } else if(name === 'purchase-pass'){ purchaseP(+args[0] || 0, +args[1] || 0);
                 } else if(name === 'server-exploit'){ exploitServer();
@@ -752,14 +757,15 @@ function init(){
                 } else if(name === 'ctm-mountain-choco'){ ctmMountainChoco();
                 } else if(name === 'deathmatch-start'){ deathmatchStart();
                 } else if(name === 'deathmatch-stop'){ deathmatchStop();
-                // } else if(name === 'scan-epos'){
-                //     epos = scanEpos();
-                // } else if(name === 'scan-entity'){
-                //     if(!epos) return recv(api);
-                //     if(epos.isNull()) return recv(api);
-                //     entityList = scanEntityList(epos);
-                // } else if(name === 'clear-all'){
-                //     clearAll();
+                } else if(name === 'scan-epos'){
+                    epos = scanEpos();
+                } else if(name === 'scan-entity'){
+                    if(!epos) return recv(api);
+                    if(epos.isNull()) return recv(api);
+                    const scanned = scanEntityList(epos);
+                    entityList = new Set([...scanned].map(p => p.toString()));
+                } else if(name === 'clear-all'){
+                    clearAll();
                 } else if(name === 'tier-numbers'){
                     excns = args[0]
                 } else if(name === 'except-number'){

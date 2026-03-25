@@ -461,52 +461,15 @@ function init() {
                     config = args[2];
                     wpdata = args[3];
                     excepts = (config['except-number'] || "").split(',').filter(v => v).map(v => parseInt(v) || 0).filter(v => v) || [];
-                    // } else if(name === 'addr'){
-                    // isArm = Process.arch.includes('arm');
-                    // const r = Process.enumerateRanges('r--');
-                    // const rw = Process.enumerateRanges('rw-');
-                    // const rx = Process.enumerateRanges('r-x');
-                    // const rwx = Process.enumerateRanges('rwx');
-                    // const _xa = r.filter((range:RangeDetails) =>
-                    //     range.file &&
-                    //     range.file.path.includes('libMyGame.so')
-                    // );
-                    // if(_xa[0]) xa = _xa[0].base
-                    // else {
-                    //     const __xa = rx.filter((range:RangeDetails) =>
-                    //         range.file &&
-                    //         range.file.path.includes('split_config.arm64_v8a.apk') &&
-                    //         range.size >= 0x442_8000
-                    //     );
-                    //     if(__xa[0]) {
-                    //         xa = __xa[0].base;
-                    //     }
-                    // }
-                    // const _an = rw.filter((range:RangeDetails) =>
-                    //     (!range.file) &&
-                    //     range.size >= (isArm ? 0x1000 : 0x14E_8000)
-                    // );
-                    // if(_an[0]) an = _an[0].base;
-                    // if(isArm) rwx.filter((range:RangeDetails) =>
-                    //     range.size >= 0x1_0000
-                    // ).forEach((range:RangeDetails) => {
-                    //     const dia = range.base.add(anOffset['cash-base']).readS32();
-                    //     if(dia === 17){
-                    //         log("AN Found:", range.base.toString())
-                    //     } else {
-                    //         log(range.base.toString(), dia)
-                    //     }
-                    // });
-                    // const _jt = rx.filter(range => range.file && range.file.path.includes("jit"));
-                    // if(_jt[0]) {
-                    //     jit = _jt[0].base;
-                    //     jtRange = _jt[0].size;
-                    // }
-                    // if(!xa || !an) return recv(api);
-                    // if(!isArm && !jit) return recv(api);
-                    // send(['Address.init', xa.toString(), an.toString(), jit.toString()])
-                    // _libMyGame = Process.findModuleByName('libMyGame.so');
-                    // send(['Address.init', _libMyGame ? _libMyGame.base.toString() : 'null']);
+                    // Discover an (anonymous rw- range) for scanEpos
+                    isArm = Process.arch.includes('arm');
+                    const rw = Process.enumerateRanges('rw-');
+                    const _an = rw.filter((range) => (!range.file) &&
+                        range.size >= (isArm ? 0x1000 : 0x14E_8000));
+                    if (_an[0]) {
+                        an = _an[0].base;
+                        log("AN Found:", an.toString());
+                    }
                 }
                 else if (name === 'cheats') {
                     // if(!an || !xa) return recv(api);
@@ -621,13 +584,15 @@ function init() {
                     if (key === keybinds['deathmatch-stop'] && action === 'DOWN') {
                         deathmatchStop();
                     }
-                    // if(key === keybinds['scan-epos'] && action === 'DOWN') {
-                    //     epos = scanEpos();
-                    // }
-                    // if(key === keybinds['scan-entity'] && action === 'DOWN') {
-                    //     entityList = scanEntityList(epos);
-                    // }
-                    // if(key === keybinds['clear-all'] && action === 'DOWN') clearAll();
+                    if (key === keybinds['scan-epos'] && action === 'DOWN') {
+                        epos = scanEpos();
+                    }
+                    if (key === keybinds['scan-entity'] && action === 'DOWN') {
+                        const scanned = scanEntityList(epos);
+                        entityList = new Set([...scanned].map(p => p.toString()));
+                    }
+                    if (key === keybinds['clear-all'] && action === 'DOWN')
+                        clearAll();
                     if (key === keybinds['esp-mark'] && action === 'DOWN') {
                         const numbers = getFocusedEntity().map(entity => entity.add(eposOffset['number']).readS32());
                         numbers.forEach(number => {
@@ -837,14 +802,20 @@ function init() {
                 }
                 else if (name === 'deathmatch-stop') {
                     deathmatchStop();
-                    // } else if(name === 'scan-epos'){
-                    //     epos = scanEpos();
-                    // } else if(name === 'scan-entity'){
-                    //     if(!epos) return recv(api);
-                    //     if(epos.isNull()) return recv(api);
-                    //     entityList = scanEntityList(epos);
-                    // } else if(name === 'clear-all'){
-                    //     clearAll();
+                }
+                else if (name === 'scan-epos') {
+                    epos = scanEpos();
+                }
+                else if (name === 'scan-entity') {
+                    if (!epos)
+                        return recv(api);
+                    if (epos.isNull())
+                        return recv(api);
+                    const scanned = scanEntityList(epos);
+                    entityList = new Set([...scanned].map(p => p.toString()));
+                }
+                else if (name === 'clear-all') {
+                    clearAll();
                 }
                 else if (name === 'tier-numbers') {
                     excns = args[0];

@@ -982,7 +982,9 @@
         "char-id": { "en": "Character ID", "ko": "\uCE90\uB9AD\uD130 ID", "ja": "\u30AD\u30E3\u30E9\u30AF\u30BF\u30FCID", "zh": "\u89D2\u8272ID" },
         "utilities": { "en": "Utilities", "ko": "\uC720\uD2F8\uB9AC\uD2F0", "ja": "\u30E6\u30FC\u30C6\u30A3\u30EA\u30C6\u30A3", "zh": "\u5DE5\u5177" },
         "user-id": { "en": "User ID", "ko": "\uC720\uC800 ID", "ja": "\u30E6\u30FC\u30B6\u30FCID", "zh": "\u7528\u6237ID" },
+        "slot": { "en": "Slot", "ko": "\uC2AC\uB86F", "ja": "\u30B9\u30ED\u30C3\u30C8", "zh": "\u69FD\u4F4D" },
         "kick": { "en": "Kick", "ko": "\uD0A5", "ja": "\u30AD\u30C3\u30AF", "zh": "\u8E22\u51FA" },
+        "kick-all-enemy": { "en": "Kick All Enemy", "ko": "\uC0C1\uB300\uD300 \uC804\uCCB4 \uD0A5", "ja": "\u6575\u5168\u54E1\u30AD\u30C3\u30AF", "zh": "\u8E22\u51FA\u5168\u90E8\u654C\u4EBA" },
         "change": { "en": "Change", "ko": "\uBCC0\uACBD", "ja": "\u5909\u66F4", "zh": "\u66F4\u6539" },
         "vip-pass": { "en": "VIP Pass", "ko": "VIP \uD328\uC2A4", "ja": "VIP\u30D1\u30B9", "zh": "VIP\u901A\u884C\u8BC1" },
         "hero-pass": { "en": "Hero Pass", "ko": "\uD788\uC5B4\uB85C \uD328\uC2A4", "ja": "\u30D2\u30FC\u30ED\u30FC\u30D1\u30B9", "zh": "\u82F1\u96C4\u901A\u884C\u8BC1" },
@@ -1486,8 +1488,15 @@
       (0, dom_1.$_)("request-br-reward").addEventListener("click", () => {
         (0, ipc_1.send)("request-br-reward");
       });
-      (0, dom_1.$_)("kick-player").addEventListener("click", () => {
-        (0, ipc_1.send)("kick-player", parseInt((0, dom_1.$i)("kick-player-number").value) || 0);
+      for (let i = 0; i < 10; i++) {
+        const el = (0, dom_1.$_)(`kick-slot-${i}`);
+        if (el)
+          el.addEventListener("click", () => {
+            (0, ipc_1.send)("kick-player", i);
+          });
+      }
+      (0, dom_1.$_)("kick-all-enemy")?.addEventListener("click", () => {
+        (0, ipc_1.send)("kick-all-enemy");
       });
       (0, dom_1.$_)("change-nickname").addEventListener("click", () => {
         (0, ipc_1.send)("change-nickname", (0, dom_1.$i)("nickname-value").value || "");

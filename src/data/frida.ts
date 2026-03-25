@@ -214,13 +214,13 @@ export const executeProcess = async (
     const session = await device.attach(pid, { realm: useEmulator ? frida.Realm.Emulated : frida.Realm.Native });
     console.info("[*] Process attached");
     const script = await session.createScript(_script);
+    script.message.connect(recieveCallback);
+    session.detached.connect(disposeCallback);
     await script.load();
     await session.resume();
     await device.resume(pid);
     console.info("[*] Session resumed");
     attachCallback();
-    script.message.connect(recieveCallback);
-    session.detached.connect(disposeCallback);
     const dispose = async () => {
         script.message.disconnect(recieveCallback);
         session.detached.disconnect(disposeCallback);
@@ -248,10 +248,10 @@ export const attachProcess = async (
     const frida = getFrida();
     const session = await device.attach(pid, { realm: useEmulator ? frida.Realm.Emulated : frida.Realm.Native });
     const script = await session.createScript(_script);
-    await script.load();
-    attachCallback();
     script.message.connect(recieveCallback);
     session.detached.connect(disposeCallback);
+    await script.load();
+    attachCallback();
     const dispose = async () => {
         script.message.disconnect(recieveCallback);
         session.detached.disconnect(disposeCallback);
